@@ -1,0 +1,27 @@
+x lägg till marketKey till odds
+x property för bet name ("Match", "CS 0-0", "OU 2.75", etc)
+x lägg till date/volume till marketodds och odds?
+- bättre hantering av numBookies, per land, per sharp, etc
+- bookies: ta med alla som inte är explicit disabled
+- nya bookies
+? en enda status för ft/ot/penalties/other?
+? status för ft/pt/scores?
+? lägg till outcome/was_x och massa annat från marketodds på odds?
+- handle was_x med kosntiga marknader som DC
+
+- event parsing till parser.
+
+[ ] Fixa 'npm run crawler' med flaggor för input?
+[ ] Spara event.historyData?
+[ ] Spara på github
+[ ] Deploya i molnet
+
+SQL
+-------------------------------------
+
+[ ] Importera events
+[ ] Importera odds
+[ ] Importera bookies
+[ ] Fixa aggregerade odds för soft/sharp/exchange
+[ ] Fixa oddsjämförelse inom soft/sharp för att se vem som är bäst
+

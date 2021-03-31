@@ -1,0 +1,49 @@
+{
+  "extends": ["airbnb-base", "plugin:prettier/recommended"],
+  "env": {
+    "node": true,
+    "browser": true,
+    "es6": true,
+    "jest": true
+  },
+  "settings": {
+    "import/resolver": {
+      "webpack": {
+        "config": "src/app/config/webpack.common.js"
+      }
+    }
+  },
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": "error",
+    "max-len": [
+      "warn",
+      {
+        "code": 150,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true,
+        "ignoreUrls": true,
+        "ignoreRegExpLiterals": true,
+        "ignoreComments": true
+      }
+    ],
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+    "import/extensions": ["error", "ignorePackages", {}],
+    "no-console": "off",
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
+    "import/prefer-default-export": "off",
+    "no-use-before-define": ["error", { "functions": false }],
+    "no-plusplus": "off",
+    "no-unused-vars": "warn",
+    "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 1, "maxBOF": 0 }]
+  }
+}
