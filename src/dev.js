@@ -18,13 +18,13 @@ const log = createLogger();
 async function run() {
   log.info('Dev start...');
 
-  if (false) {
+  if (true) {
     log.info('Reset result files...');
     dataWriter.resetFiles('event');
     await crawlerQueue.dispatch(3);
   }
 
-  if (true) {
+  if (false) {
     dataWriter.resetFiles('bookie');
     //await bookielib.getBookiesFromWebPage();
     await bookielib.crawlBookies();

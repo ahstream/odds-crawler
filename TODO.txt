@@ -1,3 +1,16 @@
+- flytta alla LAY till egna tabeller
+- beskrivande bet_name: '1x2 FT", "AH +2.00 FT/FTOT/1H/2H"
+- sub category för AH/OU: x.00, x.25, x.50, x.75?
+- egna tabeller för CS/HTFT?
+- add division/country to odds
+
+- testa bt=1,2,5 på alla säsonger av epl
+- testa pinnacle mot value på betfair
+- testa betfair som true odds på odds > 1.5
+- testa andra som true odds på övriga bt
+- hitta värde på ht/ft utifrån 1x2 ft/ht
+
+
 x lägg till marketKey till odds
 x property för bet name ("Match", "CS 0-0", "OU 2.75", etc)
 x lägg till date/volume till marketodds och odds?

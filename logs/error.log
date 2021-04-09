@@ -1,0 +1,13 @@
+2021-04-06 00:57:20.451 - error: Failed to JSON parse score for event: https://www.oddsportal.com/soccer/england/championship-2019-2020/charlton-millwall-2RqkoHqa/, scrapedScore: "d":{"E":"notAllowed"},{"E":"notAllowed"}, see verbose log for more logging.
+2021-04-06 00:57:20.514 - error: event.getEventFromWebPage exception: AssertionError [ERR_ASSERTION]: event.score.ok falsey, url: https://www.oddsportal.com/soccer/england/championship-2019-2020/charlton-millwall-2RqkoHqa/
+2021-04-06 03:09:35.434 - error: event.getEventFromWebPage exception: Error: connect ECONNREFUSED 188.92.41.44:443, url: https://www.oddsportal.com/soccer/england/championship-2016-2017/cardiff-burton-YBBylV2K/
+2021-04-06 05:00:04.239 - error: Failed to get URL web page: https://www.oddsportal.com/soccer/england/championship-2013-2014/bolton-watford-2oK8FARN/
+2021-04-06 05:00:04.241 - error: event.getEventFromWebPage exception: TypeError: Cannot read property 'data' of null, url: https://www.oddsportal.com/soccer/england/championship-2013-2014/bolton-watford-2oK8FARN/
+2021-04-06 05:05:00.895 - error: Corrupt feed for event: millwall-ipswich-4ItfKvCa
+2021-04-06 05:05:00.903 - error: event.getEventFromWebPage exception: AssertionError [ERR_ASSERTION]: feedsResult.ok falsey, url: https://www.oddsportal.com/soccer/england/championship-2013-2014/millwall-ipswich-4ItfKvCa/
+2021-04-06 05:05:04.669 - error: Failed to get URL web page: https://fb.oddsportal.com/feed/match/1-1-0pz3IItC-1-2-yjeb5.dat?_=1617678303383
+2021-04-06 05:05:04.671 - error: event.getEventFromWebPage exception: TypeError: Cannot read property 'data' of null, url: https://www.oddsportal.com/soccer/england/championship-2013-2014/nottingham-blackburn-0pz3IItC/
+2021-04-06 05:51:00.660 - error: Failed to get betting types for event: https://www.oddsportal.com/soccer/england/championship-2012-2013/burnley-wolves-SGTAQGY1/
+2021-04-06 05:51:00.663 - error: event.getEventFromWebPage exception: AssertionError [ERR_ASSERTION]: event.bettingTypes falsey, url: https://www.oddsportal.com/soccer/england/championship-2012-2013/burnley-wolves-SGTAQGY1/
+2021-04-06 07:22:00.549 - error: Failed to JSON parse score for event: https://www.oddsportal.com/soccer/england/championship-2009-2010/reading-sheffield-wed-OfH2spe1/, scrapedScore: "d":{"E":"notAllowed"},{"E":"notAllowed"}, see verbose log for more logging.
+2021-04-06 07:22:00.555 - error: event.getEventFromWebPage exception: AssertionError [ERR_ASSERTION]: event.score.ok falsey, url: https://www.oddsportal.com/soccer/england/championship-2009-2010/reading-sheffield-wed-OfH2spe1/

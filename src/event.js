@@ -362,6 +362,10 @@ function processBackOrLay(event, feedSrc, backOrLayKey, bt, sc) {
 }
 
 function processBet(event, feedSrc, bt, sc, isBack, attributeText, attributes) {
+  if (isBack === false) {
+    // todo: write lay  ets to own table!
+    return;
+  }
   //log.debug(`Process bet for bt: ${bt}, sc: ${sc}, isBack: ${isBack}, attribute: ${attribute}`);
 
   const marketKey = addMarket(event, bt, sc, isBack, attributeText, attributes, feedSrc.act);
@@ -409,6 +413,7 @@ function processOpeningOrClosingOdds(event, isOpening, feedSrc, outcomeKey, bt, 
       event.odds[betKey] = {};
       event.odds[betKey].eventId = event.id;
       event.odds[betKey].marketKey = marketKey;
+      event.odds[betKey].season = event.season;
       event.odds[betKey].bt = bt;
       event.odds[betKey].sc = sc;
       event.odds[betKey].isBack = isBack;
@@ -640,39 +645,44 @@ function updateMarketOdds(event) {
     ptr.numOutcomes = numExpectedOutcomes;
 
     if (ptr.openingOk) {
-      const combinedOpeningOdds =
-        (ptr.openingOdds_1 ? 100 / ptr.openingOdds_1 : 0) +
-        (ptr.openingOdds_2 ? 100 / ptr.openingOdds_2 : 0) +
-        (ptr.openingOdds_3 ? 100 / ptr.openingOdds_3 : 0);
+      const openingOverround = calcOverround(ptr.bt, ptr.openingOdds_1, ptr.openingOdds_2, ptr.openingOdds_3);
+      const openingMargin = openingOverround - 1;
+      // const openingPayout = 1 / openingOverround;
 
-      ptr.openingVig = _.round((combinedOpeningOdds - 100) / 100, 6);
+      ptr.openingOverround = _.round(openingOverround, 6);
 
-      ptr.openingProb1_1 = _.round(calcProb1(ptr.openingOdds_1, ptr.openingVig, numExpectedOutcomes), 6);
-      ptr.openingProb1_2 = _.round(calcProb1(ptr.openingOdds_2, ptr.openingVig, numExpectedOutcomes), 6);
-      ptr.openingProb1_3 = _.round(calcProb1(ptr.openingOdds_3, ptr.openingVig, numExpectedOutcomes), 6);
+      ptr.openingBiasProb_1 = _.round(calcBiasProb(ptr.openingOdds_1, openingMargin, numExpectedOutcomes), 6);
+      ptr.openingBiasProb_2 = _.round(calcBiasProb(ptr.openingOdds_2, openingMargin, numExpectedOutcomes), 6);
+      ptr.openingBiasProb_3 = _.round(calcBiasProb(ptr.openingOdds_3, openingMargin, numExpectedOutcomes), 6);
 
-      ptr.openingProb2_1 = _.round(calcProb2(ptr.openingOdds_1, ptr.openingVig), 6);
-      ptr.openingProb2_2 = _.round(calcProb2(ptr.openingOdds_2, ptr.openingVig), 6);
-      ptr.openingProb2_3 = _.round(calcProb2(ptr.openingOdds_3, ptr.openingVig), 6);
+      ptr.openingEqualProb_1 = _.round(calcEqualProb(ptr.openingOdds_1, openingOverround), 6);
+      ptr.openingEqualProb_2 = _.round(calcEqualProb(ptr.openingOdds_2, openingOverround), 6);
+      ptr.openingEqualProb_3 = _.round(calcEqualProb(ptr.openingOdds_3, openingOverround), 6);
     }
 
     if (ptr.closingOk) {
-      const combinedClosingOdds =
-        (ptr.closingOdds_1 ? 100 / ptr.closingOdds_1 : 0) +
-        (ptr.closingOdds_2 ? 100 / ptr.closingOdds_2 : 0) +
-        (ptr.closingOdds_3 ? 100 / ptr.closingOdds_3 : 0);
+      const closingOverround = calcOverround(ptr.bt, ptr.closingOdds_1, ptr.closingOdds_2, ptr.closingOdds_3);
+      const closingMargin = closingOverround - 1;
+      // const closingPayout = 1 / closingOverround;
 
-      ptr.closingVig = _.round((combinedClosingOdds - 100) / 100, 6);
+      ptr.closingOverround = _.round(closingOverround, 6);
 
-      ptr.closingProb1_1 = _.round(calcProb1(ptr.closingOdds_1, ptr.closingVig, numExpectedOutcomes), 6);
-      ptr.closingProb1_2 = _.round(calcProb1(ptr.closingOdds_2, ptr.closingVig, numExpectedOutcomes), 6);
-      ptr.closingProb1_3 = _.round(calcProb1(ptr.closingOdds_3, ptr.closingVig, numExpectedOutcomes), 6);
+      ptr.closingBiasProb_1 = _.round(calcBiasProb(ptr.closingOdds_1, closingMargin, numExpectedOutcomes), 6);
+      ptr.closingBiasProb_2 = _.round(calcBiasProb(ptr.closingOdds_2, closingMargin, numExpectedOutcomes), 6);
+      ptr.closingBiasProb_3 = _.round(calcBiasProb(ptr.closingOdds_3, closingMargin, numExpectedOutcomes), 6);
 
-      ptr.closingProb2_1 = _.round(calcProb2(ptr.closingOdds_1, ptr.closingVig), 6);
-      ptr.closingProb2_2 = _.round(calcProb2(ptr.closingOdds_2, ptr.closingVig), 6);
-      ptr.closingProb2_3 = _.round(calcProb2(ptr.closingOdds_3, ptr.closingVig), 6);
+      ptr.closingEqualProb_1 = _.round(calcEqualProb(ptr.closingOdds_1, closingOverround), 6);
+      ptr.closingEqualProb_2 = _.round(calcEqualProb(ptr.closingOdds_2, closingOverround), 6);
+      ptr.closingEqualProb_3 = _.round(calcEqualProb(ptr.closingOdds_3, closingOverround), 6);
     }
   });
+}
+
+function calcOverround(bt, odds1, odds2, odds3) {
+  // DC bets have a book of 200%, need to divide with 2 to get real overround!
+  const divider = bt === config.bt.DC ? 2 : 1;
+  const overround = (odds1 ? 1 / odds1 : 0) + (odds2 ? 1 / odds2 : 0) + (odds3 ? 1 / odds3 : 0);
+  return overround / divider;
 }
 
 async function getBettingTypes(event) {
@@ -763,22 +773,14 @@ function expectedNumOfOutcomes(bt) {
   }
 }
 
-function calcProb1(odds, vig, numOutcomes) {
-  const result = 1 / ((numOutcomes * odds) / (numOutcomes - vig * odds));
+function calcBiasProb(odds, margin, numOutcomes) {
+  const result = 1 / ((numOutcomes * odds) / (numOutcomes - margin * odds));
   return isFinite(result) ? result : null;
 }
 
-function calcProb2(odds, vig) {
-  const result = 1 / odds / (1 + vig);
+function calcEqualProb(odds, overround) {
+  const result = 1 / odds / overround;
   return isFinite(result) ? result : null;
-}
-
-function respondOk(response = undefined) {
-  return { ok: true, response };
-}
-
-function respondError(response = undefined) {
-  return { ok: false, response };
 }
 
 // PARSE
@@ -1069,6 +1071,16 @@ function parseDivisionData(event, htmltext) {
   return divisionData;
 }
 
+// MISC
+
+function respondOk(response = undefined) {
+  return { ok: true, response };
+}
+
+function respondError(response = undefined) {
+  return { ok: false, response };
+}
+
 // CREATES
 
 function createEvent(options = {}) {
@@ -1330,7 +1342,7 @@ function createMarketOdds() {
     attribute2: null,
 
     openingOk: null,
-    openingVig: null,
+    openingOverround: null,
 
     openingOdds_1: null,
     openingOdds_2: null,
@@ -1344,16 +1356,16 @@ function createMarketOdds() {
     openingVolume_2: null,
     openingVolume_3: null,
 
-    openingProb1_1: null,
-    openingProb1_2: null,
-    openingProb1_3: null,
+    openingBiasProb_1: null,
+    openingBiasProb_2: null,
+    openingBiasProb_3: null,
 
-    openingProb2_1: null,
-    openingProb2_2: null,
-    openingProb2_3: null,
+    openingEqualProb_1: null,
+    openingEqualProb_2: null,
+    openingEqualProb_3: null,
 
     closingOk: null,
-    closingVig: null,
+    closingOverround: null,
 
     closingOdds_1: null,
     closingOdds_2: null,
@@ -1367,13 +1379,13 @@ function createMarketOdds() {
     closingVolume_2: null,
     closingVolume_3: null,
 
-    closingProb1_1: null,
-    closingProb1_2: null,
-    closingProb1_3: null,
+    closingBiasProb_1: null,
+    closingBiasProb_2: null,
+    closingBiasProb_3: null,
 
-    closingProb2_1: null,
-    closingProb2_2: null,
-    closingProb2_3: null
+    closingEqualProb_1: null,
+    closingEqualProb_2: null,
+    closingEqualProb_3: null
   };
 }
 

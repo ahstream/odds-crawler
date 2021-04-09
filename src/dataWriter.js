@@ -66,11 +66,12 @@ export function writeToDivisionFile(data) {
 }
 
 export function writeToBookieFile(data) {
+  convertToSqlSafeCsvData(data);
   const filepath = `${config.pathToDataFolder}/misc/bookie.csv`;
   filelib.appendJsonDataToCsvFile(filepath, data, {});
 }
 
-// Misc ------------------------------------------------------------------------------------------
+// Misc ---------------------------------------------F---------------------------------------------
 
 export function eventExistInFile(url, divisionCode) {
   const filepath = `${config.pathToDataFolder}/result/event/${divisionCodeToFileSafeName(divisionCode)}/event.csv`;

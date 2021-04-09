@@ -4,6 +4,7 @@
 
 const _ = require('lodash');
 const assert = require('assert');
+const config = require('../config/config.json');
 const parser = require('./parser');
 const provider = require('./provider');
 const dataWriter = require('./dataWriter.js');
