@@ -7,7 +7,7 @@ const fileUtils = require('./lib/fileUtils');
 const log = require('./lib/logUtils');
 const httpUtils = require('./lib/httpUtils');
 const config = require('./config/config.json');
-const tools = require('./tools');
+const tools = require('../tools');
 const fs = require('fs');
 const bookmakers = require('./bookies');
 

@@ -61,6 +61,67 @@ export async function crawlDivisions(url) {
   return seasons;
 }
 
+export function parseDivisionData(url, htmltext, fallbackSeason = null) {
+  const divisionData = createDivisionData();
+
+  const reDivision = /<h2 class=\"out\">You are here<\/h2>[^<]*<[^>]*>Home<\/a>[^<]*<a href=\"\/[^\/]*\/\">([^<]*)<\/a>[^<]*<a href=\"[^\"]*\">([^<]*)<\/a>[^<]*<a href=\"[^\"]*\">([^<]*)<\/a>/im;
+  const scrapedDivision = htmltext.match(reDivision);
+  if (!scrapedDivision || scrapedDivision.length != 4) {
+    log.error(`Failed to scrape division data for event: ${url}, scrapedDivision: ${scrapedDivision}`);
+    return null;
+  }
+
+  divisionData.sport = scrapedDivision[1].trim();
+  divisionData.country = scrapedDivision[2].trim();
+
+  const divisionSeason = scrapedDivision[3];
+  const reDivisionTwoYears = /(.*)([0-9]{4})\/([0-9]{4})/im;
+  const scrapedDivisionTwoYears = divisionSeason.match(reDivisionTwoYears);
+  if (scrapedDivisionTwoYears && scrapedDivisionTwoYears.length === 4) {
+    divisionData.division = scrapedDivisionTwoYears[1].trim();
+    divisionData.season = parseInt(scrapedDivisionTwoYears[3], 10);
+  } else {
+    const reDivisionOneYear = /(.*)([0-9]{4})/im;
+    const scrapedDivisionOneYear = divisionSeason.match(reDivisionOneYear);
+    if (scrapedDivisionOneYear && scrapedDivisionOneYear.length === 3) {
+      divisionData.division = scrapedDivisionOneYear[1].trim();
+      divisionData.season = parseInt(scrapedDivisionOneYear[2], 10);
+    } else {
+      divisionData.division = divisionSeason;
+      divisionData.season = null;
+    }
+  }
+  if (divisionData.season === null) {
+    divisionData.season = fallbackSeason;
+    log.debug(`Failed to scrape division season year for event: ${url}, set season year from fallbackSeason: ${fallbackSeason}`);
+  }
+
+  return divisionData;
+}
+
+export function validateDivisionData(divisionData, url) {
+  const parsedUrl = parser.parseUrl(url);
+
+  if (divisionData.sport.replaceAll(' ', '').toLowerCase() !== parsedUrl.sport.replaceAll('-', '').toLowerCase()) {
+    log.error(parsedUrl);
+    return false;
+  }
+  if (divisionData.country.replaceAll(' ', '').toLowerCase() !== parsedUrl.country.replaceAll('-', '').toLowerCase()) {
+    log.error(parsedUrl);
+    return false;
+  }
+  if (divisionData.division.replaceAll(' ', '').toLowerCase() !== parsedUrl.divisionCodeName.replaceAll('-', '').toLowerCase()) {
+    log.error(parsedUrl);
+    return false;
+  }
+  if (divisionData.season !== parsedUrl.year && parsedUrl.year !== null) {
+    log.error(parsedUrl);
+    return false;
+  }
+
+  return true;
+}
+
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
 
 function createDivisionObject(season) {
@@ -111,4 +172,15 @@ function createDivisionObject(season) {
   obj.numEventsLast4Years = (obj[`${years[0]}-e`] ?? 0) + (obj[`${years[1]}-e`] ?? 0) + (obj[`${years[2]}-e`] ?? 0) + (obj[`${years[3]}-e`] ?? 0);
 
   return obj;
+}
+
+function createDivisionData(options = {}) {
+  const data = {
+    sport: null,
+    country: null,
+    division: null,
+    season: null
+  };
+
+  return { ...data, ...options };
 }

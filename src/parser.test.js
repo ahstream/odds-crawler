@@ -8,7 +8,19 @@ test('ping returns pong', () => {
 });
 
 test('parseUrl()', () => {
-  // [type, sport, country, divisionCodeName, divisionCode, year, event];
+  // [type, sport, country, divisionCodeName, divisionCode, year, event, eventId];
+  expect(parser.parseUrl('https://www.oddsportal.com/soccer/sweden/allsvenskan/elfsborg-kalmar-A7HBwTVN/')).toEqual({
+    type: 'event',
+    sport: 'soccer',
+    country: 'england',
+    divisionCodeName: 'league-one',
+    divisionCode: 'soccer/england/league-one',
+    year: 2020,
+    event: 'bolton-doncaster-QB1Cg43p',
+    eventId: 'QB1Cg43p'
+  });
+
+  // [type, sport, country, divisionCodeName, divisionCode, year, event, eventId];
   expect(parser.parseUrl('https://www.oddsportal.com/soccer/england/league-one-2019-2020/bolton-doncaster-QB1Cg43p/')).toEqual({
     type: 'event',
     sport: 'soccer',
@@ -16,7 +28,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: 2020,
-    event: 'bolton-doncaster-QB1Cg43p'
+    event: 'bolton-doncaster-QB1Cg43p',
+    eventId: 'QB1Cg43p'
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -27,7 +40,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: 2019,
-    event: 'bolton-doncaster-QB1Cg43p'
+    event: 'bolton-doncaster-QB1Cg43p',
+    eventId: 'QB1Cg43p'
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -38,7 +52,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: null,
-    event: 'bolton-doncaster-QB1Cg43p'
+    event: 'bolton-doncaster-QB1Cg43p',
+    eventId: 'QB1Cg43p'
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -49,7 +64,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: null,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -60,7 +76,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: 2020,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -71,7 +88,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: 2021,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -82,7 +100,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: null,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -93,7 +112,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: 2019,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -104,7 +124,8 @@ test('parseUrl()', () => {
     divisionCodeName: 'league-one',
     divisionCode: 'soccer/england/league-one',
     year: 2020,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -115,7 +136,8 @@ test('parseUrl()', () => {
     divisionCodeName: '',
     divisionCode: '',
     year: null,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -126,7 +148,8 @@ test('parseUrl()', () => {
     divisionCodeName: '',
     divisionCode: '',
     year: null,
-    event: ''
+    event: '',
+    eventId: ''
   });
 
   // [type, sport, country, divisionCodeName, divisionCode, year, event];
@@ -137,7 +160,8 @@ test('parseUrl()', () => {
     divisionCodeName: '',
     divisionCode: '',
     year: null,
-    event: ''
+    event: '',
+    eventId: ''
   });
 });
 

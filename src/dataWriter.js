@@ -47,15 +47,27 @@ export function writeToOddsFile(data, divisionCode) {
   filelib.appendJsonDataToCsvFile(filepath, data, {});
 }
 
-export function writeToMarketOddsFile(data, divisionCode) {
+export function writeToHistoryFile(data, divisionCode) {
   convertToSqlSafeCsvData(data);
-  const filepath = ensureDivisionFolder(divisionCode) + '/marketodds.csv';
+  const filepath = ensureDivisionFolder(divisionCode) + '/history.csv';
   filelib.appendJsonDataToCsvFile(filepath, data, {});
 }
 
 export function writeToMarketFile(data, divisionCode) {
   convertToSqlSafeCsvData(data);
   const filepath = ensureDivisionFolder(divisionCode) + '/market.csv';
+  filelib.appendJsonDataToCsvFile(filepath, data, {});
+}
+
+export function writeToMarketResultFile(data, divisionCode) {
+  convertToSqlSafeCsvData(data);
+  const filepath = ensureDivisionFolder(divisionCode) + '/marketresult.csv';
+  filelib.appendJsonDataToCsvFile(filepath, data, {});
+}
+
+export function writeToMarketOddsFile(data, divisionCode) {
+  convertToSqlSafeCsvData(data);
+  const filepath = ensureDivisionFolder(divisionCode) + '/marketodds.csv';
   filelib.appendJsonDataToCsvFile(filepath, data, {});
 }
 

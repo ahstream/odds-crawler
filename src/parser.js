@@ -32,6 +32,9 @@ export function parseUrl(url) {
   const division = utilslib.trimBothChars(result[3] ?? '', '/').trim();
   let event = utilslib.trimBothChars(result[4] ?? '', '/').trim();
 
+  const eventResult = event.match(/.*-([0-9A-Z]*)$/i);
+  const eventId = eventResult && eventResult.length === 2 ? eventResult[1] : '';
+
   const divisionParts = parseDivisionFromUrlPath(division);
   const divisionCodeName = divisionParts[0];
   let year = divisionParts[2];
@@ -62,9 +65,10 @@ export function parseUrl(url) {
     divisionCodeName,
     divisionCode,
     year,
-    event
+    event,
+    eventId
   };
-  // return [type, sport, country, divisionCodeName, divisionCode, year, event];
+  // return [type, sport, country, divisionCodeName, divisionCode, year, event, eventId];
 }
 
 export function parseDivisionFromUrlPath(divisionPath) {

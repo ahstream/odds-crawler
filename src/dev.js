@@ -21,7 +21,7 @@ async function run() {
   if (true) {
     log.info('Reset result files...');
     dataWriter.resetFiles('event');
-    await crawlerQueue.dispatch(3);
+    await crawlerQueue.dispatch(1);
   }
 
   if (false) {

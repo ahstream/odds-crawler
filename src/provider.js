@@ -73,6 +73,33 @@ export function convertTimestampToDate(timestamp) {
   return new Date(properTimestamp);
 }
 
+export function ensureDateOrNull(val) {
+  if (typeof val !== 'number') {
+    return null;
+  }
+  const d = new Date(val * 1000);
+  if (Object.prototype.toString.call(d) === '[object Date]' && !Number.isNaN(d.getTime())) {
+    return val;
+  }
+  return null;
+}
+
+export function ensureOddsOrNull(val) {
+  if (typeof val === 'string') {
+    return parseFloat(val);
+  } else if (typeof val === 'number') {
+    return val;
+  } else return null;
+}
+
+export function ensureVolumeOrNull(val) {
+  if (typeof val === 'string') {
+    return parseInt(val);
+  } else if (typeof val === 'number') {
+    return val;
+  } else return null;
+}
+
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
 
 function sleep(ms, flRandomize = true) {
