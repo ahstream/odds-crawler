@@ -186,10 +186,10 @@ test('parseNumberOfBookies()', async () => {
   // prettier-ignore
   const expectedBookieNums = [
     20, 18, 18, 18, 18, 18, 18, 13, 11, 17, 18,
-    13, 17, 12, 16, 11, 15,  7,  8,  9, 13, 14,
-    11,  2, 17, 19, 17, 20, 20, 20,  4,  5, 10,
-    10,  1,  4,  4,  4,  4, 16,  4,  4,  4,  4,
-     1, 18,  4,  1,  1,  4
+    13, 17, 12, 16, 11, 15, 7, 8, 9, 13, 14,
+    11, 2, 17, 19, 17, 20, 20, 20, 4, 5, 10,
+    10, 1, 4, 4, 4, 4, 16, 4, 4, 4, 4,
+    1, 18, 4, 1, 1, 4
   ];
   const expectedMinmax = [1, 11, 20];
 
@@ -209,4 +209,10 @@ test('normalizeDivisionName()', async () => {
   expect(parser.normalizeDivisionName('Primera Divisió')).toEqual('Primera Divisio');
   expect(parser.normalizeDivisionName('Primera Divisió 2020')).toEqual('Primera Divisio');
   expect(parser.normalizeDivisionName('Primera Divisió 2019/2020')).toEqual('Primera Divisio');
+});
+
+test('parseMatches()', async () => {
+  expect(parser.parseMatches('')).toEqual([]);
+  expect(parser.parseMatches('xxxxxx')).toEqual([]);
+  expect(parser.parseMatches('<td class=\\"table-time datet t1622331000-1-1-0-0 \\"><\\/td><td class=\\"name table-participant\\"><a href=\\"\\/soccer\\/usa\\/nisa\\/chattanooga-maryland-bobcats-SQMIFmzh\\/\\">Chattanooga - Maryland Bobcats<\\/a>')).toEqual(['/soccer/usa/nisa/chattanooga-maryland-bobcats-SQMIFmzh/']);
 });

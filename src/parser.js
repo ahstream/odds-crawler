@@ -166,8 +166,8 @@ export function parseSeasonLinksFromSeasonPage(htmltext, divisionName) {
         : Number.isInteger(year2)
         ? `${year2}`
         : Number.isInteger(year1)
-        ? `${year1}`
-        : '';
+          ? `${year1}`
+          : '';
     if (name) {
       seasonLinks.push({ divisionName, year, name, url });
     }
@@ -306,3 +306,15 @@ export function parseBookiesFromBookiesPage(htmltext) {
 
   return JSON.parse(match[1]);
 }
+
+export function parseMatches(htmltext) {
+  const matchedItems = [...htmltext.matchAll(/<a href=\\"\\(\/[a-z0-9-]*\\\/[a-z0-9-]*\\\/[a-z0-9-]*\\\/[a-zA-Z0-9-]*\\\/)\\"/gim)];
+  const matches = [];
+  matchedItems.forEach((matchedItem) => {
+    const url = matchedItem[1].replace(/\\/g, '');
+    matches.push(url);
+  });
+  return matches;
+}
+
+
