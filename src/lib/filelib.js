@@ -1,34 +1,49 @@
-'use strict';
-
 // DECLARES -----------------------------------------------------------------------------
 
-const { Parser } = require('json2csv');
 const csvtojson = require('csvtojson');
-const jsonfile = require('jsonfile');
 const fs = require('fs');
 const fse = require('fs-extra');
+const { Parser } = require('json2csv');
+const jsonfile = require('jsonfile');
 
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
 // Does not work to export function, need to be exports.csvFileToJson for some reason!
-exports.readCsvFile = async (filepath, { delimiter = ';' }) => csvtojson({ delimiter }).fromFile(filepath);
+exports.readCsvFile = async (filepath, { delimiter = ';' }) =>
+  csvtojson({ delimiter }).fromFile(filepath);
 
-exports.writeJsonDataToCsvFile = (filepath, data, { delimiter = ';', flatten = true, quote = '"', charset = 'utf8' }) => {
+exports.writeJsonDataToCsvFile = (
+  filepath,
+  data,
+  { delimiter = ';', flatten = true, quote = '"', charset = 'utf8' }
+) => {
   const options = { delimiter, flatten, quote, charset };
   writeOrAppendJsonDataToCsvFile(filepath, data, options, false);
 };
 
-exports.appendJsonDataToCsvFile = (filepath, data, { delimiter = ';', flatten = true, quote = '"', charset = 'utf8' }) => {
+exports.appendJsonDataToCsvFile = (
+  filepath,
+  data,
+  { delimiter = ';', flatten = true, quote = '"', charset = 'utf8' }
+) => {
   const options = { delimiter, flatten, quote, charset };
   writeOrAppendJsonDataToCsvFile(filepath, data, options, true);
 };
 
-exports.writeJsonDataToFile = (filepath, data, { spaces = 2, EOL = '\r\n' }) => {
+exports.writeJsonDataToFile = (
+  filepath,
+  data,
+  { spaces = 2, EOL = '\r\n' }
+) => {
   const options = { spaces, EOL };
   writeOrAppendJsonDataToFile(filepath, data, options, false);
 };
 
-exports.appendJsonDataToFile = (filepath, data, { spaces = 2, EOL = '\r\n' }) => {
+exports.appendJsonDataToFile = (
+  filepath,
+  data,
+  { spaces = 2, EOL = '\r\n' }
+) => {
   const options = { spaces, EOL };
   writeOrAppendJsonDataToFile(filepath, data, options, true);
 };
@@ -72,8 +87,13 @@ exports.existsInFile = (searchForText, filepath) => {
 
 function writeOrAppendJsonDataToCsvFile(filepath, data, options, append) {
   try {
-    const header = fs.existsSync(filepath) ? false : true;
-    const parser = new Parser({ header, flatten: options.flatten, quote: options.quote, delimiter: options.delimiter });
+    const header = !fs.existsSync(filepath);
+    const parser = new Parser({
+      header,
+      flatten: options.flatten,
+      quote: options.quote,
+      delimiter: options.delimiter
+    });
     const dataList = [];
     // eslint-disable-next-line no-restricted-syntax
     for (const prop in data) {

@@ -1,14 +1,10 @@
-'use strict';
-
 // DECLARES -----------------------------------------------------------------------------
 
 const axios = require('axios');
 
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
-/**
- * ping()
- */
+// Test ping function
 export const ping = () => 'pong';
 
 export function get(url, config = {}) {
@@ -24,9 +20,12 @@ export async function getResponse(url, config = {}) {
 }
 
 export async function getMany(urls, maxTries = 2, delayBetweenTries = 100, config = {}) {
-  const results = urls.map((url, index) => {
-    return { index, url, success: false, response: null };
-  });
+  const results = urls.map((url, index) => ({
+    index,
+    url,
+    success: false,
+    response: null
+  }));
 
   let allFetched = false;
   let tries = 0;
@@ -69,24 +68,27 @@ export async function getMany(urls, maxTries = 2, delayBetweenTries = 100, confi
     if (delayBetweenTries > 0) await sleep(delayBetweenTries);
   }
 
-  const finalResults = results.map((item) => {
-    return { success: item.success, url: item.url, response: item.response };
-  });
+  const finalResults = results.map((item) => ({
+    success: item.success,
+    url: item.url,
+    response: item.response
+  }));
 
   const allSuccess = finalResults.map((item) => item.success).reduce((sum, val) => sum && val, true);
 
   return { success: allSuccess, data: finalResults };
 }
 
+// TODO: Flagga för att tillåta redirects?!
 export function isSuccess(response, url = '') {
-  const isSuccess = response.data && response.status && response.status >= 200 && response.status < 300;
+  const successFlag = response.data && response.status && response.status >= 200 && response.status < 300;
 
   if (url !== '' && response && response.request && response.request.res) {
-    const isSameUrl = url == response.request.res.responseUrl;
-    return isSuccess && isSameUrl;
+    const isSameUrl = url === response.request.res.responseUrl;
+    return successFlag && isSameUrl;
   }
 
-  return isSuccess;
+  return successFlag;
 }
 
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
@@ -98,18 +100,18 @@ function handleError(error) {
      * status code that falls out of the range of 2xx
      */
     return error.response;
-  } else if (error.request) {
+  }
+  if (error.request) {
     /*
      * The request was made but no response was received, `error.request`
      * is an instance of XMLHttpRequest in the browser and an instance
      * of http.ClientRequest in Node.js
      */
     return error.request;
-  } else {
-    // Something happened in setting up the request and triggered an Error
-    console.error(error.message);
-    return error;
   }
+  // Something happened in setting up the request and triggered an Error
+  console.error(error.message);
+  return error;
 }
 
 function sleep(ms, randomizeMin = 100, randomizeMax = 100) {
@@ -120,5 +122,5 @@ function sleep(ms, randomizeMin = 100, randomizeMax = 100) {
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1) + min); //The maximum is inclusive and the minimum is inclusive
+  return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
 }

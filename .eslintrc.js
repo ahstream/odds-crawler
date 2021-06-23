@@ -1,45 +1,37 @@
 module.exports = {
-  // ESLint will stop looking in parent folders once it finds this configuration.
   root: true,
-
-  // A configuration file can extend the set of enabled rules from base configurations.
   extends: [
-    // Airbnb's base config.
-    // https://github.com/airbnb/javascript/tree/master/packages/eslint-config-airbnb-base
     'airbnb-base',
-
     // Turns off all rules that are unnecessary or might conflict with Prettier. Make sure to put it
     // last, so it gets the chance to override other configs.
-    // https://github.com/prettier/eslint-config-prettier
     'prettier'
   ],
-
-  // ESLint supports the use of third-party plugins.
-  plugins: [
-    // Runs Prettier as an ESLint rule and reports differences as individual ESLint issues.
-    // https://github.com/prettier/eslint-plugin-prettier
-    'prettier'
-  ],
+  plugins: ['prettier', 'require-sort'],
 
   // ESLint comes with a large number of rules. Don't use numbers to specify the type of rule,
   // instead use 'off', 'warn' and 'error'.
   rules: {
     // Report differences from Prettier config.
-    'prettier/prettier': 'error',
+    'prettier/prettier': 'off',
 
-    // Don't enforce destructuring from arrays and objects.
+    'global-require': 'off',
+    'no-console': 'off',
+    'no-await-in-loop': 'off',
+    'no-restricted-syntax': 'off',
+    'no-unused-vars': 'off',
+    'no-use-before-define': ['error', 'nofunc'],
+    'no-plusplus': 'off',
+    'import/no-named-as-default-member': 'off',
     'prefer-destructuring': 'off',
-
-    // Ensure consistent use of file extension within the import path. Enforces the use of
-    // extensions for all import statements except packages and .js/.ts extensions.
-    'import/extensions': [
-      'error',
-      'ignorePackages',
-      {
-        js: 'never',
-        ts: 'never'
-      }
-    ],
+    'import/prefer-default-export': 'off',
+    'import/extensions': 'off',
+    'no-underscore-dangle': 'off',
+    'class-methods-use-this': 'off',
+    'import/named': 'off',
+    // 'sort-imports': 'error',
+    // 'require-sort/require-sort': 'error',
+    'no-continue': 'off',
+    'no-param-reassign': 'off',
 
     // Don't ensure that there is no resolvable path back to the module via its dependencies.
     // Dependency cycles aren't always an issue, you just need to know that you're doing.
@@ -48,25 +40,24 @@ module.exports = {
     // Require or disallow a space immediately following the // or /* in a comment.
     'spaced-comment': ['error', 'always', { exceptions: ['-', '+', '*', '!', '='] }],
 
-    // When there is only a single export from a module, don't prefer using default export
-    // over named export.
-    'import/prefer-default-export': 'off',
-
     // Forbid the import of external modules that are not declared in the package.json's
     // dependencies, devDependencies, optionalDependencies or peerDependencies. Option
     // 'devDependencies' is set because we don't want the response "'xxx' should be listed in the
     // project's dependencies, not devDependencies".
-    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    'import/no-extraneous-dependencies': 'off', //  ['error', { devDependencies: true }],
+
+    'import/no-unresolved': 'off',
+    'import/no-self-import': 'off',
 
     // Specify the maximum length of a line. This works together with Prettier's printWidth, but in
     // different ways. Make sure to sync the length for consistency. max-len just says what the
     // maximum allowed line length is, but not what the generally preferred length is – which is
     // what printWidth from Prettier specifies.
     'max-len': [
-      'error',
+      'warn',
       {
-        code: 100,
-        comments: 100,
+        code: 120,
+        comments: 120,
         tabWidth: 2,
         ignoreUrls: true,
         ignoreComments: false,
@@ -110,10 +101,7 @@ module.exports = {
 
   // ESLint allows you to specify the JavaScript language options you want to support.
   parserOptions: {
-    // 9th edition of ECMAScript syntax.
-    ecmaVersion: 2018,
-
-    // ECMAScript modules.
+    ecmaVersion: 2020,
     sourceType: 'module'
   },
 
@@ -135,6 +123,9 @@ module.exports = {
     // Using eslint-import-resolver-alias to solve Webpack aliases.
     // https://github.com/johvin/eslint-import-resolver-alias
     'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
+      },
       alias: {
         map: [['@', './']],
         extensions: ['.ts', '.js']

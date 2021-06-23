@@ -1,10 +1,8 @@
-'use strict';
-
 // DECLARES -----------------------------------------------------------------------------
 
+const fs = require('fs');
 const util = require('util');
 const winston = require('winston');
-const fs = require('fs');
 
 const defaultOptions = {
   level: 'info',
@@ -13,10 +11,10 @@ const defaultOptions = {
 
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
-exports.createLogger = createLogger;
+// exports.createLogger = createLogger;
 
 exports.deleteLogFiles = (dir) => {
-  const dirVal = trimRightChars(dir, '/');
+  const dirVal = trimCharsRight(dir, '/');
 
   const errorFilepath = `${dirVal}/error.log`;
   const infoFilepath = `${dirVal}/info.log`;
@@ -43,18 +41,16 @@ exports.deleteLogFiles = (dir) => {
 
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
 
-export function trimRightChars(str, charlist) {
-  return str.replace(new RegExp('[' + charlist + ']+$'), '');
+export function trimCharsRight(str, charlist) {
+  return str.replace(new RegExp(`[${charlist}]+$`), '');
 }
 
 function transform(info, opts) {
   const args = info[Symbol.for('splat')];
   if (args) {
     info.message = util.format(info.message, ...args);
-  } else {
-    if (typeof info.message === 'object') {
-      info.message = util.format(info.message, '');
-    }
+  } else if (typeof info.message === 'object') {
+    info.message = util.format(info.message, '');
   }
   return info;
 }
@@ -63,24 +59,31 @@ function utilFormatter() {
   return { transform };
 }
 
-function createLogger(level = '', dir = 'logs', options = {}) {
+export function createLogger(level = '', dir = 'logs', options = {}) {
   const levelVal = level !== '' ? level : defaultOptions.level;
-  const timestampFormatVal = options.timestampFormat ?? defaultOptions.timestampFormat;
+  const timestampFormatVal =
+    options.timestampFormat ?? defaultOptions.timestampFormat;
 
   const colorFormatter = winston.format.combine(
     winston.format.timestamp({ format: timestampFormatVal }),
     utilFormatter(),
     winston.format.colorize(),
-    winston.format.printf(({ level, message, label, timestamp }) => `${timestamp} ${label || '-'} ${level}: ${message}`)
+    winston.format.printf(
+      ({ level, message, label, timestamp }) =>
+        `${timestamp} ${label || '-'} ${level}: ${message}`
+    )
   );
 
   const noColorFormatter = winston.format.combine(
     winston.format.timestamp({ format: timestampFormatVal }),
     utilFormatter(),
-    winston.format.printf(({ level, message, label, timestamp }) => `${timestamp} ${label || '-'} ${level}: ${message}`)
+    winston.format.printf(
+      ({ level, message, label, timestamp }) =>
+        `${timestamp} ${label || '-'} ${level}: ${message}`
+    )
   );
 
-  const dirVal = trimRightChars(dir, '/');
+  const dirVal = trimCharsRight(dir, '/');
   if (!fs.existsSync(dirVal)) {
     fs.mkdirSync(dirVal);
   }
@@ -88,11 +91,30 @@ function createLogger(level = '', dir = 'logs', options = {}) {
   const logger = winston.createLogger({
     level: defaultOptions.logLevel,
     transports: [
-      new winston.transports.Console({ format: colorFormatter, level: levelVal }),
-      new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/error.log`, level: 'error' }),
-      new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/info.log`, level: 'info' }),
-      new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/debug.log`, level: 'debug' }),
-      new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/verbose.log`, level: 'verbose' })
+      new winston.transports.Console({
+        format: colorFormatter,
+        level: levelVal
+      }),
+      new winston.transports.File({
+        format: noColorFormatter,
+        filename: `${dirVal}/error.log`,
+        level: 'error'
+      }),
+      new winston.transports.File({
+        format: noColorFormatter,
+        filename: `${dirVal}/info.log`,
+        level: 'info'
+      }),
+      new winston.transports.File({
+        format: noColorFormatter,
+        filename: `${dirVal}/debug.log`,
+        level: 'debug'
+      }),
+      new winston.transports.File({
+        format: noColorFormatter,
+        filename: `${dirVal}/verbose.log`,
+        level: 'verbose'
+      })
       // new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/silly.log`, level: 'silly' }),
     ]
   });

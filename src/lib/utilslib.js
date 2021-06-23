@@ -1,34 +1,30 @@
-'use strict';
-
 // DECLARES -----------------------------------------------------------------------------
 
 /* eslint-disable no-extend-native */
 /* eslint-disable func-names */
 /* eslint-disable import/prefer-default-export */
 
-const fs = require('fs');
-
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
 export function isValidUrl(url) {
   try {
-    new URL(url);
+    const temp = new URL(url);
   } catch (e) {
     return false;
   }
   return true;
 }
 
-export function trimLeftChars(str, charlist) {
-  return str.replace(new RegExp('^[' + charlist + ']+'), '');
+export function trimCharsLeft(str, chars) {
+  return str.replace(new RegExp(`^[${chars}]+`), '');
 }
 
-export function trimRightChars(str, charlist) {
-  return str.replace(new RegExp('[' + charlist + ']+$'), '');
+export function trimCharsRight(str, chars) {
+  return str.replace(new RegExp(`[${chars}]+$`), '');
 }
 
-export function trimBothChars(str, charlist) {
-  return trimLeftChars(trimRightChars(str, charlist), charlist);
+export function trimChars(str, chars) {
+  return trimCharsLeft(trimCharsRight(str, chars), chars);
 }
 
 export function ensureProperties(baseObj, properties) {
@@ -71,7 +67,7 @@ export function convertNumberValToLocaleString(val, locale = 'sv_SE') {
   if (typeof val !== 'number') {
     return val;
   }
-  if ((locale = 'sv_SE')) {
+  if (locale === 'sv_SE') {
     return val.toString().replace(/\./g, ',');
   }
   return val.toString();
@@ -86,8 +82,8 @@ export function getRandomInteger(min, max) {
 }
 
 export function decodeEntitiesInString(encodedString) {
-  var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
-  var translate = {
+  const translateRegexp = /&(nbsp|amp|quot|lt|gt);/g;
+  const translate = {
     nbsp: ' ',
     amp: '&',
     quot: '"',
@@ -95,11 +91,9 @@ export function decodeEntitiesInString(encodedString) {
     gt: '>'
   };
   return encodedString
-    .replace(translate_re, function (match, entity) {
-      return translate[entity];
-    })
-    .replace(/&#(\d+);/gi, function (match, numStr) {
-      var num = parseInt(numStr, 10);
+    .replace(translateRegexp, (match, entity) => translate[entity])
+    .replace(/&#(\d+);/gi, (match, numStr) => {
+      const num = parseInt(numStr, 10);
       return String.fromCharCode(num);
     });
 }

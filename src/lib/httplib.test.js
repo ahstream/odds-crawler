@@ -1,5 +1,3 @@
-'use strict';
-
 const httplib = require('./httplib.js');
 
 test('ping returns pong', () => {

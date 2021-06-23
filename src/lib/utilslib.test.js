@@ -1,6 +1,9 @@
-'use strict';
-
-import { propertiesExists, trimLeftChars, trimRightChars, trimBothChars } from './utilslib';
+import {
+  propertiesExists,
+  trimCharsLeft,
+  trimCharsRight,
+  trimChars
+} from './utilslib';
 
 test('propertiesExists', () => {
   const obj = {};
@@ -14,23 +17,23 @@ test('propertiesExists', () => {
   expect(propertiesExists(obj2, ['p1', 'p2'])).toBe(false);
 });
 
-test('trimLeftChars()', () => {
-  expect(trimLeftChars('aababcde', 'a')).toBe('babcde');
-  expect(trimLeftChars('babcde', 'a')).toBe('babcde');
-  expect(trimLeftChars('aababcdeaaa', 'a')).toBe('babcdeaaa');
-  expect(trimLeftChars('babcdeaa', 'a')).toBe('babcdeaa');
+test('trimCharsLeft()', () => {
+  expect(trimCharsLeft('aababcde', 'a')).toBe('babcde');
+  expect(trimCharsLeft('babcde', 'a')).toBe('babcde');
+  expect(trimCharsLeft('aababcdeaaa', 'a')).toBe('babcdeaaa');
+  expect(trimCharsLeft('babcdeaa', 'a')).toBe('babcdeaa');
 });
 
-test('trimRightChars()', () => {
-  expect(trimRightChars('aababcdedeeee', 'e')).toBe('aababcded');
-  expect(trimRightChars('aababcdede', 'e')).toBe('aababcded');
-  expect(trimRightChars('eeaababcdedeeee', 'e')).toBe('eeaababcded');
-  expect(trimRightChars('eaababcdede', 'e')).toBe('eaababcded');
+test('trimCharsRight()', () => {
+  expect(trimCharsRight('aababcdedeeee', 'e')).toBe('aababcded');
+  expect(trimCharsRight('aababcdede', 'e')).toBe('aababcded');
+  expect(trimCharsRight('eeaababcdedeeee', 'e')).toBe('eeaababcded');
+  expect(trimCharsRight('eaababcdede', 'e')).toBe('eaababcded');
 });
 
 test('trimLeftRightChars()', () => {
-  expect(trimBothChars('eaababcdedeeee', 'e')).toBe('aababcded');
-  expect(trimBothChars('aababcdede', 'e')).toBe('aababcded');
-  expect(trimBothChars('eaababcdedeeee', 'a')).toBe('eaababcdedeeee');
-  expect(trimBothChars('eaababcdedeeeea', 'a')).toBe('eaababcdedeeee');
+  expect(trimChars('eaababcdedeeee', 'e')).toBe('aababcded');
+  expect(trimChars('aababcdede', 'e')).toBe('aababcded');
+  expect(trimChars('eaababcdedeeee', 'a')).toBe('eaababcdedeeee');
+  expect(trimChars('eaababcdedeeeea', 'a')).toBe('eaababcdedeeee');
 });
