@@ -1,7 +1,11 @@
-// DECLARES -----------------------------------------------------------------------------
+/**
+ * Copyright (c) 2021
+ * FILE DESCRIPTION
+ */
 
 const fs = require('fs');
 const util = require('util');
+
 const winston = require('winston');
 
 const defaultOptions = {
@@ -9,7 +13,9 @@ const defaultOptions = {
   timestampFormat: 'YYYY-MM-DD HH:mm:ss.SSS'
 };
 
-// EXPORTED FUNCTIONS -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// MAIN FUNCTIONS
+// ------------------------------------------------------------------------------------------------
 
 // exports.createLogger = createLogger;
 
@@ -39,7 +45,9 @@ exports.deleteLogFiles = (dir) => {
   }
 };
 
-// HELPER FUNCTIONS -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// HELPER FUNCTIONS
+// ------------------------------------------------------------------------------------------------
 
 export function trimCharsRight(str, charlist) {
   return str.replace(new RegExp(`[${charlist}]+$`), '');
@@ -59,28 +67,21 @@ function utilFormatter() {
   return { transform };
 }
 
-export function createLogger(level = '', dir = 'logs', options = {}) {
-  const levelVal = level !== '' ? level : defaultOptions.level;
-  const timestampFormatVal =
-    options.timestampFormat ?? defaultOptions.timestampFormat;
+export function createLogger(logLevel = '', dir = 'logs', options = {}) {
+  const logLevelVal = logLevel !== '' ? logLevel : defaultOptions.level;
+  const timestampFormatVal = options.timestampFormat ?? defaultOptions.timestampFormat;
 
   const colorFormatter = winston.format.combine(
     winston.format.timestamp({ format: timestampFormatVal }),
     utilFormatter(),
     winston.format.colorize(),
-    winston.format.printf(
-      ({ level, message, label, timestamp }) =>
-        `${timestamp} ${label || '-'} ${level}: ${message}`
-    )
+    winston.format.printf(({ level, message, label, timestamp }) => `${timestamp} ${label || '-'} ${level}: ${message}`)
   );
 
   const noColorFormatter = winston.format.combine(
     winston.format.timestamp({ format: timestampFormatVal }),
     utilFormatter(),
-    winston.format.printf(
-      ({ level, message, label, timestamp }) =>
-        `${timestamp} ${label || '-'} ${level}: ${message}`
-    )
+    winston.format.printf(({ level, message, label, timestamp }) => `${timestamp} ${label || '-'} ${level}: ${message}`)
   );
 
   const dirVal = trimCharsRight(dir, '/');
@@ -93,7 +94,7 @@ export function createLogger(level = '', dir = 'logs', options = {}) {
     transports: [
       new winston.transports.Console({
         format: colorFormatter,
-        level: levelVal
+        level: logLevelVal
       }),
       new winston.transports.File({
         format: noColorFormatter,
@@ -115,7 +116,7 @@ export function createLogger(level = '', dir = 'logs', options = {}) {
         filename: `${dirVal}/verbose.log`,
         level: 'verbose'
       })
-      // new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/silly.log`, level: 'silly' }),
+      // new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/silly.log`, logLevel: 'silly' }),
     ]
   });
 

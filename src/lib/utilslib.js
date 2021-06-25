@@ -1,10 +1,14 @@
-// DECLARES -----------------------------------------------------------------------------
+/**
+ * Copyright (c) 2021
+ * FILE DESCRIPTION
+ */
 
 /* eslint-disable no-extend-native */
 /* eslint-disable func-names */
-/* eslint-disable import/prefer-default-export */
 
-// EXPORTED FUNCTIONS -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// MAIN FUNCTIONS
+// ------------------------------------------------------------------------------------------------
 
 export function isValidUrl(url) {
   try {

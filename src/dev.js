@@ -1,50 +1,39 @@
-// DECLARES -----------------------------------------------------------------------------
+/**
+ * Copyright (c) 2021
+ * FILE DESCRIPTION
+ */
 
-import { ignoreLinks, getNextMatches, getNextMatchesOneDay, processMatchLinks, resetOddsHistoryDB } from './match/match';
+import { createLogger, deleteLogFiles } from './lib/loggerlib';
 
-const bookielib = require('./bookie/bookie.js');
-const crawlerQueue = require('./crawler/crawlerQueue.js');
-const dataWriter = require('./dataWriter/dataWriter');
-const { createLogger, deleteLogFiles } = require('./lib/loggerlib');
-const match = require('./match/match.js');
-const matchLink = require('./match/matchLink.js');
-const mongo = require('./mongo/mongodb.js');
+const { program } = require('commander');
 
-deleteLogFiles('logs/');
+const match = require('./match.js');
+const matchLink = require('./matchLink.js');
+const mongo = require('./mongodb.js');
+
 const log = createLogger();
 
-// VARIABLES -----------------------------------------------------------------------------
-
-// SESSION FUNCTIONS -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// MAIN FUNCTIONS
+// ------------------------------------------------------------------------------------------------
 
 async function run() {
+  deleteLogFiles('logs/');
   log.info('Dev start...');
 
   await mongo.connect();
 
   try {
-    if (false) {
-      log.info('Reset result files...');
-      dataWriter.resetFiles('event');
-      await crawlerQueue.dispatch(1);
-    }
-
-    if (false) {
-      dataWriter.resetFiles('bookie');
-      // await bookielib.getBookiesFromWebPage();
-      await bookielib.crawlBookies();
-      // await metadatalib.getMetadataFromWebPage();
-    }
-
     if (true) {
-      const date = new Date(Date.parse('2021-06-09')); // new Date();
+      const date = new Date(Date.parse('2021-06-24')); // new Date();
+      log.info('resetOddsHistoryDB...');
       await match.resetOddsHistoryDB();
+      log.info('resetDB...');
       await matchLink.resetDB();
-      const r1 = await matchLink.crawlPeriod('soccer', 1, date, 0, 0);
-      await matchLink.processMatchLinks();
-      // await matchLink.processOtherLinks();
-      // await match.processMatches();
-      // await match.exportMatches();
+      log.info('crawlPeriod...');
+      const r1 = await matchLink.crawlPeriod('soccer', 1, date, 1, 0);
+      log.info('processMatchLinks...');
+      await matchLink.processMatchLinks('', false);
     }
   } catch (e) {
     log.error('error:', e);
@@ -53,6 +42,8 @@ async function run() {
   }
 }
 
-log.info('Dev end!');
+program.option('-c, --command <name>', 'command name', 'default');
+program.parse();
+console.log(`command: ${program.opts().command}`);
 
 run();

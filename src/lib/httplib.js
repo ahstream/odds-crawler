@@ -1,11 +1,13 @@
-// DECLARES -----------------------------------------------------------------------------
+/**
+ * Copyright (c) 2021
+ * FILE DESCRIPTION
+ */
 
 const axios = require('axios');
 
-// EXPORTED FUNCTIONS -----------------------------------------------------------------------------
-
-// Test ping function
-export const ping = () => 'pong';
+// ------------------------------------------------------------------------------------------------
+// MAIN FUNCTIONS
+// ------------------------------------------------------------------------------------------------
 
 export function get(url, config = {}) {
   return axios.get(url, config);
@@ -91,22 +93,18 @@ export function isSuccess(response, url = '') {
   return successFlag;
 }
 
-// HELPER FUNCTIONS -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// HELPER FUNCTIONS
+// ------------------------------------------------------------------------------------------------
 
 function handleError(error) {
   if (error.response) {
-    /*
-     * The request was made and the server responded with a
-     * status code that falls out of the range of 2xx
-     */
+    // The request was made and the server responded with a status code that falls out of the range of 2xx
     return error.response;
   }
   if (error.request) {
-    /*
-     * The request was made but no response was received, `error.request`
-     * is an instance of XMLHttpRequest in the browser and an instance
-     * of http.ClientRequest in Node.js
-     */
+    // The request was made but no response was received, `error.request` is an instance of XMLHttpRequest in the
+    // browser and an instance of http.ClientRequest in Node.js
     return error.request;
   }
   // Something happened in setting up the request and triggered an Error
@@ -115,12 +113,13 @@ function handleError(error) {
 }
 
 function sleep(ms, randomizeMin = 100, randomizeMax = 100) {
-  const msVal = randomizeMin - randomizeMax !== 0 ? ((getRandomIntInclusive(randomizeMin, randomizeMax) / 100) * ms).toFixed(0) : ms;
+  const randomizeFactor = randomizeMin - randomizeMax;
+  const msVal = randomizeFactor ? ((getRandomIntInclusive(randomizeMin, randomizeMax) / 100) * ms).toFixed(0) : ms;
   return new Promise((resolve) => setTimeout(resolve, msVal));
 }
 
 function getRandomIntInclusive(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
+  const minCeil = Math.ceil(min);
+  const maxFloor = Math.floor(max);
+  return Math.floor(Math.random() * (maxFloor - minCeil + 1) + minCeil);
 }
