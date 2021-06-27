@@ -39,6 +39,7 @@ class Mongo {
   async dropCollection(name) {
     try {
       await this.db.collection(name).drop();
+      log.debug(`Mongo DB: Dropped collection ${name}`);
     } catch (ex) {
       // console.log(ex);
     }

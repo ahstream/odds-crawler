@@ -3,9 +3,13 @@
  * FILE DESCRIPTION
  */
 
+import { writeToFile } from './dataWriter';
 import { CustomError } from './exceptions';
+import { updateOddsHistoryDB } from './oddsHistory';
 import { parseMatchPageEvent } from './parser';
 import { httpGetAllowedHtmltext } from './provider';
+
+const _ = require('lodash');
 
 const betlib = require('./bet');
 const feedlib = require('./feed');
@@ -15,12 +19,11 @@ const scorelib = require('./score');
 
 const log = createLogger();
 
-// ------------------------------------------------------------------------------------------------
-// MAIN FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+// MAIN FUNCTIONS ---------------------------------------------------------------------------------
 
-export async function resetOddsHistoryDB() {
-  await mongodb.dropCollection('oddsHistory');
+export function exportMatchToFile(match) {
+  match.score.url = match.url;
+  writeToFile(match.score, 'score');
 }
 
 export async function getMatchFromWebPage(parsedUrl) {
@@ -38,102 +41,49 @@ export async function getMatchFromWebPage(parsedUrl) {
     throw new CustomError('Failed getting bet types', { match, htmltext });
   }
 
+  // log.debug(match);
+  // return match;
+
   const numBets = await feedlib.processMatchFeeds(match);
   if (numBets < 1) {
     throw new CustomError('No bets in feed', { url: match.url, htmltext });
   }
   log.debug(`Num bets in feed: ${numBets}`);
 
-  /*
-  event.hasOdds = _.isEmpty(event.odds) == false;
-  if (event.hasOdds) {
-    marketoddslib.updateMarketOdds(event);
+  match.hasOdds = _.isEmpty(match.odds) === false;
+  if (match.hasOdds) {
+    // todo: marketoddslib.updateMarketOdds(match);
   }
-  event.ok = true;
-       */
-
-  // log.verbose(match);
+  match.ok = true;
 
   return match;
 }
 
-export async function updateMatchOddsHistoryDB(match) {
-  const historyItems = [];
-
-  Object.keys(match.history).forEach((key, _index) => {
-    const item = match.history[key];
-    const mongoItem = {
-      _id: item.id,
-      matchId: item.matchId,
-      marketId: item.marketId,
-      outcome: item.outcome,
-      bookie: item.bookie,
-      odds: item.odds,
-      date: item.date,
-      volume: item.volume
-    };
-    historyItems.push(mongoItem);
-  });
-
-  if (historyItems.length === 0) {
-    return { total: 0, new: 0, existing: 0 };
-  }
-
-  const result = await mongodb.db
-    .collection('oddsHistory')
-    .insertMany(historyItems, { ordered: false })
-    .catch((err, res) => {
-      if (err.code !== 11000) {
-        log.error('Unknown error when inserting many documents to mongodb:', err.message);
-        log.debug('Unknown error when inserting many documents to mongodb:', err.message, err);
-        return { insertedCount: -1 };
-      }
-      return { insertedCount: err.result.result.nInserted };
-    });
-  return {
-    total: historyItems.length,
-    new: result.insertedCount,
-    existing: historyItems.length - result.insertedCount
-  };
-}
-
-export async function moveToExportedMatches() {
-  /*
-  const exportedMatchesCol = mongodb.db.collection('exportedMatches');
-  const matchesCol = mongodb.db.collection('matches');
-  for (const match of await matchesCol.find({}).toArray()) {
-    if (!(await exportedMatchExists(match._id))) {
-      await exportedMatchesCol.insertOne(match);
-    }
-  }
-  await matchesCol.deleteMany({});
-     */
+export async function updateMatchInDB(match) {
+  const result = await updateOddsHistoryDB(match.oddsHistory);
+  return { oddsHistory: result };
 }
 
 export function hasNormalMatchResult(match) {
-  return match.score.isComplete;
+  return match?.score?.isComplete;
 }
 
-// ------------------------------------------------------------------------------------------------
-// HELPER FUNCTIONS
-// ------------------------------------------------------------------------------------------------
-
-async function getMatchFromDB(matchId) {
-  return (await mongodb.db.collection('matches').find({ _id: matchId }).toArray())[0];
-}
-
-export async function exportedMatchExists(matchId) {
-  return (await mongodb.db.collection('exportedMatches').find({ _id: matchId }).limit(1).count()) === 1;
-}
+// CREATORS ----------------------------------------------------------------------------------------
 
 function createMatch(parsedUrl) {
   return {
     id: parsedUrl.matchId,
     status: 'new',
-    parsedUrl,
+    sport: parsedUrl.sport,
+    sportId: null,
+    country: parsedUrl.country,
+    tournament: parsedUrl.tournament,
+    tournamentId: null,
+    tournamentKey: parsedUrl.tournamentKey,
     url: parsedUrl.matchUrl,
+    parsedUrl,
     startTime: null,
-    startTimeUnix: null,
+    timestamp: null,
     home: null,
     away: null,
     betTypes: null,
@@ -141,6 +91,6 @@ function createMatch(parsedUrl) {
     marketResult: {},
     marketOdds: {},
     odds: {},
-    history: {}
+    oddsHistory: {}
   };
 }

@@ -13,9 +13,7 @@ const provider = require('./provider');
 
 const log = createLogger();
 
-// ------------------------------------------------------------------------------------------------
-// MAIN FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+// MAIN FUNCTIONS ---------------------------------------------------------------------------------
 
 export function parseMatchUrl(url) {
   const result = url.match(/(?:https:\/\/www\.oddsportal\.com)?\/([^/]*\/)?([^/]*\/)?([^/]*\/)?([^/]*\/)?/i);
@@ -26,6 +24,7 @@ export function parseMatchUrl(url) {
   const sport = utilslib.trimChars(result[1] ?? '', '/').trim();
   const country = utilslib.trimChars(result[2] ?? '', '/').trim();
   const tournament = utilslib.trimChars(result[3] ?? '', '/').trim();
+  const tournamentKey = `${sport}/${country}/${tournament}`;
   const match = utilslib.trimChars(result[4] ?? '', '/').trim();
   const matchUrl = `/${sport}/${country}/${tournament}/${match}/`;
 
@@ -39,6 +38,7 @@ export function parseMatchUrl(url) {
     sport,
     country,
     tournament,
+    tournamentKey,
     match,
     matchId,
     matchUrl,

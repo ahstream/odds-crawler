@@ -3,7 +3,7 @@
  * FILE DESCRIPTION
  */
 
-import { updateMatchOddsHistoryDB, getMatchFromWebPage } from './match.js';
+import { updateMatchInDB, getMatchFromWebPage, exportMatchToFile } from './match.js';
 import { parseNextMatchesData, parseNextMatchesHashes, parseNextMatchesJson } from './parser';
 import { createLongDateString, createLongTimestamp, httpGetAllowedHtmltext } from './provider';
 
@@ -14,15 +14,14 @@ const log = createLogger();
 
 const ONE_HOUR = 1000 * 60 * 60;
 
-// ------------------------------------------------------------------------------------------------
-// MAIN FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+const MATCH_LINKS = 'matchLinks';
+const MATCH_LINKS_COMPLETED = 'matchLinksCompleted';
+const OTHER_LINKS = 'otherLinks';
+const IGNORED_LINKS = 'ignoredLinks';
 
-export async function resetDB() {
-  await mongodb.dropCollection('matchLinks');
-  await mongodb.dropCollection('matchLinksCompleted');
-  await mongodb.dropCollection('otherLinks');
-}
+// todo: <span class="active"><strong><a href="[^"]*">([0-9\/\-]*)<\/a><\/strong><\/span>
+
+// CRAWL MATCH PAGES -------------------------------------------------------------------------------
 
 export async function crawlMatchPages(sport, sportId, startDate, daysForward, daysBack) {
   log.info(`Crawl match pages from date: ${startDate.toLocaleDateString()}, sportName: ${sport}, sportId: ${sportId}, forward: ${daysForward}, back: ${daysBack}`);
@@ -38,7 +37,7 @@ export async function crawlMatchPages(sport, sportId, startDate, daysForward, da
 
   for (const date of dates) {
     try {
-      const result = await crawlDay(sport, sportId, date);
+      const result = await crawlMatchPage(sport, sportId, date);
       log.debug('Match links crawled:', result);
 
       numLinks.numMatchLinks.total += result.numMatchLinks.total;
@@ -60,51 +59,47 @@ export async function crawlMatchPages(sport, sportId, startDate, daysForward, da
   return numLinks;
 }
 
+async function crawlMatchPage(sport, sportId, date) {
+  log.debug(`Crawl match page for date: ${date.toLocaleDateString()}, sport: ${sport}, sportId: ${sportId}`);
+
+  const dateStr = createLongDateString(date);
+  const url = `https://www.oddsportal.com/matches/${sport}/${dateStr}/`;
+  const htmltext = await httpGetAllowedHtmltext([url]);
+
+  const hashes = parseNextMatchesHashes(htmltext);
+  const nextMatches = await getNextMatchesByHashes(sportId, dateStr, hashes);
+
+  const numMatchLinks = await addMatchLinksToDB(nextMatches.parsedMatchUrls, dateStr);
+  const numOtherLinks = await addOtherLinksToDB(nextMatches.otherUrls, dateStr);
+
+  return { numMatchLinks, numOtherLinks };
+}
+
+export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
+  const urls = [];
+  const baseUrl = 'https://fb.oddsportal.com/ajax-next-games/';
+  urls.push(`${baseUrl}${sportId}/2/1/${dateStr}/${decodeURI(hashes.xHash[dateStr])}.dat?_=${createLongTimestamp()}`);
+  urls.push(`${baseUrl}${sportId}/2/1/${dateStr}/${decodeURI(hashes.xHashf[dateStr])}.dat?_=${createLongTimestamp()}`);
+  const htmltext = await httpGetAllowedHtmltext(urls);
+
+  const result = parseNextMatchesJson(htmltext);
+  if (result && typeof result.d === 'string') {
+    return parseNextMatchesData(result.d);
+  }
+
+  log.error('Failed getNextMatchesByHashes, parseNextMatchesJson:', result);
+  return null;
+}
+
+// CRAWL MATCH LINKS -------------------------------------------------------------------------------
+
 export async function crawlMatchLinks(status = null, force = false) {
-  const now = new Date();
-  const dateStr = createLongDateString(new Date());
-
-  const baseCriteria = {
-    isCompleted: { $ne: true }
-  };
-  if (!force) {
-    baseCriteria.nextCrawlTime = { $lte: now };
-  }
-  if (status) {
-    baseCriteria.status = { $eq: status };
-  }
-
-  const matchLinksCol = mongodb.db.collection('matchLinks');
-
-  const nextMatchLinks = await matchLinksCol.find({ ...baseCriteria, dateStr: { $gte: dateStr } }).toArray();
-  const prevMatchLinks = await matchLinksCol.find({ ...baseCriteria, dateStr: { $lt: dateStr } }).toArray();
-
-  const matchLinks = [...nextMatchLinks, ...prevMatchLinks];
-  const numMatchLinks = matchLinks.length;
-  let ct = 0;
-
-  for (const matchLink of matchLinks) {
-    ct++;
-    // add to tournaments and check if should exclude or not. if exclude: set status = 'exclude' and move to exclude table!
-    //
+  const matchLinks = await getMatchLinksFromDB(status, force);
+  for (const [idx, matchLink] of matchLinks.entries()) {
     try {
-      matchLink.lastCrawlTime = new Date();
-      const match = await getMatchFromWebPage(matchLink.parsedUrl);
-      //  const tournament = updateTournaments(match);
-      const result = await updateMatchOddsHistoryDB(match);
-      log.info(`Match link ${ct} of ${numMatchLinks} crawled: ${result.new} new odds, ${result.existing} dups, ${matchLink.parsedUrl.matchUrl}`);
-      matchLink.isCompleted = match.params.isFinished;
-      matchLink.status = match.status;
-      matchLink.startTime = match.score.startTime;
-      matchLink.tournamentId = match.params.tournamentId;
-      matchLink.sportId = match.params.sportId;
-    } catch (ex) {
-      log.error(ex.message, matchLink.parsedUrl.matchUrl, ex.name);
-      matchLink.errorMsg = ex.message;
-      matchLink.error = { name: ex.name, message: ex.message, data: ex.data, stack: ex.stack };
-      matchLink.errorCount++;
-      matchLink.isCompleted = null;
-      matchLink.status = 'error';
+      await crawlMatchLink(matchLink, idx + 1, matchLinks.length);
+    } catch (error) {
+      handleCrawlMatchLinkError(matchLink, error);
     }
     scheduleNextCrawl(matchLink);
     await updateMatchLinkInDB(matchLink);
@@ -113,7 +108,34 @@ export async function crawlMatchLinks(status = null, force = false) {
   return true;
 }
 
-// todo: <span class="active"><strong><a href="[^"]*">([0-9\/\-]*)<\/a><\/strong><\/span>
+async function crawlMatchLink(matchLink, count, totalCount) {
+  // todo: add to tournaments and check if should exclude or not.
+  const match = await getMatchFromWebPage(matchLink.parsedUrl);
+  exportMatchToFile(match);
+  //  const tournament = updateTournaments(match);
+  const result = await updateMatchInDB(match);
+  handleCrawlMatchLinkSuccess(matchLink, match);
+  log.info(`Match link ${count} of ${totalCount} crawled: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${matchLink.parsedUrl.matchUrl}`);
+}
+
+function handleCrawlMatchLinkSuccess(matchLink, match) {
+  matchLink.lastCrawlTime = new Date();
+  matchLink.isCompleted = match.params.isFinished;
+  matchLink.status = match.status;
+  matchLink.startTime = match.score.startTime;
+  matchLink.tournamentId = match.params.tournamentId;
+  matchLink.sportId = match.params.sportId;
+}
+
+function handleCrawlMatchLinkError(matchLink, error) {
+  log.error(error.message, matchLink.parsedUrl.matchUrl, error.name);
+
+  matchLink.errorMsg = error.message;
+  matchLink.error = { name: error.name, message: error.message, data: error.data, stack: error.stack };
+  matchLink.errorCount++;
+  matchLink.isCompleted = null;
+  matchLink.status = 'error';
+}
 
 function scheduleNextCrawl(matchLink) {
   const now = new Date();
@@ -159,67 +181,107 @@ function calcHoursToNextCrawl(matchLink) {
   return 4;
 }
 
+
+async function matchLinkExistsInDB(matchId) {
+  if ((await mongodb.db.collection(MATCH_LINKS).find({ _id: matchId }).limit(1).count()) === 1) {
+    return true;
+  }
+  return (await mongodb.db.collection('matchLinksCompleted').find({ _id: matchId }).limit(1).count()) === 1;
+}
+
+async function getMatchLinksFromDB(status, force) {
+  const now = new Date();
+  const dateStr = createLongDateString(new Date());
+
+  const baseCriteria = {
+    isCompleted: { $ne: true }
+  };
+  if (!force) {
+    baseCriteria.nextCrawlTime = { $lte: now };
+  }
+  if (status) {
+    baseCriteria.status = { $eq: status };
+  }
+
+  const matchLinksCol = mongodb.db.collection(MATCH_LINKS);
+
+  const nextMatchLinks = await matchLinksCol.find({ ...baseCriteria, dateStr: { $gte: dateStr } }).toArray();
+  const prevMatchLinks = await matchLinksCol.find({ ...baseCriteria, dateStr: { $lt: dateStr } }).toArray();
+
+  return [...nextMatchLinks, ...prevMatchLinks];
+}
+
 export async function updateMatchLinkInDB(matchLink) {
   if (matchLink.isCompleted) {
-    const completedItem = createCompletedMatchLink(matchLink);
+    const completedItem = createMatchLinkCompleted(matchLink);
     await mongodb.db.collection('matchLinksCompleted').updateOne({ _id: matchLink._id }, { $set: completedItem }, { upsert: true });
-    await mongodb.db.collection('matchLinks').deleteOne({ _id: matchLink._id });
+    await mongodb.db.collection(MATCH_LINKS).deleteOne({ _id: matchLink._id });
   } else {
-    const replacementMatchLink = { ...matchLink };
-    await mongodb.db.collection('matchLinks').replaceOne({ _id: matchLink._id }, replacementMatchLink);
+    const replacementItem = { ...matchLink };
+    await mongodb.db.collection(MATCH_LINKS).replaceOne({ _id: matchLink._id }, replacementItem);
   }
 }
 
-export async function processOtherLinks() {
-  const otherLinksCol = mongodb.db.collection('otherLinks');
-  const ignoredLinksCol = mongodb.db.collection('otherLinksIgnored');
+async function addMatchLinksToDB(parsedMatchUrls, dateStr) {
+  const now = new Date();
+  let numNew = 0;
+  let numExisting = 0;
+  let numIgnored = 0;
+  const matchLinksCol = mongodb.db.collection(MATCH_LINKS);
+  for (const parsedUrl of parsedMatchUrls) {
+    if (!(await validateTournament(parsedUrl))) {
+      numIgnored++;
+    } else if (!(await matchLinkExistsInDB(parsedUrl.matchId))) {
+      await matchLinksCol.insertOne(createMatchLink(parsedUrl, dateStr, now));
+      numNew++;
+    } else {
+      numExisting++;
+    }
+  }
+  return { total: parsedMatchUrls.length, new: numNew, existing: numExisting, ignored: numIgnored };
+}
+
+// OTHER LINKS -------------------------------------------------------------------------------
+
+export async function ignoreOtherLinks() {
+  const otherLinksCol = mongodb.db.collection(OTHER_LINKS);
+  const ignoredLinksCol = mongodb.db.collection(IGNORED_LINKS);
   for (const link of await otherLinksCol.find({}).toArray()) {
-    if (!(await ignoredLinkExists(link._id))) {
+    if (!(await ignoredLinkExistsInDB(link._id))) {
       await ignoredLinksCol.insertOne(link);
     }
   }
   await otherLinksCol.deleteMany({});
 }
 
-// ------------------------------------------------------------------------------------------------
-// HELPER FUNCTIONS
-// ------------------------------------------------------------------------------------------------
-
-async function crawlDay(sportName, sportId, date) {
-  log.debug(`Crawl match links on date: ${date.toLocaleDateString()}, sportName: ${sportName}, sportId: ${sportId}`);
-
-  const dateStr = createLongDateString(date);
-  const url = `https://www.oddsportal.com/matches/${sportName}/${dateStr}/`;
-  const htmltext = await httpGetAllowedHtmltext([url]);
-
-  const hashes = parseNextMatchesHashes(htmltext);
-  const nextMatches = await getNextMatchesByHashes(sportId, dateStr, hashes);
-
-  const numMatchLinks = await addMatchLinks(dateStr, nextMatches.parsedMatchUrls);
-  const numOtherLinks = await addOtherLinks(dateStr, nextMatches.otherUrls);
-
-  return { numMatchLinks, numOtherLinks };
-}
-
-export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
-  const urls = [];
-  const baseUrl = 'https://fb.oddsportal.com/ajax-next-games/';
-  urls.push(`${baseUrl}${sportId}/2/1/${dateStr}/${decodeURI(hashes.xHash[dateStr])}.dat?_=${createLongTimestamp()}`);
-  urls.push(`${baseUrl}${sportId}/2/1/${dateStr}/${decodeURI(hashes.xHashf[dateStr])}.dat?_=${createLongTimestamp()}`);
-  const htmltext = await httpGetAllowedHtmltext(urls);
-
-  const result = parseNextMatchesJson(htmltext);
-  if (result && typeof result.d === 'string') {
-    return parseNextMatchesData(result.d);
+async function addOtherLinksToDB(otherUrls, dateStr) {
+  const now = new Date();
+  let numNew = 0;
+  let numExisting = 0;
+  let numIgnored = 0;
+  const otherLinksCol = mongodb.db.collection(OTHER_LINKS);
+  for (const url of otherUrls) {
+    if (await ignoredLinkExistsInDB(url)) {
+      numIgnored++;
+    } else if (!(await otherLinkExistsInDB(url))) {
+      await otherLinksCol.insertOne(createOtherLink(url, dateStr, now));
+      numNew++;
+    } else {
+      numExisting++;
+    }
   }
-
-  log.error('Failed getNextMatchesByHashes, parseNextMatchesJson:', result);
-  return null;
+  return { total: otherUrls.length, new: numNew, existing: numExisting, ignored: numIgnored };
 }
 
-/**
- * Misc functions
- */
+async function otherLinkExistsInDB(url) {
+  return (await mongodb.db.collection(OTHER_LINKS).find({ _id: url }).limit(1).count()) === 1;
+}
+
+async function ignoredLinkExistsInDB(url) {
+  return (await mongodb.db.collection(IGNORED_LINKS).find({ _id: url }).limit(1).count()) === 1;
+}
+
+// MISC -------------------------------------------------------------------------------------------
 
 function getDateRange(date, days, inc) {
   const currentDate = new Date(date);
@@ -231,84 +293,22 @@ function getDateRange(date, days, inc) {
   return dates;
 }
 
-/**
- * Add to DB functions
- */
-
-async function addMatchLinks(dateStr, parsedMatchUrls) {
-  const now = new Date();
-  let numNew = 0;
-  let numExisting = 0;
-  let numIgnored = 0;
-  const matchLinksCol = mongodb.db.collection('matchLinks');
-  for (const parsedUrl of parsedMatchUrls) {
-    if (!(await validateTournament(parsedUrl))) {
-      numIgnored++;
-    } else if (!(await matchLinkExists(parsedUrl.matchId))) {
-      await matchLinksCol.insertOne(createMatchLink(parsedUrl, dateStr, now));
-      numNew++;
-    } else {
-      numExisting++;
-    }
-  }
-  return { total: parsedMatchUrls.length, new: numNew, existing: numExisting, ignored: numIgnored };
-}
-
 async function validateTournament(parsedUrl) {
   // todo: implement!
   return true;
 }
 
-async function addOtherLinks(dateStr, otherUrls) {
-  const now = new Date();
-  let numNew = 0;
-  let numExisting = 0;
-  let numIgnored = 0;
-  const otherLinksCol = mongodb.db.collection('otherLinks');
-  for (const url of otherUrls) {
-    if (await ignoredLinkExists(url)) {
-      numIgnored++;
-    } else if (!(await otherLinkExists(url))) {
-      await otherLinksCol.insertOne(createOtherLink(url, dateStr, now));
-      numNew++;
-    } else {
-      numExisting++;
-    }
-  }
-  return { total: otherUrls.length, new: numNew, existing: numExisting, ignored: numIgnored };
-}
-
-/**
- * Exist checker functions
- */
-
-async function matchLinkExists(matchId) {
-  if ((await mongodb.db.collection('matchLinks').find({ _id: matchId }).limit(1).count()) === 1) {
-    return true;
-  }
-  return (await mongodb.db.collection('matchLinksCompleted').find({ _id: matchId }).limit(1).count()) === 1;
-}
-
-async function otherLinkExists(url) {
-  return (await mongodb.db.collection('otherLinks').find({ _id: url }).limit(1).count()) === 1;
-}
-
-async function ignoredLinkExists(url) {
-  return (await mongodb.db.collection('otherLinksIgnored').find({ _id: url }).limit(1).count()) === 1;
-}
-
-/**
- * Creator functions
- */
+// CREATORS ---------------------------------------------------------------------------------------
 
 function createMatchLink(parsedUrl, dateStr, now) {
   return {
     _id: parsedUrl.matchId,
-    sport: null,
+    sport: parsedUrl.sport,
     sportId: null,
-    tournament: null,
+    country: parsedUrl.country,
+    tournament: parsedUrl.tournament,
     tournamentId: null,
-    country: null,
+    tournamentKey: parsedUrl.tournamentKey,
     status: 'new',
     isCompleted: false,
     errorCount: 0,
@@ -320,18 +320,16 @@ function createMatchLink(parsedUrl, dateStr, now) {
     hoursToStart: null,
     hoursToNextCrawl: null,
     lastCrawlTime: null,
-    parsedUrl,
-    dateStr
+    dateStr,
+    parsedUrl
   };
 }
 
-function createCompletedMatchLink(matchLink) {
+function createMatchLinkCompleted(matchLink) {
   return {
     _id: matchLink._id,
-    sport: matchLink.parsedUrl.sport,
-    country: matchLink.parsedUrl.country,
-    tournament: matchLink.parsedUrl.tournament,
-    tournamentId: matchLink.tournamentId
+    tournamentId: matchLink.tournamentId,
+    tournamentKey: matchLink.tournamentKey
   };
 }
 

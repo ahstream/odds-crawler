@@ -16,12 +16,19 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 export async function parseScore(match) {
-  switch (match.params.sportId) {
-    case 1:
+  switch (match.sport) {
+    case 'soccer':
+      return parseScoreSoccer(match);
+    case 'tennis':
       return parseScoreSoccer(match);
     default:
-      throw new CustomError('Unsupported sport', { sportId: match.params.sportId, url: match.url });
+      throw new CustomError('Unsupported sport', { sport: match.sport, url: match.url });
   }
+}
+
+async function parseScoreTennis(match) {
+  const score = createScore();
+  return score;
 }
 
 async function parseScoreSoccer(match) {
@@ -59,10 +66,13 @@ async function parseScoreSoccer(match) {
   score.isComplete = null;
 
   score.startTime = new Date(parsedScore.startTime * 1000);
-  score.startTimeUnix = parsedScore.startTime;
+  score.timestamp = parsedScore.startTime;
 
   const result = parsedScore.result;
   const resultAlert = parsedScore['result-alert'];
+
+  score.result = result;
+  score.resultAlert = resultAlert;
 
   if (resultAlert !== '') {
     if (resultAlert.match(/.*(Canceled).*/i)) {
@@ -106,6 +116,7 @@ async function parseScoreSoccer(match) {
   }
 
   const ptResult = result.match(/\(([0-9]+):([0-9]+)(, ([0-9]+):([0-9]+))*\)/i);
+  score.ptResult = ptResult;
 
   if (ptResult && ptResult.length >= 1) {
     const ptText = ptResult[0].trim();
@@ -204,9 +215,12 @@ export function createScore(options = {}) {
     // finalResultOnly: false,
 
     startTime: null,
-    startTimeUnix: null,
+    timestamp: null,
 
+    result: null,
     ptScores: null,
+    ptResult: null,
+    resultAlert: null,
 
     sc1_1: null, // FTOT
     sc1_2: null,

@@ -12,9 +12,9 @@ const provider = require('./provider');
 
 const log = createLogger();
 
-// ------------------------------------------------------------------------------------------------
-// MAIN FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+const ODDS_HISTORY = 'oddsHistory';
+
+//  MAIN FUNCTIONS --------------------------------------------------------------------------------
 
 export function addOdds(match, marketId, oddsId, betArgs, outcomeArgs, bookieArgs, oddsItem) {
   if (!oddsItem.date) {
@@ -23,7 +23,7 @@ export function addOdds(match, marketId, oddsId, betArgs, outcomeArgs, bookieArg
   }
 
   const id = createId(oddsId, oddsItem.date);
-  match.history[id] = createOdds(id, match, marketId, betArgs, outcomeArgs, bookieArgs, oddsItem);
+  match.oddsHistory[id] = createOddsHistory(id, match, marketId, betArgs, outcomeArgs, bookieArgs, oddsItem);
 }
 
 export function addHistory(match, feed, marketId, oddsId, betArgs, outcomeArgs, bookieArgs) {
@@ -57,62 +57,62 @@ export function addHistory(match, feed, marketId, oddsId, betArgs, outcomeArgs, 
   }
 }
 
-export function createOddsHistoryDBItem(oddsHistory) {
-  return {
-    _id: oddsHistory.id,
-    outcome: oddsHistory.outcome,
-    bookie: oddsHistory.bookie,
-    odds: oddsHistory.odds,
-    date: oddsHistory.date,
-    volume: oddsHistory.volume
-  };
-}
+// DB ----------------------------------------------------------------------------------------
 
 export async function initOddsHistoryDB() {
-  const collName = 'oddsHistory';
-  const collSchema = getOddsHistorySchema();
-  if (!await mongodb.collectionExists(collName)) {
-    await mongodb.db.createCollection(collName, { validator: collSchema });
-  } else {
-    await mongodb.db.command({ collMod: collName, validator: collSchema });
+  const collSchema = createOddsHistoryDBSchema();
+  if (!await mongodb.collectionExists(ODDS_HISTORY)) {
+    await mongodb.db.createCollection(ODDS_HISTORY);
   }
+  const result = await mongodb.db.command({
+    collMod: ODDS_HISTORY,
+    validator: createOddsHistoryDBSchema()
+  });
+  log.debug('initOddsHistoryDB result:', result);
 }
 
-async function getOddsHistorySchema() {
-  return {
-    $jsonSchema: {
-      bsonType: 'object',
-      required: ['outcome', 'bookie', 'odds', 'date', 'volume'],
-      properties: {
-        outcome: {
-          bsonType: 'int'
-        },
-        bookie: {
-          bsonType: 'int'
-        },
-        odds: {
-          bsonType: 'double'
-        },
-        date: {
-          bsonType: 'date'
-        },
-        volume: {
-          bsonType: 'int'
-        }
+export async function updateOddsHistoryDB(history) {
+  const oddsHistoryItems = [];
+  Object.keys(history).forEach((key, _index) => {
+    oddsHistoryItems.push(createOddsHistoryDBItem(history[key]));
+  });
+  if (oddsHistoryItems.length === 0) {
+    return { total: 0, new: 0, existing: 0 };
+  }
+
+  const result = await mongodb.db
+    .collection(ODDS_HISTORY)
+    .insertMany(oddsHistoryItems, { ordered: false })
+    .catch((err, res) => {
+      switch (err.code) {
+        case 121:
+          log.error('Mongo DB Error:', err.message);
+          log.debug('Mongo DB writeErrors[0]:', err.writeErrors[0]);
+          return { insertedCount: err.result.result.nInserted };
+        case 11000:
+          log.debug('Mongo DB Error:', err.message);
+          return { insertedCount: err.result.result.nInserted };
+        default:
+          log.error('Mongo DB Error:', err.message);
+          log.debug('Mongo DB Error:', err);
+          return { insertedCount: -1 };
       }
-    }
+    });
+
+  return {
+    total: oddsHistoryItems.length,
+    new: result.insertedCount,
+    existing: oddsHistoryItems.length - result.insertedCount
   };
 }
 
-// ------------------------------------------------------------------------------------------------
-// HELPER FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+// CREATORS ----------------------------------------------------------------------------------------
 
 function createId(oddsId, date) {
   return `${oddsId}_${date.getTime()}`;
 }
 
-function createOdds(id, match, marketId, betArgs, outcomeArgs, bookieArgs, oddsItem) {
+function createOddsHistory(id, match, marketId, betArgs, outcomeArgs, bookieArgs, oddsItem) {
   return {
     id,
     matchId: match.id,
@@ -126,5 +126,42 @@ function createOdds(id, match, marketId, betArgs, outcomeArgs, bookieArgs, oddsI
     odds: oddsItem.odds,
     date: oddsItem.date,
     volume: oddsItem.volume
+  };
+}
+
+function createOddsHistoryDBItem(oddsHistory) {
+  return {
+    _id: oddsHistory.id,
+    outcome: oddsHistory.outcome,
+    bookie: oddsHistory.bookie,
+    odds: oddsHistory.odds,
+    date: oddsHistory.date,
+    volume: oddsHistory.volume
+  };
+}
+
+function createOddsHistoryDBSchema() {
+  return {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['outcome', 'bookie', 'odds', 'date', 'volume'],
+      properties: {
+        outcome: {
+          bsonType: 'int'
+        },
+        bookie: {
+          bsonType: 'int'
+        },
+        odds: {
+          bsonType: 'number'
+        },
+        date: {
+          bsonType: 'date'
+        },
+        volume: {
+          bsonType: ['int', 'null']
+        }
+      }
+    }
   };
 }

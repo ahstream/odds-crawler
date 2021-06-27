@@ -57,6 +57,33 @@
     "16": "S5",
     "99": "PT"
   },
+  "sport": {
+    "soccer": 1,
+    "basketball": 3,
+    "baseball": 6,
+    "hockey": 4,
+    "tennis": 2,
+    "american-football": 5,
+    "aussie-rules": 18,
+    "badminton": 21,
+    "bandy": 10,
+    "beach-soccer": 26,
+    "beach-volleyball": 17,
+    "boxing": 16,
+    "cricket": 13,
+    "darts": 14,
+    "esports": 36,
+    "floorball": 9,
+    "futsal": 11,
+    "handball": 7,
+    "mma": 28,
+    "pesapallo": 30,
+    "rugby-league": 19,
+    "rugby-union": 8,
+    "snooker": 15,
+    "volleyball": 12,
+    "water-polo": 22
+  },
   "bookies": {
     "1": {
       "name": "Interwetten",

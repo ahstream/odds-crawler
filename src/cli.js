@@ -8,6 +8,7 @@ import { httpGetResponse } from './provider';
 
 const program = require('commander');
 
+const config = require('../config/config.json');
 const httplib = require('./lib/httplib');
 const utilslib = require('./lib/utilslib');
 const matchLink = require('./matchLink.js');
@@ -16,11 +17,26 @@ const oddsHistory = require('./oddsHistory.js');
 
 const log = createLogger();
 
-// ------------------------------------------------------------------------------------------------
-// MAIN FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+// RUNTIME ----------------------------------------------------------------------------------
 
-async function runCmd() {
+program.option('--force', 'Force execution', false);
+program.option('--interval <value>', 'Minute interval for crawling', myParseInt, 60);
+program.option('--sport <value>', 'Sport name', 'soccer');
+// program.option('--sportId <value>', 'Sport ID', myParseInt, 1);
+program.option('--datestr <value>', 'Date string (YYYYMMDD)', '');
+program.option('--daysAfter <value>', 'Days ahead', myParseInt, 0);
+program.option('--daysBefore <value>', 'Days before', myParseInt, 0);
+program.option('--status <value>', 'Status', null);
+program.parse();
+
+runCommand();
+
+// MAIN FUNCTIONS ----------------------------------------------------------------------------------
+
+/**
+ * runCommand()
+ */
+async function runCommand() {
   const options = program.opts();
   const cmd = program.args[0];
   switch (cmd) {
@@ -28,7 +44,7 @@ async function runCmd() {
       await crawlMatchPages({
         interval: options.interval,
         sport: options.sport,
-        sportId: options.sportId,
+        sportId: lookupSportId(options.sport),
         datestr: options.datestr,
         daysAfter: options.daysAfter,
         daysBefore: options.daysBefore
@@ -61,18 +77,19 @@ async function runCmd() {
 }
 
 /**
- * @param config: { interval, sport, sportId, datestr, daysAfter, daysBefore}
+ * crawlMatchPages()
+ * @param args: { interval, sport, sportId, datestr, daysAfter, daysBefore}
  */
-async function crawlMatchPages(config) {
+async function crawlMatchPages(args) {
   try {
-    log.info('Begin crawl match links... ', config);
-    const numTimes = config.interval ? Infinity : 1;
+    log.info('Begin crawl match links... ', args);
+    const numTimes = args.interval ? Infinity : 1;
     for (let ct = 1; ct <= numTimes; ct++) {
       log.info(`Run #${ct} started...`);
-      log.info('Result:', await crawlMatchPagesThread(config));
+      log.info('Result:', await crawlMatchPagesThread(args));
       if (ct < numTimes) {
-        log.info(`Sleep for ${config.interval} minutes before starting run #${ct + 1}...`);
-        await utilslib.sleep(config.interval * 60 * 1000);
+        log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
+        await utilslib.sleep(args.interval * 60 * 1000);
       }
     }
     log.info('Done!');
@@ -95,18 +112,19 @@ async function crawlMatchPagesThread({ sport, sportId, datestr, daysAfter, daysB
 }
 
 /**
- * @param config: { interval, status, force}
+ * crawlMatchLinks()
+ * @param args: { interval, status, force}
  */
-async function crawlMatchLinks(config) {
+async function crawlMatchLinks(args) {
   try {
-    log.info('Begin crawl match links... ', config);
-    const numTimes = config.interval ? Infinity : 1;
+    log.info('Begin crawl match links... ', args);
+    const numTimes = args.interval ? Infinity : 1;
     for (let ct = 1; ct <= numTimes; ct++) {
       log.info(`Run #${ct} started...`);
-      log.info('Result:', await crawlMatchLinksThread(config));
+      log.info('Result:', await crawlMatchLinksThread(args));
       if (ct < numTimes) {
-        log.info(`Sleep for ${config.interval} minutes before starting run #${ct + 1}...`);
-        await utilslib.sleep(config.interval * 60 * 1000);
+        log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
+        await utilslib.sleep(args.interval * 60 * 1000);
       }
     }
     log.info('Done!');
@@ -127,19 +145,31 @@ async function crawlMatchLinksThread({ status = null, force = false }) {
   }
 }
 
+/**
+ * setupDB()
+ */
+async function setupDB() {
+  await mongodb.connect();
+}
+
+/**
+ * closeDB()
+ */
+async function closeDB() {
+  await mongodb.close();
+}
+
+/**
+ * resetDB()
+ */
 async function resetDB() {
   try {
+    log.info('Reset DB...');
     await setupDB();
-    log.info('Reset mongo db collection: matchLinks');
     await mongodb.dropCollection('matchLinks');
-    log.info('Reset mongo db collection: matchLinksCompleted');
     await mongodb.dropCollection('matchLinksCompleted');
-    log.info('Reset mongo db collection: otherLinks');
     await mongodb.dropCollection('otherLinks');
-    log.info('Reset mongo db collection: ignoredLinks');
     await mongodb.dropCollection('ignoredLinks');
-    // log.info('Reset mongo db collection: oddsHistory');
-    // await mongodb.dropCollection('oddsHistory');
     log.info('Done!');
   } catch (e) {
     log.error('Error:', e.message, e);
@@ -148,20 +178,11 @@ async function resetDB() {
   }
 }
 
-// ------------------------------------------------------------------------------------------------
-// HELPER FUNCTIONS
-// ------------------------------------------------------------------------------------------------
+// HELPERS ----------------------------------------------------------------------------------
 
-async function setupDB() {
-  log.debug('Setup mongodb db...');
-  await mongodb.connect();
-}
-
-async function closeDB() {
-  log.debug('Close mongodb db...');
-  await mongodb.close();
-}
-
+/**
+ * datestrToDate()
+ */
 function datestrToDate(val) {
   if (val === '') {
     return new Date();
@@ -173,6 +194,9 @@ function datestrToDate(val) {
   return new Date(Date.parse(datestr));
 }
 
+/**
+ * myParseInt()
+ */
 function myParseInt(value, dummyPrevious) {
   const parsedValue = parseInt(value, 10);
   if (Number.isNaN(parsedValue)) {
@@ -181,14 +205,9 @@ function myParseInt(value, dummyPrevious) {
   return parsedValue;
 }
 
-program.option('--force', 'Force execution', false);
-program.option('--interval <value>', 'Minute interval for crawling', myParseInt, 60);
-program.option('--sport <value>', 'Sport name', 'soccer');
-program.option('--sportId <value>', 'Sport ID', myParseInt, 1);
-program.option('--datestr <value>', 'Date string (YYYYMMDD)', '');
-program.option('--daysAfter <value>', 'Days ahead', myParseInt, 0);
-program.option('--daysBefore <value>', 'Days before', myParseInt, 0);
-program.option('--status <value>', 'Status', null);
-program.parse();
-
-runCmd();
+/**
+ * lookupSportId()
+ */
+function lookupSportId(sport) {
+  return config.sport[sport];
+}
