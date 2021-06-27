@@ -24,26 +24,43 @@ export async function resetDB() {
   await mongodb.dropCollection('otherLinks');
 }
 
-export async function crawlPeriod(sport, sportId, startDate, daysForward = 0, daysBack = 0) {
-  log.info(`Crawl match links from date: ${startDate.toLocaleString()}, sport: ${sport}, sportId: ${sportId}, forward: ${daysForward}, back: ${daysBack}`);
+export async function crawlMatchPages(sportName, sportId, startDate, daysForward, daysBack) {
+  log.info(`Crawl match pages from date: ${startDate.toLocaleDateString()}, sportName: ${sportName}, sportId: ${sportId}, forward: ${daysForward}, back: ${daysBack}`);
 
   const forwardDates = getDateRange(startDate, daysForward, 1);
   const backDates = getDateRange(startDate, daysBack, -1);
   const dates = [startDate].concat(forwardDates, backDates);
 
+  const numLinks = {
+    numMatchLinks: { total: 0, new: 0, existing: 0, ignored: 0 },
+    numOtherLinks: { total: 0, new: 0, existing: 0, ignored: 0 }
+  };
+
   for (const date of dates) {
     try {
-      const result = await crawlDay(sport, sportId, date);
-      log.info('Match links crawled:', result);
+      const result = await crawlDay(sportName, sportId, date);
+      log.debug('Match links crawled:', result);
+
+      numLinks.numMatchLinks.total += result.numMatchLinks.total;
+      numLinks.numMatchLinks.new += result.numMatchLinks.new;
+      numLinks.numMatchLinks.existing += result.numMatchLinks.existing;
+      numLinks.numMatchLinks.ignored += result.numMatchLinks.ignored;
+
+      numLinks.numOtherLinks.total += result.numOtherLinks.total;
+      numLinks.numOtherLinks.new += result.numOtherLinks.new;
+      numLinks.numOtherLinks.existing += result.numOtherLinks.existing;
+      numLinks.numOtherLinks.ignored += result.numOtherLinks.ignored;
+
+      // log.info(`>>> New match links: ${result.numMatchLinks.new} (of ${result.numMatchLinks.total}); other links: ${result.numOtherLinks.new} (of ${result.numOtherLinks.total})`);
     } catch (e) {
-      log.debug('Failed crawlDay:', e.message, e);
+      log.debug('Failed crawlMatchPages:', e.message, e);
     }
   }
 
-  return true;
+  return numLinks;
 }
 
-export async function processMatchLinks(status = undefined, force = false) {
+export async function crawlMatchLinks(status = null, force = false) {
   const now = new Date();
   const dateStr = createLongDateString(new Date());
 
@@ -75,7 +92,7 @@ export async function processMatchLinks(status = undefined, force = false) {
       const match = await getMatchFromWebPage(matchLink.parsedUrl);
       //  const tournament = updateTournaments(match);
       const result = await updateMatchOddsHistoryDB(match);
-      log.info(`Match ${ct}/${numMatchLinks}: ${matchLink.parsedUrl.matchUrl} (${result.itemCount}/${result.insertedCount})`);
+      log.info(`Match ${ct}/${numMatchLinks} crawled: ${matchLink.parsedUrl.matchUrl} (${result.itemCount}/${result.insertedCount})`);
       matchLink.isCompleted = match.params.isFinished;
       matchLink.status = match.status;
       matchLink.startTime = match.score.startTime;
@@ -134,12 +151,24 @@ function calcHoursToNextCrawl(matchLink) {
   if (matchLink.hoursToStart <= 24) {
     return 3;
   }
+  if (matchLink.hoursToStart > 96) {
+    return 24;
+  }
   return 4;
 }
 
+// todo: <head><title>502 Bad Gateway</title></head>
+
+// todo: complaetedMatchLinks: add parsedUrl.division?!
+
 export async function updateMatchLinkInDB(matchLink) {
   if (matchLink.isCompleted) {
-    const completedItem = { _id: matchLink._id };
+    const completedItem = {
+      _id: matchLink._id,
+      sportId: matchLink.sportId,
+      country: matchLink.parsedUrl.country,
+      tournamentId: matchLink.tournamentId
+    };
     await mongodb.db.collection('matchLinksCompleted').updateOne({ _id: matchLink._id }, { $set: completedItem }, { upsert: true });
     await mongodb.db.collection('matchLinks').deleteOne({ _id: matchLink._id });
   } else {
@@ -163,20 +192,20 @@ export async function processOtherLinks() {
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-async function crawlDay(sport, sportId, date) {
-  log.info(`Crawl match links on date: ${date.toLocaleDateString()}, sport: ${sport}, sportId: ${sportId}`);
+async function crawlDay(sportName, sportId, date) {
+  log.debug(`Crawl match links on date: ${date.toLocaleDateString()}, sportName: ${sportName}, sportId: ${sportId}`);
 
   const dateStr = createLongDateString(date);
-  const url = `https://www.oddsportal.com/matches/${sport}/${dateStr}/`;
+  const url = `https://www.oddsportal.com/matches/${sportName}/${dateStr}/`;
   const htmltext = await httpGetAllowedHtmltext([url]);
 
   const hashes = parseNextMatchesHashes(htmltext);
   const nextMatches = await getNextMatchesByHashes(sportId, dateStr, hashes);
 
-  const matchLinksAdded = await addMatchLinks(dateStr, nextMatches.parsedMatchUrls);
-  const otherLinksAdded = await addOtherLinks(dateStr, nextMatches.otherUrls);
+  const numMatchLinks = await addMatchLinks(dateStr, nextMatches.parsedMatchUrls);
+  const numOtherLinks = await addOtherLinks(dateStr, nextMatches.otherUrls);
 
-  return { ...matchLinksAdded, ...otherLinksAdded };
+  return { numMatchLinks, numOtherLinks };
 }
 
 export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
@@ -184,7 +213,6 @@ export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
   const baseUrl = 'https://fb.oddsportal.com/ajax-next-games/';
   urls.push(`${baseUrl}${sportId}/2/1/${dateStr}/${decodeURI(hashes.xHash[dateStr])}.dat?_=${createLongTimestamp()}`);
   urls.push(`${baseUrl}${sportId}/2/1/${dateStr}/${decodeURI(hashes.xHashf[dateStr])}.dat?_=${createLongTimestamp()}`);
-  // todo: hantera throws!
   const htmltext = await httpGetAllowedHtmltext(urls);
 
   const result = parseNextMatchesJson(htmltext);
@@ -216,45 +244,45 @@ function getDateRange(date, days, inc) {
 
 async function addMatchLinks(dateStr, parsedMatchUrls) {
   const now = new Date();
-  let addedCount = 0;
-  let existingCount = 0;
-  let excludedCount = 0;
+  let numNew = 0;
+  let numExisting = 0;
+  let numIgnored = 0;
   const matchLinksCol = mongodb.db.collection('matchLinks');
   for (const parsedUrl of parsedMatchUrls) {
-    // todo: validate tournament (add + check if excluded)
     if (!(await validateTournament(parsedUrl))) {
-      excludedCount++;
-      continue;
-    }
-    if (!(await matchLinkExists(parsedUrl.matchId))) {
+      numIgnored++;
+    } else if (!(await matchLinkExists(parsedUrl.matchId))) {
       await matchLinksCol.insertOne(createMatchLink(parsedUrl, dateStr, now));
-      addedCount++;
+      numNew++;
     } else {
-      existingCount++;
+      numExisting++;
     }
   }
-  return { totalCount: parsedMatchUrls.length, addedCount, existingCount, excludedCount };
-  // return { matchLinks: parsedMatchUrls.length, matchLinksAdded: addedCount };
+  return { total: parsedMatchUrls.length, new: numNew, existing: numExisting, ignored: numIgnored };
 }
 
 async function validateTournament(parsedUrl) {
+  // todo: implement!
   return true;
 }
 
 async function addOtherLinks(dateStr, otherUrls) {
   const now = new Date();
-  let addedCount = 0;
-  let existingCount = 0;
+  let numNew = 0;
+  let numExisting = 0;
+  let numIgnored = 0;
   const otherLinksCol = mongodb.db.collection('otherLinks');
   for (const url of otherUrls) {
-    if (!(await otherLinkExists(url))) {
+    if (await ignoredLinkExists(url)) {
+      numIgnored++;
+    } else if (!(await otherLinkExists(url))) {
       await otherLinksCol.insertOne(createOtherLink(url, dateStr, now));
-      addedCount++;
+      numNew++;
     } else {
-      existingCount++;
+      numExisting++;
     }
   }
-  return { totalCount: otherUrls.length, addedCount, existingCount };
+  return { total: otherUrls.length, new: numNew, existing: numExisting, ignored: numIgnored };
 }
 
 /**
@@ -269,10 +297,7 @@ async function matchLinkExists(matchId) {
 }
 
 async function otherLinkExists(url) {
-  if ((await mongodb.db.collection('otherLinks').find({ _id: url }).limit(1).count()) === 1) {
-    return true;
-  }
-  return ignoredLinkExists(url);
+  return (await mongodb.db.collection('otherLinks').find({ _id: url }).limit(1).count()) === 1;
 }
 
 async function ignoredLinkExists(url) {

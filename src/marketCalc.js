@@ -1,3 +1,5 @@
+import { CustomError } from './exceptions';
+
 /**
  * Copyright (c) 2021
  * FILE DESCRIPTION
@@ -40,13 +42,12 @@ export function calcMarket(match, scores, betArgs) {
       case config.bt.OE:
         return backOrLay(betArgs.isBack, calcOE(scores));
       default:
-        // todo: throw error?
         log.debug('calcMarket is null for:', scores, betArgs, match.url, match.params, match.score);
-        return null;
+        throw new Error(`Unexpected betType: ${betArgs.bt}`);
     }
   } catch (error) {
     log.debug('Error at calcMarket:', scores, betArgs, error);
-    throw error;
+    throw new CustomError('Failed calc market', { scores, betArgs, error });
   }
 }
 
@@ -76,9 +77,8 @@ function getOutcome(score1, score2) {
   if (score1 < score2) {
     return 3;
   }
-  // todo: throw error?
   log.debug('getOutcome is null for:', score1, score2);
-  return null;
+  throw new CustomError('Failed getOutcome', { score1, score2 });
 }
 
 const is1 = (scores) => scores._1 > scores._2;
@@ -104,9 +104,8 @@ function calcMatch(scores) {
   if (is2(scores)) {
     return r(3, L, L, W);
   }
-  // todo: throw error?
   log.debug('calcMatch is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcMatch', { scores });
 }
 
 function calcDC(scores) {
@@ -119,9 +118,8 @@ function calcDC(scores) {
   if (is2(scores)) {
     return r(5, L, W, W);
   }
-  // todo: throw error?
   log.debug('calcDC is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcDC', { scores });
 }
 
 function calcDNB(scores) {
@@ -134,9 +132,8 @@ function calcDNB(scores) {
   if (isX(scores)) {
     return r(0, D, D);
   }
-  // todo: throw error?
   log.debug('calcDNB is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcDNB', { scores });
 }
 
 function calcCS(scores, goals1, goals2) {
@@ -150,9 +147,8 @@ function calcBTS(scores) {
   if (isBTSNo(scores)) {
     return r(2, L, W);
   }
-  // todo: throw error?
   log.debug('calcBTS is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcBTS', { scores });
 }
 
 function calcOE(scores) {
@@ -162,9 +158,8 @@ function calcOE(scores) {
   if (isEven(scores)) {
     return r(2, L, W);
   }
-  // todo: throw error?
   log.debug('calcOE is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcOE', { scores });
 }
 
 function calcHTFT(scores, outcomeHT, outcomeFT, match) {
@@ -188,9 +183,8 @@ function calcEH(scores, handicap) {
   if (is2(newScores)) {
     return r(3, L, L, W);
   }
-  // todo: throw error?
   log.debug('calcEH is null for:', scores, handicap);
-  return null;
+  throw new CustomError('Failed calcEH', { scores, handicap });
 }
 
 function calcOU(scores, tg) {
@@ -205,9 +199,8 @@ function calcOU(scores, tg) {
     case 0.75:
       return calcOUSplit(scores, tg);
     default:
-      // todo: throw error?
       log.debug('calcOU is null for:', scores, tg);
-      return null;
+      throw new CustomError('Failed calcOU', { scores, tg });
   }
 }
 
@@ -221,9 +214,8 @@ function calcOUEven(scores, tg) {
   if (isUnder(scores, tg)) {
     return r(2, L, W);
   }
-  // todo: throw error?
   log.debug('calcOUEven is null for:', scores, tg);
-  return null;
+  throw new CustomError('Failed calcOUEven', { scores, tg });
 }
 
 function calcOUHalf(scores, tg) {
@@ -233,9 +225,7 @@ function calcOUHalf(scores, tg) {
   if (isUnder(scores, tg)) {
     return r(2, L, W);
   }
-  // todo: throw error?
-  log.debug('calcOUHalf is null for:', scores, tg);
-  return null;
+  throw new CustomError('Failed calcOUHalf', { scores, tg });
 }
 
 function calcOUSplit(scores, tg) {
@@ -271,9 +261,8 @@ function calcAH(scores, handicap) {
     case 0.75:
       return calcAHSplit(scores, handicap);
     default:
-      // todo: throw error?
       log.debug('calcAH is null for:', scores, handicap);
-      return null;
+      throw new CustomError('Failed calcAH', { scores, handicap });
   }
 }
 
@@ -287,9 +276,8 @@ function calcAH00Outcome(scores) {
   if (is2(scores)) {
     return r(2, L, W);
   }
-  // todo: throw error?
   log.debug('calcAH00Outcome is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcAH00Outcome', { scores });
 }
 
 function calcAH00(scores, handicap) {
@@ -321,9 +309,8 @@ function calcAH50Outcome(scores) {
   if (is2(scores)) {
     return r(2, L, W);
   }
-  // todo: throw error?
   log.debug('calcAH50Outcome is null for:', scores);
-  return null;
+  throw new CustomError('Failed calcAH50Outcome', { scores });
 }
 
 function calcAH50(scores, handicap) {

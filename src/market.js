@@ -3,6 +3,7 @@
  * FILE DESCRIPTION
  */
 
+import { CustomError } from './exceptions';
 import { hasNormalMatchResult } from './match';
 
 const config = require('../config/config.json');
@@ -53,8 +54,14 @@ export function addMarket(match, betArgs, bookies) {
 
     return marketId;
   } catch (error) {
-    log.debug('Error at addMarket:', error, betArgs, match.url, match.params, match.score);
-    throw error;
+    // log.debug('Error at addMarket:', error, betArgs, match.url, match.params, match.score);
+    throw new CustomError('Failed adding market', {
+      betArgs,
+      url: match.url,
+      params: match.params,
+      score: match.score,
+      error
+    });
   }
 }
 

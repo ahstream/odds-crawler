@@ -31,9 +31,9 @@ async function run() {
       log.info('resetDB...');
       await matchLink.resetDB();
       log.info('crawlPeriod...');
-      const r1 = await matchLink.crawlPeriod('soccer', 1, date, 1, 0);
+      const r1 = await matchLink.crawlMatchPages('soccer', 1, date, 60, 10);
       log.info('processMatchLinks...');
-      await matchLink.processMatchLinks('', false);
+      await matchLink.crawlMatchLinks('', false);
     }
   } catch (e) {
     log.error('error:', e);
@@ -46,4 +46,4 @@ program.option('-c, --command <name>', 'command name', 'default');
 program.parse();
 console.log(`command: ${program.opts().command}`);
 
-run();
+// run();

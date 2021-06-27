@@ -22,7 +22,7 @@ const COMMON_HTTP_HEADERS = {
 // MAIN FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-export async function httpGetAllowedHtmltext(urls, delay = 200) {
+export async function httpGetAllowedHtmltext(urls, delay = 300) {
   const response = await httpGetAllowedResponse(urls, delay);
   const htmltext = getHtmltextFromResponse(response, urls);
   if (!htmltext) {
@@ -31,7 +31,7 @@ export async function httpGetAllowedHtmltext(urls, delay = 200) {
   return htmltext;
 }
 
-export async function httpGetAllowedResponse(urls, delay = 200) {
+export async function httpGetAllowedResponse(urls, delay = 300) {
   let response;
   let ct = 0;
 
@@ -56,7 +56,7 @@ export async function httpGetAllowedResponse(urls, delay = 200) {
   throw new CustomError('Failed getting allowed response from URL', { urls, delay, data: response.data });
 }
 
-export async function httpGetResponse(url, delay = 200) {
+export async function httpGetResponse(url, delay = 300) {
   const response = await httplib.getResponse(url, COMMON_HTTP_HEADERS);
   if (delay > 0) {
     await sleep(delay);
@@ -64,7 +64,7 @@ export async function httpGetResponse(url, delay = 200) {
   return response;
 }
 
-export function httpGetManyUrls(urls, maxTries = 10, delayBetweenTries = 100) {
+export function httpGetManyUrls(urls, maxTries = 10, delayBetweenTries = 300) {
   return httplib.getMany(urls, maxTries, delayBetweenTries, COMMON_HTTP_HEADERS);
 }
 

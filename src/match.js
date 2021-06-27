@@ -31,15 +31,7 @@ export async function getMatchFromWebPage(parsedUrl) {
 
   match.params = parseMatchPageEvent(htmltext);
   match.score = await scorelib.parseScore(match, htmltext);
-  /*
-  if (!match.score) {
-    throw new Exceptions('Failed parsing match score', { match, htmltext });
-  }
-   */
-
-  match.status = match.score.status;
-  match.params.isAwarded = match.status === 'awarded';
-  match.params.isCanceled = match.status === 'canceled';
+  match.status = match.score.status ?? match.status;
 
   match.betTypes = await betlib.getBetTypes(match);
   if (!match.betTypes || Object.keys(match.betTypes).length === 0) {
@@ -102,7 +94,7 @@ export async function updateMatchOddsHistoryDB(match) {
 }
 
 export async function moveToExportedMatches() {
-  // TODO: Exportera bara matcher som är fully completed!
+  /*
   const exportedMatchesCol = mongodb.db.collection('exportedMatches');
   const matchesCol = mongodb.db.collection('matches');
   for (const match of await matchesCol.find({}).toArray()) {
@@ -111,10 +103,11 @@ export async function moveToExportedMatches() {
     }
   }
   await matchesCol.deleteMany({});
+     */
 }
 
 export function hasNormalMatchResult(match) {
-  return !!(match.params.isFinished && !match.params.isPostponed && !match.params.isAwarded && !match.params.isCanceled);
+  return match.score.isComplete;
 }
 
 // ------------------------------------------------------------------------------------------------

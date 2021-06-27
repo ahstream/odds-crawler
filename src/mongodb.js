@@ -18,30 +18,38 @@ const dbName = 'oddsCrawlerDB';
 
 class Mongo {
   constructor() {
-    this.client = new MongoClient(`mongodb://${uri}/${dbName}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    this.client = createClient();
   }
 
   async connect() {
+    if (!this.client) {
+      this.client = createClient();
+    }
     await this.client.connect();
-    log.info('Connected to MongoDB');
+    log.debug('Connected to MongoDB');
     this.db = this.client.db();
   }
 
   async close() {
     await this.client.close();
-    log.info('Disconnected from MongoDB');
+    this.client = undefined;
+    log.debug('Disconnected from MongoDB');
   }
 
   async dropCollection(name) {
     try {
-      await this.client.collection(name).drop();
+      await this.db.collection(name).drop();
     } catch (ex) {
-      // do nothing
+      // console.log(ex);
     }
   }
+}
+
+function createClient() {
+  return new MongoClient(`mongodb://${uri}/${dbName}`, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  });
 }
 
 module.exports = new Mongo();

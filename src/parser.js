@@ -135,7 +135,7 @@ export function parseMatchFeed(htmltext) {
 export function validateHtmltext(htmltext) {
   const error = parseError(htmltext);
   if (error) {
-    throw new CustomError(`Error ${error}`, { htmltext });
+    throw new CustomError(`Error: ${error}`, { htmltext });
   }
 }
 

@@ -7,12 +7,24 @@ import { CustomError } from './exceptions';
 import { httpGetAllowedHtmltext } from './provider';
 
 const provider = require('./provider');
+const { createLogger } = require('./lib/loggerlib');
+
+const log = createLogger();
 
 // ------------------------------------------------------------------------------------------------
 // MAIN FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
 export async function parseScore(match) {
+  switch (match.params.sportId) {
+    case 1:
+      return parseScoreSoccer(match);
+    default:
+      throw new CustomError('Unsupported sport', { sportId: match.params.sportId, url: match.url });
+  }
+}
+
+async function parseScoreSoccer(match) {
   const score = createScore();
 
   const urls = [];
@@ -36,6 +48,16 @@ export async function parseScore(match) {
   // Everything from now are failures that should be handled normally!
   score.ok = true;
 
+  score.isFinished = parsedScore.isFinished;
+  score.isStarted = parsedScore.isStarted;
+  score.isLive = score.isStarted && !score.isFinished;
+  score.isCanceled = null;
+  score.isPostponed = null;
+  score.isAbandoned = null;
+  score.isAwarded = null;
+  score.isCorrupt = null;
+  score.isComplete = null;
+
   score.startTime = new Date(parsedScore.startTime * 1000);
   score.startTimeUnix = parsedScore.startTime;
 
@@ -45,10 +67,17 @@ export async function parseScore(match) {
   if (resultAlert !== '') {
     if (resultAlert.match(/.*(Canceled).*/i)) {
       score.status = 'canceled';
+      score.isCanceled = true;
       return score;
     }
     if (resultAlert.match(/.*(Postponed).*/i)) {
       score.status = 'postponed';
+      score.isPostponed = true;
+      return score;
+    }
+    if (resultAlert.match(/.*(Abandoned).*/i)) {
+      score.status = 'abandoned';
+      score.isAbandoned = true;
       return score;
     }
   }
@@ -58,6 +87,7 @@ export async function parseScore(match) {
   if (ftResult == null) {
     if (result.match(/.*(awarded).*/i)) {
       score.status = 'awarded';
+      score.isAwarded = true;
       return score;
     }
   } else {
@@ -82,8 +112,9 @@ export async function parseScore(match) {
     score.ptScores = ptText;
     const ptTextScores = ptText.replaceAll('(', '').replaceAll(')', '').split(',');
     if (ptTextScores.length === 1) {
-      // Having only one part time score probably mean match was canceled!?
-      score.status = 'unknown';
+      log.debug('Having only one part time score probably mean match was canceled?', ptTextScores, ptText);
+      score.status = 'corrupt';
+      score.isCorrupt = true;
       return score;
     }
     const ptNumScores = ptTextScores.map((ptTextScore) => {
@@ -112,6 +143,12 @@ export async function parseScore(match) {
 
       if (score.isPenalties) {
         const ptFinalScore = extraScores[numExtraScores - 1];
+        if (!ptFinalScore) {
+          log.debug('Corrupt match result, possibly missing result in one half?', ptNumScores, match.url);
+          score.status = 'corrupt';
+          score.isCorrupt = true;
+          return score;
+        }
         score.sc99_1 = ptFinalScore[0];
         score.sc99_2 = ptFinalScore[1];
 
@@ -127,13 +164,16 @@ export async function parseScore(match) {
 
   if (score.status !== '') {
     // do nothing, keep current status
-  } else if (parsedScore.isFinished) {
+  } else if (score.isFinished) {
     score.status = 'finished';
-  } else if (!parsedScore.isStarted) {
+  } else if (!score.isStarted) {
     score.status = 'scheduled';
-  } else if (parsedScore.isStarted) {
+  } else if (score.isLive) {
     score.status = 'live';
   }
+
+  // If score is not complete it has been returned before control reaches here!
+  score.isComplete = score.isFinished;
 
   return score;
 }
