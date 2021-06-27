@@ -56,7 +56,7 @@ export async function getMany(urls, maxTries = 2, delayBetweenTries = 100, confi
       }
       const url = urls[index];
       results[index].response = response;
-      if (isSuccess(response, url)) {
+      if (isSuccess(response, '')) {
         numSuccess++;
         results[index].success = true;
       }
@@ -81,9 +81,8 @@ export async function getMany(urls, maxTries = 2, delayBetweenTries = 100, confi
   return { success: allSuccess, data: finalResults };
 }
 
-// TODO: Flagga för att tillåta redirects?!
 export function isSuccess(response, url = '') {
-  const successFlag = response.data && response.status && response.status >= 200 && response.status < 300;
+  const successFlag = response.data && response.status && response.status >= 200 && response.status <= 300;
 
   if (url !== '' && response && response.request && response.request.res) {
     const isSameUrl = url === response.request.res.responseUrl;

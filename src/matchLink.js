@@ -24,8 +24,8 @@ export async function resetDB() {
   await mongodb.dropCollection('otherLinks');
 }
 
-export async function crawlMatchPages(sportName, sportId, startDate, daysForward, daysBack) {
-  log.info(`Crawl match pages from date: ${startDate.toLocaleDateString()}, sportName: ${sportName}, sportId: ${sportId}, forward: ${daysForward}, back: ${daysBack}`);
+export async function crawlMatchPages(sport, sportId, startDate, daysForward, daysBack) {
+  log.info(`Crawl match pages from date: ${startDate.toLocaleDateString()}, sportName: ${sport}, sportId: ${sportId}, forward: ${daysForward}, back: ${daysBack}`);
 
   const forwardDates = getDateRange(startDate, daysForward, 1);
   const backDates = getDateRange(startDate, daysBack, -1);
@@ -38,7 +38,7 @@ export async function crawlMatchPages(sportName, sportId, startDate, daysForward
 
   for (const date of dates) {
     try {
-      const result = await crawlDay(sportName, sportId, date);
+      const result = await crawlDay(sport, sportId, date);
       log.debug('Match links crawled:', result);
 
       numLinks.numMatchLinks.total += result.numMatchLinks.total;
@@ -51,9 +51,9 @@ export async function crawlMatchPages(sportName, sportId, startDate, daysForward
       numLinks.numOtherLinks.existing += result.numOtherLinks.existing;
       numLinks.numOtherLinks.ignored += result.numOtherLinks.ignored;
 
-      // log.info(`>>> New match links: ${result.numMatchLinks.new} (of ${result.numMatchLinks.total}); other links: ${result.numOtherLinks.new} (of ${result.numOtherLinks.total})`);
+      log.debug('>>> New match links:', numLinks);
     } catch (e) {
-      log.debug('Failed crawlMatchPages:', e.message, e);
+      log.error('Failed crawlMatchPages:', e.message, e);
     }
   }
 
@@ -92,7 +92,7 @@ export async function crawlMatchLinks(status = null, force = false) {
       const match = await getMatchFromWebPage(matchLink.parsedUrl);
       //  const tournament = updateTournaments(match);
       const result = await updateMatchOddsHistoryDB(match);
-      log.info(`Match ${ct}/${numMatchLinks} crawled: ${matchLink.parsedUrl.matchUrl} (${result.itemCount}/${result.insertedCount})`);
+      log.info(`Match link ${ct} of ${numMatchLinks} crawled: ${result.new} new odds, ${result.existing} dups, ${matchLink.parsedUrl.matchUrl}`);
       matchLink.isCompleted = match.params.isFinished;
       matchLink.status = match.status;
       matchLink.startTime = match.score.startTime;
@@ -109,6 +109,8 @@ export async function crawlMatchLinks(status = null, force = false) {
     scheduleNextCrawl(matchLink);
     await updateMatchLinkInDB(matchLink);
   }
+
+  return true;
 }
 
 // todo: <span class="active"><strong><a href="[^"]*">([0-9\/\-]*)<\/a><\/strong><\/span>
@@ -157,18 +159,9 @@ function calcHoursToNextCrawl(matchLink) {
   return 4;
 }
 
-// todo: <head><title>502 Bad Gateway</title></head>
-
-// todo: complaetedMatchLinks: add parsedUrl.division?!
-
 export async function updateMatchLinkInDB(matchLink) {
   if (matchLink.isCompleted) {
-    const completedItem = {
-      _id: matchLink._id,
-      sportId: matchLink.sportId,
-      country: matchLink.parsedUrl.country,
-      tournamentId: matchLink.tournamentId
-    };
+    const completedItem = createCompletedMatchLink(matchLink);
     await mongodb.db.collection('matchLinksCompleted').updateOne({ _id: matchLink._id }, { $set: completedItem }, { upsert: true });
     await mongodb.db.collection('matchLinks').deleteOne({ _id: matchLink._id });
   } else {
@@ -311,8 +304,11 @@ async function ignoredLinkExists(url) {
 function createMatchLink(parsedUrl, dateStr, now) {
   return {
     _id: parsedUrl.matchId,
-    tournamentId: null,
+    sport: null,
     sportId: null,
+    tournament: null,
+    tournamentId: null,
+    country: null,
     status: 'new',
     isCompleted: false,
     errorCount: 0,
@@ -326,6 +322,16 @@ function createMatchLink(parsedUrl, dateStr, now) {
     lastCrawlTime: null,
     parsedUrl,
     dateStr
+  };
+}
+
+function createCompletedMatchLink(matchLink) {
+  return {
+    _id: matchLink._id,
+    sport: matchLink.parsedUrl.sport,
+    country: matchLink.parsedUrl.country,
+    tournament: matchLink.parsedUrl.tournament,
+    tournamentId: matchLink.tournamentId
   };
 }
 

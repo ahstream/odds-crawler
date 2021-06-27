@@ -76,7 +76,7 @@ export async function updateMatchOddsHistoryDB(match) {
   });
 
   if (historyItems.length === 0) {
-    return { itemCount: historyItems.length, insertedCount: 0 };
+    return { total: 0, new: 0, existing: 0 };
   }
 
   const result = await mongodb.db
@@ -90,7 +90,11 @@ export async function updateMatchOddsHistoryDB(match) {
       }
       return { insertedCount: err.result.result.nInserted };
     });
-  return { itemCount: historyItems.length, insertedCount: result.insertedCount };
+  return {
+    total: historyItems.length,
+    new: result.insertedCount,
+    existing: historyItems.length - result.insertedCount
+  };
 }
 
 export async function moveToExportedMatches() {

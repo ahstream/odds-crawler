@@ -25,9 +25,9 @@ export function parseMatchUrl(url) {
 
   const sport = utilslib.trimChars(result[1] ?? '', '/').trim();
   const country = utilslib.trimChars(result[2] ?? '', '/').trim();
-  const division = utilslib.trimChars(result[3] ?? '', '/').trim();
+  const tournament = utilslib.trimChars(result[3] ?? '', '/').trim();
   const match = utilslib.trimChars(result[4] ?? '', '/').trim();
-  const matchUrl = `/${sport}/${country}/${division}/${match}/`;
+  const matchUrl = `/${sport}/${country}/${tournament}/${match}/`;
 
   const matchIdTmp = match.match(/.*-([0-9A-Z]*)$/i);
   const matchId = matchIdTmp && matchIdTmp.length === 2 ? matchIdTmp[1] : '';
@@ -38,11 +38,11 @@ export function parseMatchUrl(url) {
     name,
     sport,
     country,
-    division,
+    tournament,
     match,
     matchId,
-    sourceUrl: url,
-    matchUrl
+    matchUrl,
+    sourceUrl: url
   };
 }
 
@@ -143,21 +143,43 @@ export function parseError(htmltext) {
   if (typeof htmltext !== 'string') {
     return 0;
   }
-  const m1 = htmltext.match(/{"E":"([^"]*)"}/im);
-  if (m1 && m1[1]) {
-    return m1[1];
+
+  const result1 = getRegexMatch(1, htmltext.match(/{"E":"([^"]*)"}/im));
+  if (result1) {
+    return result1;
   }
-  const m2 = htmltext.match(/{'E':'([^']*)'}/im);
-  if (m2 && m2[1]) {
-    return m2[1];
+
+  const result2 = getRegexMatch(1, htmltext.match(/{'E':'([^']*)'}/im));
+  if (result2) {
+    return result2;
   }
-  const m3 = htmltext.match(/notAllowed/im);
-  if (m3) {
-    return m3;
+
+  const result3 = getRegexMatch(null, htmltext.match(/notAllowed/im));
+  if (result3) {
+    return result3;
   }
-  const m4 = htmltext.match(/<title>OddsPortal: Error ([0-9]+)<\/title>/im);
-  if (m4 && m4[1]) {
-    return m4[1];
+
+  const result4 = getRegexMatch(1, htmltext.match(/<title>OddsPortal: Error ([0-9]+)<\/title>/im));
+  if (result4) {
+    return result4;
   }
+
+  const result5 = getRegexMatch(1, htmltext.match(/<title>([0-9]+) Bad Gateway<\/title>/im));
+  if (result5) {
+    return result5;
+  }
+
   return 0;
+}
+
+function getRegexMatch(index, matchedResult) {
+  if (index === null) {
+    return matchedResult;
+  }
+
+  if (matchedResult && matchedResult[index]) {
+    return matchedResult[index];
+  }
+
+  return false;
 }

@@ -4,9 +4,11 @@
  */
 
 import { createLogger, deleteLogFiles } from './lib/loggerlib';
+import { httpGetResponse } from './provider';
 
 const program = require('commander');
 
+const httplib = require('./lib/httplib');
 const utilslib = require('./lib/utilslib');
 const matchLink = require('./matchLink.js');
 const mongodb = require('./mongodb.js');
@@ -24,7 +26,7 @@ async function runCmd() {
     case 'crawlMatchPages':
       await crawlMatchPages({
         interval: options.interval,
-        sportName: options.sportName,
+        sport: options.sport,
         sportId: options.sportId,
         datestr: options.datestr,
         daysAfter: options.daysAfter,
@@ -53,7 +55,7 @@ async function runCmd() {
 }
 
 /**
- * @param config: { interval, sportName, sportId, datestr, daysAfter, daysBefore}
+ * @param config: { interval, sport, sportId, datestr, daysAfter, daysBefore}
  */
 async function crawlMatchPages(config) {
   try {
@@ -73,11 +75,11 @@ async function crawlMatchPages(config) {
   }
 }
 
-async function crawlMatchPagesThread({ sportName, sportId, datestr, daysAfter, daysBefore }) {
+async function crawlMatchPagesThread({ sport, sportId, datestr, daysAfter, daysBefore }) {
   try {
     const date = datestrToDate(datestr);
     await setupDB();
-    return await matchLink.crawlMatchPages(sportName, sportId, date, daysAfter, daysBefore);
+    return await matchLink.crawlMatchPages(sport, sportId, date, daysAfter, daysBefore);
   } catch (e) {
     log.error('Error:', e.message, e);
     return null;
@@ -175,7 +177,7 @@ function myParseInt(value, dummyPrevious) {
 
 program.option('--force', 'Force execution', false);
 program.option('--interval <value>', 'Minute interval for crawling', myParseInt, 60);
-program.option('--sportName <value>', 'Sport name', 'soccer');
+program.option('--sport <value>', 'Sport name', 'soccer');
 program.option('--sportId <value>', 'Sport ID', myParseInt, 1);
 program.option('--datestr <value>', 'Date string (YYYYMMDD)', '');
 program.option('--daysAfter <value>', 'Days ahead', myParseInt, 0);

@@ -84,7 +84,6 @@ function isMarketIncluded(match, betArgs) {
     }
   }
 
-  // todo: check attributes for certain bt:s?
   switch (betArgs.bt) {
     case config.bt.Match:
     case config.bt.OU:
