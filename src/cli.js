@@ -12,6 +12,7 @@ const httplib = require('./lib/httplib');
 const utilslib = require('./lib/utilslib');
 const matchLink = require('./matchLink.js');
 const mongodb = require('./mongodb.js');
+const oddsHistory = require('./oddsHistory.js');
 
 const log = createLogger();
 
@@ -47,6 +48,11 @@ async function runCmd() {
       log.info('Reset log files... ');
       deleteLogFiles('logs/');
       log.info('Done!');
+      break;
+    case 'test':
+      await setupDB();
+      await oddsHistory.initOddsHistoryDB();
+      await closeDB();
       break;
     default:
       // throw new program.InvalidArgumentError('Unknown command!');

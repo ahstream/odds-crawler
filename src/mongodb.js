@@ -43,6 +43,11 @@ class Mongo {
       // console.log(ex);
     }
   }
+
+  async collectionExists(name) {
+    const collections = await this.db.listCollections().toArray();
+    return collections.find(o => o.name === name) !== undefined;
+  }
 }
 
 function createClient() {

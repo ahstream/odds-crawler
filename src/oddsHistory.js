@@ -6,6 +6,7 @@
 import { CustomError } from './exceptions';
 
 const { createLogger } = require('./lib/loggerlib');
+const mongodb = require('./mongodb.js');
 const oddsitemlib = require('./oddsItem.js');
 const provider = require('./provider');
 
@@ -54,6 +55,53 @@ export function addHistory(match, feed, marketId, oddsId, betArgs, outcomeArgs, 
       error
     });
   }
+}
+
+export function createOddsHistoryDBItem(oddsHistory) {
+  return {
+    _id: oddsHistory.id,
+    outcome: oddsHistory.outcome,
+    bookie: oddsHistory.bookie,
+    odds: oddsHistory.odds,
+    date: oddsHistory.date,
+    volume: oddsHistory.volume
+  };
+}
+
+export async function initOddsHistoryDB() {
+  const collName = 'oddsHistory';
+  const collSchema = getOddsHistorySchema();
+  if (!await mongodb.collectionExists(collName)) {
+    await mongodb.db.createCollection(collName, { validator: collSchema });
+  } else {
+    await mongodb.db.command({ collMod: collName, validator: collSchema });
+  }
+}
+
+async function getOddsHistorySchema() {
+  return {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['outcome', 'bookie', 'odds', 'date', 'volume'],
+      properties: {
+        outcome: {
+          bsonType: 'int'
+        },
+        bookie: {
+          bsonType: 'int'
+        },
+        odds: {
+          bsonType: 'double'
+        },
+        date: {
+          bsonType: 'date'
+        },
+        volume: {
+          bsonType: 'int'
+        }
+      }
+    }
+  };
 }
 
 // ------------------------------------------------------------------------------------------------
