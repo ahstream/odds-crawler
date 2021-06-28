@@ -104,7 +104,7 @@ async function parseScoreSoccer(match) {
     score.sc1_1 = parseInt(ftResult[1], 10);
     score.sc1_2 = parseInt(ftResult[2], 10);
 
-    // Set FT same as FTOT now, in case PT results are not available!
+    // Set FT same as FTOT now, in case PT result are not available!
     score.sc2_1 = score.sc1_1;
     score.sc2_2 = score.sc1_2;
 
@@ -142,7 +142,7 @@ async function parseScoreSoccer(match) {
 
     if (score.isPenalties || score.isOT) {
       const extraScores = ptNumScores.filter(
-        (item, index) => index + 1 > 2 // all results after half1 and half2!
+        (item, index) => index + 1 > 2 // all result after half1 and half2!
       );
       const numExtraScores = extraScores.length;
 

@@ -23,7 +23,7 @@ const log = createLogger();
 
 export function exportMatchToFile(match) {
   match.score.url = match.url;
-  writeToFile(match.score, 'score');
+  writeToFile(match.score, match.sport);
 }
 
 export async function getMatchFromWebPage(parsedUrl) {
