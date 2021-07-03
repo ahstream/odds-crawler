@@ -1,7 +1,7 @@
 
 yarn cli resetLogFiles
 yarn cli resetDB
-yarn cli test
+yarn cli initOddsHistoryDB
 
 yarn cli crawlMatchPages --interval 1 --datestr 20210627 --sport "soccer" --daysAfter 0 --daysBefore 1
 yarn cli crawlMatchPages --interval 5 --sport "soccer" --daysAfter 2 --daysBefore 15

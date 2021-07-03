@@ -65,7 +65,7 @@ async function runCommand() {
       deleteLogFiles('logs/');
       log.info('Done!');
       break;
-    case 'test':
+    case 'initOddsHistoryDB':
       await setupDB();
       await oddsHistory.initOddsHistoryDB();
       await closeDB();
