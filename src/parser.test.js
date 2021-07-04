@@ -1,9 +1,17 @@
 import fs from 'fs';
-import { parseMatchUrl, parseNextMatchesData, parseNextMatchesHashes, parseNextMatchesJson } from './parser';
+
+import {
+  parseMatchUrl,
+  parseNextMatchesData,
+  parseNextMatchesHashes,
+  parseNextMatchesJson,
+  parseScore
+} from './parser';
+
+const parser = require('./parser');
 
 const _ = require('lodash');
 
-const parser = require('./parser');
 
 test('ping returns pong', () => {
   expect(parser.ping()).toBe('pong');

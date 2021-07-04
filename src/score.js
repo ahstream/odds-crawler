@@ -7,6 +7,9 @@ import { CustomError } from './exceptions';
 import { httpGetAllowedHtmltext } from './provider';
 
 const provider = require('./provider');
+
+const _ = require('lodash');
+
 const { createLogger } = require('./lib/loggerlib');
 
 const log = createLogger();
@@ -15,25 +18,7 @@ const log = createLogger();
 // MAIN FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-export async function parseScore(match) {
-  switch (match.sport) {
-    case 'soccer':
-      return parseScoreSoccer(match);
-    case 'tennis':
-      return parseScoreSoccer(match);
-    default:
-      throw new CustomError('Unsupported sport', { sport: match.sport, url: match.url });
-  }
-}
-
-async function parseScoreTennis(match) {
-  const score = createScore();
-  return score;
-}
-
-async function parseScoreSoccer(match) {
-  const score = createScore();
-
+export async function getScore(match) {
   const urls = [];
   const baseUrl = 'https://fb.oddsportal.com/feed/postmatchscore/1-';
   urls.push(`${baseUrl}${match.id}-${decodeURI(match.params.xhash)}.dat?_=${provider.createLongTimestamp()}`);
@@ -52,139 +37,13 @@ async function parseScoreSoccer(match) {
     throw new CustomError('Failed to JSON parse score for match', { urls, parsedScore, htmltext });
   }
 
-  // Everything from now are failures that should be handled normally!
-  score.ok = true;
-
-  score.isFinished = parsedScore.isFinished;
-  score.isStarted = parsedScore.isStarted;
-  score.isLive = score.isStarted && !score.isFinished;
-  score.isCanceled = null;
-  score.isPostponed = null;
-  score.isAbandoned = null;
-  score.isAwarded = null;
-  score.isCorrupt = null;
-  score.isComplete = null;
+  const score = parseScore(match.sport, parsedScore.result, parsedScore['result-alert']);
+  if (!score) {
+    throw new CustomError('Failed to parse score for match', { urls, parsedScore, htmltext });
+  }
 
   score.startTime = new Date(parsedScore.startTime * 1000);
   score.timestamp = parsedScore.startTime;
-
-  const result = parsedScore.result;
-  const resultAlert = parsedScore['result-alert'];
-
-  score.result = result;
-  score.resultAlert = resultAlert;
-
-  if (resultAlert !== '') {
-    if (resultAlert.match(/.*(Canceled).*/i)) {
-      score.status = 'canceled';
-      score.isCanceled = true;
-      return score;
-    }
-    if (resultAlert.match(/.*(Postponed).*/i)) {
-      score.status = 'postponed';
-      score.isPostponed = true;
-      return score;
-    }
-    if (resultAlert.match(/.*(Abandoned).*/i)) {
-      score.status = 'abandoned';
-      score.isAbandoned = true;
-      return score;
-    }
-  }
-
-  const ftResult = result.match(/<strong>([0-9]+):([0-9]+)(?: penalties)?( ET)?( OT)?/i);
-
-  if (ftResult == null) {
-    if (result.match(/.*(awarded).*/i)) {
-      score.status = 'awarded';
-      score.isAwarded = true;
-      return score;
-    }
-  } else {
-    score.sc1_1 = parseInt(ftResult[1], 10);
-    score.sc1_2 = parseInt(ftResult[2], 10);
-
-    // Set FT same as FTOT now, in case PT result are not available!
-    score.sc2_1 = score.sc1_1;
-    score.sc2_2 = score.sc1_2;
-
-    score.hasFullTimeScore = true;
-
-    const scoreText = ftResult[0];
-    score.isOT = scoreText.match(/.*(ET).*/i) !== null;
-    score.isPenalties = scoreText.match(/.*(Penalties).*/i) !== null;
-  }
-
-  const ptResult = result.match(/\(([0-9]+):([0-9]+)(, ([0-9]+):([0-9]+))*\)/i);
-  score.ptResult = ptResult;
-
-  if (ptResult && ptResult.length >= 1) {
-    const ptText = ptResult[0].trim();
-    score.ptScores = ptText;
-    const ptTextScores = ptText.replaceAll('(', '').replaceAll(')', '').split(',');
-    if (ptTextScores.length === 1) {
-      log.debug('Having only one part time score probably mean match was canceled?', ptTextScores, ptText);
-      score.status = 'corrupt';
-      score.isCorrupt = true;
-      return score;
-    }
-    const ptNumScores = ptTextScores.map((ptTextScore) => {
-      const scores = ptTextScore.trim().split(':');
-      return [parseInt(scores[0], 10), parseInt(scores[1], 10)];
-    });
-
-    score.sc3_1 = ptNumScores[0][0];
-    score.sc3_2 = ptNumScores[0][1];
-    score.sc4_1 = ptNumScores[1][0];
-    score.sc4_2 = ptNumScores[1][1];
-    score.sc2_1 = score.sc3_1 + score.sc4_1;
-    score.sc2_2 = score.sc3_2 + score.sc4_2;
-
-    if (score.isPenalties || score.isOT) {
-      const extraScores = ptNumScores.filter(
-        (item, index) => index + 1 > 2 // all result after half1 and half2!
-      );
-      const numExtraScores = extraScores.length;
-
-      if (score.isOT) {
-        const etFinalScore = extraScores.reduce((acc, curr) => [curr[0] + acc[0], curr[1] + acc[1]], [0, 0]);
-        score.sc98_1 = etFinalScore[0];
-        score.sc98_2 = etFinalScore[1];
-      }
-
-      if (score.isPenalties) {
-        const ptFinalScore = extraScores[numExtraScores - 1];
-        if (!ptFinalScore) {
-          log.debug('Corrupt match result, possibly missing result in one half?', ptNumScores, match.url);
-          score.status = 'corrupt';
-          score.isCorrupt = true;
-          return score;
-        }
-        score.sc99_1 = ptFinalScore[0];
-        score.sc99_2 = ptFinalScore[1];
-
-        const etScores = extraScores.filter((item, index) => index + 1 < numExtraScores);
-        const etFinalScore = etScores.reduce((acc, curr) => [curr[0] + acc[0], curr[1] + acc[1]], [0, 0]);
-        score.sc98_1 = etFinalScore[0];
-        score.sc98_2 = etFinalScore[1];
-      }
-    }
-
-    score.hasPartTimeScore = true;
-  }
-
-  if (score.status !== '') {
-    // do nothing, keep current status
-  } else if (score.isFinished) {
-    score.status = 'finished';
-  } else if (!score.isStarted) {
-    score.status = 'scheduled';
-  } else if (score.isLive) {
-    score.status = 'live';
-  }
-
-  // If score is not complete it has been returned before control reaches here!
-  score.isComplete = score.isFinished;
 
   return score;
 }
@@ -193,6 +52,336 @@ async function parseScoreSoccer(match) {
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
+export function parseScore(sport, result, resultAlert) {
+  const matchedFinishedResult = result.match(/Final result <\/span><strong>(\d+:\d+) ?([^<]*)<\/strong> ?\(?([^\)]*)?\)?<\/p>/i);
+  if (matchedFinishedResult) {
+    return parseFinishedResult(sport, matchedFinishedResult);
+  }
+
+  const matchedAbortedResult = result.match(/<strong>(.*) (awarded|retired|walkover)<\/strong> ?\(?([^\)]*)?\)?<\/p>/i);
+  log.info('matchedAbortedResult', matchedAbortedResult);
+  if (matchedAbortedResult) {
+    return parseAbortedResult(sport, matchedAbortedResult);
+  }
+
+  const matchedNotFinishedResult = resultAlert.match(/<p class="result-alert"><span class="bold">(Abandoned|Canceled|Postponed|Interrupted|The match has already started\.) ?<\/span>(?:<strong>(\d+:\d+) ?([^<]*)<\/strong> ?\(?([^\)]*)\)?)?<\/p>/i);
+  log.info('matchedNotFinishedResult', matchedNotFinishedResult);
+  if (matchedNotFinishedResult) {
+    return parseNotFinishedResult(sport, matchedNotFinishedResult);
+  }
+
+  return null;
+}
+
+function parseFinishedResult(sport, matchedResult) {
+  const matchedText = matchedResult[0];
+  const result = matchedResult[1]; // '0:1'
+  const extra = matchedResult[2] ?? ''; // 'ET'
+  const results = matchedResult[3] ?? ''; // '0:0, 0:0, 0:1'
+
+  const score = createScore(sport);
+  score.status = 'finished';
+  createFullTimeResult(sport, result, extra, score);
+  createPartTimeResults(sport, results, score);
+  processPartTimeResults(sport, score);
+  analyzeResults(sport, score);
+
+  log.info(score);
+  return score;
+}
+
+function parseAbortedResult(sport, matchedResult) {
+  const matchedText = matchedResult[0];
+  const actor = matchedResult[1];
+  const reason = convertReason(matchedResult[2]); // 'Abandoned'
+  const results = textOrNull(matchedResult[3]); // '0:0, 0:0, 0:1'
+
+  const score = createScore(sport);
+  score.status = reason;
+  score.actor = actor;
+  createPartTimeResults(sport, results, score);
+  processPartTimeResults(sport, score);
+  analyzeResults(sport, score);
+
+  return score;
+}
+
+function parseNotFinishedResult(sport, matchedResult) {
+  const matchedText = matchedResult[0];
+  const reason = convertReason(matchedResult[1]); // 'Abandoned'
+  const result = textOrNull(matchedResult[2]); // '0:1'
+  const extra = textOrNull(matchedResult[3]); // 'ET'
+  const results = textOrNull(matchedResult[4]); // '0:0, 0:0, 0:1'
+
+  const score = createScore(sport);
+  score.status = reason;
+  createFullTimeResult(sport, result, extra, score);
+  createPartTimeResults(sport, results, score);
+  processPartTimeResults(sport, score);
+  analyzeResults(sport, score);
+
+  return score;
+}
+
+function convertReason(reason) {
+  switch (reason) {
+    case 'The match has already started.':
+      return 'live';
+    default:
+      return reason.toLowerCase();
+  }
+}
+
+function createFullTimeResult(sport, resultText, extraText, score) {
+  if (!resultText) {
+    return;
+  }
+  const resultList = resultText.split(':');
+  score.result = {
+    score1: numericScore(resultList[0]),
+    score2: numericScore(resultList[1])
+  };
+  score.extra = extraText;
+}
+
+function analyzeResults(sport, score) {
+  if (score.hasPartTimeScores === false) {
+    // already set, do nothing!
+    return;
+  }
+
+  switch (sport) {
+    case 'soccer':
+      score.hasPartTimeScores =
+        score.status === 'finished' &&
+        score.score1H1 !== null &&
+        score.score2H1 !== null &&
+        score.score1H2 !== null &&
+        score.score2H2 !== null;
+      break;
+    case 'tennis':
+      score.hasPartTimeScores =
+        score.status === 'finished' &&
+        score.score1H1 !== null &&
+        score.score2H1 !== null &&
+        score.score1H2 !== null &&
+        score.score2H2 !== null;
+      break;
+    default:
+      score.hasPartTimeScores = false;
+  }
+}
+
+function createPartTimeResults(sport, resultsText, score) {
+  if (!resultsText) {
+    return;
+  }
+
+  const matchedResults = [...resultsText.matchAll(/((\d+)(?:<sup>(\d+)<\/sup>)?:(\d+)(?:<sup>(\d+)<\/sup>)?)/ig)];
+  const results = [];
+  for (const partResult of matchedResults) {
+    const score1 = numericScore(partResult[2]);
+    const score2 = numericScore(partResult[4]);
+    const extraScore1 = numericScore(partResult[3]);
+    const extraScore2 = numericScore(partResult[5]);
+    const extraScores = handleExtraScores(sport, extraScore1, extraScore2);
+    const partScore = {
+      // matchedText: result[0],
+      score1,
+      score2,
+      extraScore1: extraScores.extraScore1,
+      extraScore2: extraScores.extraScore2
+    };
+    results.push(partScore);
+  }
+
+  score.results = results;
+}
+
+function handleExtraScores(sport, score1, score2) {
+  switch (sport) {
+    case 'tennis':
+      return {
+        extraScore1: score2 ? _.max([score2 + 2, 7]) : score1,
+        extraScore2: score1 ? _.max([score1 + 2, 7]) : score2
+      };
+    default:
+      return {
+        extraScore1: score1,
+        extraScore2: score2
+      };
+  }
+}
+
+function processPartTimeResults(sport, score) {
+  if (!score.extra) {
+    processPartTimeResultsNoOvertime(score);
+    return;
+  }
+  switch (sport) {
+    case 'soccer':
+      processPartTimeResultsOvertimeSoccer(score);
+      break;
+    default:
+    // do nothing!
+  }
+}
+
+function processPartTimeResultsNoOvertime(score) {
+  if (!score.results) {
+    return;
+  }
+  let ct = 1;
+  for (const result of score.results) {
+    score[`score1H${ct}`] = result.score1;
+    score[`score2H${ct}`] = result.score2;
+    score[`extraScore1H${ct}`] = result.extraScore1;
+    score[`extraScore2H${ct}`] = result.extraScore2;
+    ct++;
+  }
+}
+
+function processPartTimeResultsOvertimeSoccer(score) {
+  if (score.extra === 'penalties') {
+    score.isPenalties = true;
+    if (score.results && score.results.length < 1) {
+      score.hasPartTimeScores = false;
+    }
+    if (score.results && score.results.length === 1) {
+      score.hasPartTimeScores = false;
+      score.score1P = score.results[0].score1;
+      score.score2P = score.results[0].score2;
+    }
+    if (score.results && score.results.length === 2) {
+      score.hasPartTimeScores = false;
+      score.score1P = score.results[1].score1;
+      score.score2P = score.results[1].score2;
+    }
+    if (score.results && score.results.length === 3) {
+      score.hasPartTimeScores = true;
+      score.score1H1 = score.results[0].score1;
+      score.score2H1 = score.results[0].score2;
+      score.score1H2 = score.results[1].score1;
+      score.score2H2 = score.results[1].score2;
+      score.score1P = score.results[2].score1;
+      score.score2P = score.results[2].score2;
+    }
+    if (score.results && score.results.length === 4) {
+      score.hasPartTimeScores = true;
+      score.score1H1 = score.results[0].score1;
+      score.score2H1 = score.results[0].score2;
+      score.score1H2 = score.results[1].score1;
+      score.score2H2 = score.results[1].score2;
+      score.score1OT = score.results[2].score1;
+      score.score2OT = score.results[2].score2;
+      score.score1P = score.results[3].score1;
+      score.score2P = score.results[3].score2;
+    }
+    if (score.results && score.results.length >= 5) {
+      score.hasPartTimeScores = true;
+      score.score1H1 = score.results[0].score1;
+      score.score2H1 = score.results[0].score2;
+      score.score1H2 = score.results[1].score1;
+      score.score2H2 = score.results[1].score2;
+      const textScores = createMultiOvertimeScores(score.results, 2, score.results.length - 2);
+      score.score1OT = textScores.scores1;
+      score.score2OT = textScores.scores2;
+      score.score1P = score.results[score.results.length - 1].score1;
+      score.score2P = score.results[score.results.length - 1].score2;
+    }
+  }
+
+  if (score.extra === 'ET') {
+    score.isOvertime = true;
+    if (score.results && score.results.length < 3) {
+      score.hasPartTimeScores = false;
+    }
+    if (score.results && score.results.length === 3) {
+      score.hasPartTimeScores = true;
+      score.score1H1 = score.results[0].score1;
+      score.score2H1 = score.results[0].score2;
+      score.score1H2 = score.results[1].score1;
+      score.score2H2 = score.results[1].score2;
+      score.score1OT = score.results[2].score1;
+      score.score2OT = score.results[2].score2;
+    }
+    if (score.results && score.results.length >= 4) {
+      score.hasPartTimeScores = true;
+      score.score1H1 = score.results[0].score1;
+      score.score2H1 = score.results[0].score2;
+      score.score1H2 = score.results[1].score1;
+      score.score2H2 = score.results[1].score2;
+      const textScores = createMultiOvertimeScores(score.results, 2, score.results.length - 1);
+      score.score1OT = textScores.scores1;
+      score.score2OT = textScores.scores2;
+    }
+  }
+}
+
+function textOrNull(val) {
+  if (val && val.length > 0) {
+    return val;
+  }
+  return null;
+}
+
+function numericScore(score) {
+  if (!score) {
+    return null;
+  }
+  if (typeof score === 'string') {
+    return parseInt(score, 10);
+  }
+  return score;
+}
+
+function createMultiOvertimeScores(results, fromIndex, toIndex) {
+  const filteredResults = results.filter((element, index) => index >= fromIndex && index <= toIndex);
+  const scores1 = filteredResults.map(x => x.score1);
+  const scores2 = filteredResults.map(x => x.score2);
+  return { scores1, scores2 };
+}
+
+function createScore(sport) {
+  return {
+    sport,
+    status: null,
+    actor: null,
+    result: null,
+    results: null,
+    extra: null,
+    hasPartTimeScores: null,
+    isPenalties: false,
+    isOvertime: false,
+    startTime: null,
+    timestamp: null,
+    score1H1: null,
+    score2H1: null,
+    score1H2: null,
+    score2H2: null,
+    score1H3: null,
+    score2H3: null,
+    score1H4: null,
+    score2H4: null,
+    score1H5: null,
+    score2H5: null,
+    score1OT: null,
+    score2OT: null,
+    score1P: null,
+    score2P: null,
+    extraScore1H1: null,
+    extraScore2H1: null,
+    extraScore1H2: null,
+    extraScore2H2: null,
+    extraScore1H3: null,
+    extraScore2H3: null,
+    extraScore1H4: null,
+    extraScore2H4: null,
+    extraScore1H5: null,
+    extraScore2H5: null
+  };
+}
+
 export function createScores(score1, score2) {
   return {
     _1: score1,
@@ -200,7 +389,7 @@ export function createScores(score1, score2) {
   };
 }
 
-export function createScore(options = {}) {
+export function createScoreOld(options = {}) {
   const data = {
     ok: false,
     status: '',

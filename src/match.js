@@ -33,7 +33,7 @@ export async function getMatchFromWebPage(parsedUrl) {
   const match = createMatch(parsedUrl);
 
   match.params = parseMatchPageEvent(htmltext);
-  match.score = await scorelib.parseScore(match, htmltext);
+  match.score = await scorelib.getScore(match, htmltext);
   match.status = match.score.status ?? match.status;
 
   match.betTypes = await betlib.getBetTypes(match);
@@ -65,7 +65,7 @@ export async function updateMatchInDB(match) {
 }
 
 export function hasNormalMatchResult(match) {
-  return match?.score?.isComplete;
+  return match?.score?.status === 'finished';
 }
 
 // CREATORS ----------------------------------------------------------------------------------------
