@@ -125,10 +125,9 @@ export async function moveBackToMatchLinksQueue() {
     } catch (error) {
       log.error(error);
     }
-    return true;
   }
 
-  // return true;
+  return true;
 }
 
 async function crawlMatchLink(matchLink, count, totalCount) {
