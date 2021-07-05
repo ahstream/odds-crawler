@@ -57,7 +57,7 @@ export function parseNextMatchesHashes(htmltext) {
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    throw new CustomError('Failed to JSON parse in parseNextMatchesHashes', { error, htmltext });
+    throw new CustomError('Failed to JSON parse in parseNextMatchesHashes', { errorMsg: error.message, error, htmltext });
   }
 }
 
@@ -72,7 +72,7 @@ export function parseNextMatchesJson(htmltext) {
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    throw new CustomError('Failed to JSON parse in parseNextMatchesJson', { error, htmltext });
+    throw new CustomError('Failed to JSON parse in parseNextMatchesJson', { errorMsg: error.message, error, htmltext });
   }
 }
 
@@ -107,7 +107,7 @@ export function parseMatchPageEvent(htmltext) {
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    throw new CustomError('Failed to JSON parse in parseMatchPageEvent', { error, htmltext });
+    throw new CustomError('Failed to JSON parse in parseMatchPageEvent', { errorMsg: error.message, error, htmltext });
   }
 }
 
@@ -123,7 +123,7 @@ export function parseMatchFeed(htmltext) {
   try {
     feed = JSON.parse(result[1]).d;
   } catch (error) {
-    throw new CustomError('Failed to JSON parse in parseMatchFeed', { error, htmltext });
+    throw new CustomError('Failed to JSON parse in parseMatchFeed', { errorMsg: error.message, error, htmltext });
   }
 
   if (feed.E && feed.E === 'notAllowed') {

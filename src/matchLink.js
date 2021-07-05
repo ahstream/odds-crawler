@@ -95,6 +95,7 @@ export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
 
 export async function crawlMatchLinks(status = null, force = false) {
   const matchLinks = await getMatchLinksFromDB(status, force);
+  log.info(`Crawl ${matchLinks.length} match links...`);
   for (const [idx, matchLink] of matchLinks.entries()) {
     try {
       await crawlMatchLink(matchLink, idx + 1, matchLinks.length);
@@ -119,7 +120,9 @@ async function crawlMatchLink(matchLink, count, totalCount) {
 }
 
 function handleCrawlMatchLinkSuccess(matchLink, match) {
-  matchLink.lastCrawlTime = new Date();
+  const now = new Date();
+  matchLink.lastCrawlTime = now;
+  matchLink.lastCrawlTimeSuccess = now;
   matchLink.isCompleted = match.params.isFinished;
   matchLink.status = match.status;
   matchLink.startTime = match.score.startTime;
@@ -130,11 +133,14 @@ function handleCrawlMatchLinkSuccess(matchLink, match) {
 function handleCrawlMatchLinkError(matchLink, error) {
   log.error(error.message, matchLink.parsedUrl.matchUrl, error.name);
 
-  matchLink.errorMsg = error.message;
-  matchLink.error = { name: error.name, message: error.message, data: error.data, stack: error.stack };
-  matchLink.errorCount++;
+  const now = new Date();
+  matchLink.lastCrawlTime = now;
+  matchLink.lastCrawlTimeFail = now;
   matchLink.isCompleted = null;
   matchLink.status = 'error';
+  matchLink.errorMsg = error.message;
+  matchLink.error = { name: error.name, message: error.message, data: error.data, stack: error.stack, completeError: JSON.stringify(error) };
+  matchLink.errorCount++;
 }
 
 function scheduleNextCrawl(matchLink) {
@@ -320,6 +326,8 @@ function createMatchLink(parsedUrl, dateStr, now) {
     hoursToStart: null,
     hoursToNextCrawl: null,
     lastCrawlTime: null,
+    lastCrawlTimeSuccess: null,
+    lastCrawlTimeFail: null,
     dateStr,
     parsedUrl
   };

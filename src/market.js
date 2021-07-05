@@ -56,6 +56,7 @@ export function addMarket(match, betArgs, bookies) {
   } catch (error) {
     // log.debug('Error at addMarket:', error, betArgs, match.url, match.params, match.score);
     throw new CustomError('Failed adding market', {
+      errorMsg: error.message,
       betArgs,
       url: match.url,
       params: match.params,

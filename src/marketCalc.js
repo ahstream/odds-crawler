@@ -46,8 +46,7 @@ export function calcMarket(match, scores, betArgs) {
         throw new Error(`Unexpected betType: ${betArgs.bt}`);
     }
   } catch (error) {
-    log.debug('Error at calcMarket:', scores, betArgs, error);
-    throw new CustomError('Failed calc market', { scores, betArgs, error });
+    throw new CustomError('Failed calc market', { errorMsg: error.message, scores, betArgs, error });
   }
 }
 
