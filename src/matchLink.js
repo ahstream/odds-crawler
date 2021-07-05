@@ -4,10 +4,11 @@
  */
 
 import { updateMatchInDB, getMatchFromWebPage, exportMatchToFile } from './match.js';
-import { parseNextMatchesData, parseNextMatchesHashes, parseNextMatchesJson } from './parser';
+import { parseFakedMatchUrl, parseNextMatchesData, parseNextMatchesHashes, parseNextMatchesJson } from './parser';
 import { createLongDateString, createLongTimestamp, httpGetAllowedHtmltext } from './provider';
 
 const { createLogger } = require('./lib/loggerlib');
+const matchlib = require('./match');
 const mongodb = require('./mongodb.js');
 
 const log = createLogger();
@@ -109,6 +110,27 @@ export async function crawlMatchLinks(status = null, force = false) {
   return true;
 }
 
+export async function moveBackToMatchLinksQueue() {
+  const now = new Date();
+  const dateStr = createLongDateString(now);
+  const matchLinksCol = mongodb.db.collection(MATCH_LINKS);
+  const matchLinksCompletedCol = mongodb.db.collection(MATCH_LINKS_COMPLETED);
+  const matchLinksCompleted = await matchLinksCompletedCol.find({ }).toArray();
+  for (const [idx, matchLinkCompleted] of matchLinksCompleted.entries()) {
+    try {
+      const parsedUrl = parseFakedMatchUrl(matchLinkCompleted._id, matchLinkCompleted.tournamentKey);
+      const matchLink = createMatchLink(parsedUrl, dateStr, now);
+      // log.info(matchLink);
+      await matchLinksCol.insertOne(matchLink);
+    } catch (error) {
+      log.error(error);
+    }
+    return true;
+  }
+
+  // return true;
+}
+
 async function crawlMatchLink(matchLink, count, totalCount) {
   // todo: add to tournaments and check if should exclude or not.
   const match = await getMatchFromWebPage(matchLink.parsedUrl);
@@ -116,14 +138,14 @@ async function crawlMatchLink(matchLink, count, totalCount) {
   //  const tournament = updateTournaments(match);
   const result = await updateMatchInDB(match);
   handleCrawlMatchLinkSuccess(matchLink, match);
-  log.info(`Match link ${count} of ${totalCount} crawled: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${matchLink.parsedUrl.matchUrl}`);
+  log.info(`Match link ${count} of ${totalCount} crawled: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bookies, ${match.info.numBets} bets, ${matchLink.parsedUrl.matchUrl}`);
 }
 
 function handleCrawlMatchLinkSuccess(matchLink, match) {
   const now = new Date();
   matchLink.lastCrawlTime = now;
   matchLink.lastCrawlTimeSuccess = now;
-  matchLink.isCompleted = match.params.isFinished;
+  matchLink.isCompleted = matchlib.isFinished(match);
   matchLink.status = match.status;
   matchLink.startTime = match.score.startTime;
   matchLink.tournamentId = match.params.tournamentId;
@@ -192,7 +214,7 @@ async function matchLinkExistsInDB(matchId) {
   if ((await mongodb.db.collection(MATCH_LINKS).find({ _id: matchId }).limit(1).count()) === 1) {
     return true;
   }
-  return (await mongodb.db.collection('matchLinksCompleted').find({ _id: matchId }).limit(1).count()) === 1;
+  return (await mongodb.db.collection(MATCH_LINKS_COMPLETED).find({ _id: matchId }).limit(1).count()) === 1;
 }
 
 async function getMatchLinksFromDB(status, force) {
@@ -220,7 +242,7 @@ async function getMatchLinksFromDB(status, force) {
 export async function updateMatchLinkInDB(matchLink) {
   if (matchLink.isCompleted) {
     const completedItem = createMatchLinkCompleted(matchLink);
-    await mongodb.db.collection('matchLinksCompleted').updateOne({ _id: matchLink._id }, { $set: completedItem }, { upsert: true });
+    await mongodb.db.collection(MATCH_LINKS_COMPLETED).updateOne({ _id: matchLink._id }, { $set: completedItem }, { upsert: true });
     await mongodb.db.collection(MATCH_LINKS).deleteOne({ _id: matchLink._id });
   } else {
     const replacementItem = { ...matchLink };
@@ -337,7 +359,8 @@ function createMatchLinkCompleted(matchLink) {
   return {
     _id: matchLink._id,
     tournamentId: matchLink.tournamentId,
-    tournamentKey: matchLink.tournamentKey
+    tournamentKey: matchLink.tournamentKey,
+    lastCrawlTime: matchLink.lastCrawlTime
   };
 }
 

@@ -1,3 +1,5 @@
+import { scopeToScoreSuffix } from './score';
+
 /**
  * Copyright (c) 2021
  * FILE DESCRIPTION
@@ -14,13 +16,18 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 export function addMarketResult(market, match, betArgs) {
-  const score1 = match.score[`sc${market.sc}_1`];
-  const score2 = match.score[`sc${market.sc}_2`];
+  const scoreSuffix = scorelib.scopeToScoreSuffix(market.sc);
+  const score1 = match.score[`score1${scoreSuffix}`];
+  const score2 = match.score[`score2${scoreSuffix}`];
+  if (score1 === null || score2 === null) {
+    log.info('No scores for scope:', market.sc, score1, score2)
+    return;
+  }
   const scores = scorelib.createScores(score1, score2);
 
   const marketCalc = marketcalclib.calcMarket(match, scores, betArgs);
   if (marketCalc === null || marketCalc.outcome === null) {
-    log.info('marketCalc is null');
+    log.info('marketCalc is null for betArgs:', betArgs);
     return;
   }
 

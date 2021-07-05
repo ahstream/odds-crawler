@@ -41,22 +41,30 @@ export async function getMatchFromWebPage(parsedUrl) {
     throw new CustomError('Failed getting bet types', { match, htmltext });
   }
 
-  // log.debug(match);
-  // return match;
-
   const numBets = await feedlib.processMatchFeeds(match);
   if (numBets < 1) {
     throw new CustomError('No bets in feed', { url: match.url, htmltext });
   }
+  match.numBets = numBets;
   log.debug(`Num bets in feed: ${numBets}`);
 
   match.hasOdds = _.isEmpty(match.odds) === false;
   if (match.hasOdds) {
     // todo: marketoddslib.updateMarketOdds(match);
   }
-  match.ok = true;
+
+  addInfo(match);
+
+  log.verbose(match);
 
   return match;
+}
+
+function addInfo(match) {
+  match.info = {};
+  const mainMarket = match.market[`${match.id}_1_2_1_0.00`];
+  match.info.numBookies = mainMarket ? mainMarket.numBookies : null;
+  match.info.numBets = match.numBets;
 }
 
 export async function updateMatchInDB(match) {
@@ -65,7 +73,12 @@ export async function updateMatchInDB(match) {
 }
 
 export function hasNormalMatchResult(match) {
-  return match?.score?.status === 'finished';
+  // return match?.score?.status === 'finished';
+  return match.status === 'finished';
+}
+
+export function isFinished(match) {
+  return match.status === 'finished';
 }
 
 // CREATORS ----------------------------------------------------------------------------------------

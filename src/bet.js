@@ -41,6 +41,7 @@ function processBetKeys(betKeys, match, feed, oddsFeed, bt, sc) {
 function processBet(match, feed, oddsFeed, betArgs) {
   const marketId = marketlib.addMarket(match, betArgs, oddsFeed.act);
   if (!marketId) {
+    log.debug('Market is exluced:', betArgs)
     return;
   }
 

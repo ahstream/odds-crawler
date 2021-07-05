@@ -4,6 +4,7 @@
  */
 
 const marketoddslib = require('./marketOdds.js');
+const matchlib = require('./match.js');
 
 // ------------------------------------------------------------------------------------------------
 // MAIN FUNCTIONS
@@ -11,9 +12,11 @@ const marketoddslib = require('./marketOdds.js');
 
 export function processMatchOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem) {
   const oddsId = createId(match, betArgs, outcomeArgs, bookieArgs);
-  match.odds[oddsId] = createOdds(oddsId, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
 
-  marketoddslib.addMarketOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
+  if (matchlib.isFinished(match)) {
+    match.odds[oddsId] = createOdds(oddsId, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
+    marketoddslib.addMarketOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
+  }
 
   return oddsId;
 }

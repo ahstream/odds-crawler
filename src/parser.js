@@ -46,6 +46,22 @@ export function parseMatchUrl(url) {
   };
 }
 
+export function parseFakedMatchUrl(matchId, tournamentKey) {
+  // Example tournamentKey: soccer/colombia/primera-b
+  const items = tournamentKey.split('/');
+  return {
+    name: 'unknown',
+    sport: items[0],
+    country: items[1],
+    tournament: items[2],
+    tournamentKey,
+    match: 'unknown',
+    matchId,
+    matchUrl: `/${tournamentKey}/${matchId}/`,
+    sourceUrl: `/${tournamentKey}/${matchId}/`
+  };
+}
+
 export function parseNextMatchesHashes(htmltext) {
   validateHtmltext(htmltext);
 

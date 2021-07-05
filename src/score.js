@@ -10,6 +10,7 @@ const provider = require('./provider');
 
 const _ = require('lodash');
 
+const config = require('../config/config.json');
 const { createLogger } = require('./lib/loggerlib');
 
 const log = createLogger();
@@ -59,80 +60,71 @@ export function parseScore(sport, result, resultAlert) {
   }
 
   const matchedAbortedResult = result.match(/<strong>(.*) (awarded|retired|walkover)<\/strong> ?\(?([^\)]*)?\)?<\/p>/i);
-  log.info('matchedAbortedResult', matchedAbortedResult);
   if (matchedAbortedResult) {
+    log.debug('matchedAbortedResult', matchedAbortedResult);
     return parseAbortedResult(sport, matchedAbortedResult);
   }
 
   const matchedNotFinishedResult = resultAlert.match(/<p class="result-alert"><span class="bold">(Abandoned|Canceled|Postponed|Interrupted|The match has already started\.) ?<\/span>(?:<strong>(\d+:\d+) ?([^<]*)<\/strong> ?\(?([^\)]*)\)?)?<\/p>/i);
-  log.info('matchedNotFinishedResult', matchedNotFinishedResult);
   if (matchedNotFinishedResult) {
+    log.debug('matchedNotFinishedResult', matchedNotFinishedResult);
     return parseNotFinishedResult(sport, matchedNotFinishedResult);
   }
 
-  return null;
+  return createScore(sport);
 }
 
 function parseFinishedResult(sport, matchedResult) {
-  const matchedText = matchedResult[0];
   const result = matchedResult[1]; // '0:1'
   const extra = matchedResult[2] ?? ''; // 'ET'
   const results = matchedResult[3] ?? ''; // '0:0, 0:0, 0:1'
 
-  const score = createScore(sport);
-  score.status = 'finished';
-  createFullTimeResult(sport, result, extra, score);
-  createPartTimeResults(sport, results, score);
-  processPartTimeResults(sport, score);
-  analyzeResults(sport, score);
+  const score = createScore(sport, {status: 'finished'});
+  parseGeneralResult(score, result, extra, results);
 
-  log.info(score);
   return score;
 }
 
 function parseAbortedResult(sport, matchedResult) {
-  const matchedText = matchedResult[0];
   const actor = matchedResult[1];
-  const reason = convertReason(matchedResult[2]); // 'Abandoned'
+  const status = convertStatus(matchedResult[2]); // 'Abandoned'
+  const result = null;
+  const extra = null;
   const results = textOrNull(matchedResult[3]); // '0:0, 0:0, 0:1'
 
-  const score = createScore(sport);
-  score.status = reason;
-  score.actor = actor;
-  createPartTimeResults(sport, results, score);
-  processPartTimeResults(sport, score);
-  analyzeResults(sport, score);
-
+  const score = createScore(sport, {status, actor});
+  parseGeneralResult(score, result, extra, results);
   return score;
 }
 
 function parseNotFinishedResult(sport, matchedResult) {
-  const matchedText = matchedResult[0];
-  const reason = convertReason(matchedResult[1]); // 'Abandoned'
+  const status = convertStatus(matchedResult[1]); // 'Abandoned'
   const result = textOrNull(matchedResult[2]); // '0:1'
   const extra = textOrNull(matchedResult[3]); // 'ET'
   const results = textOrNull(matchedResult[4]); // '0:0, 0:0, 0:1'
 
-  const score = createScore(sport);
-  score.status = reason;
-  createFullTimeResult(sport, result, extra, score);
-  createPartTimeResults(sport, results, score);
-  processPartTimeResults(sport, score);
-  analyzeResults(sport, score);
-
+  const score = createScore(sport, {status});
+  parseGeneralResult(score, result, extra, results);
   return score;
 }
 
-function convertReason(reason) {
-  switch (reason) {
+function parseGeneralResult(score, result, extra, results)  {
+  initFullTimeResult(score, result, extra);
+  initPartTimeResults(score, results);
+  addPartTimeResults(score);
+  addFullTimeResult(score);
+}
+
+function convertStatus(status) {
+  switch (status) {
     case 'The match has already started.':
       return 'live';
     default:
-      return reason.toLowerCase();
+      return status.toLowerCase();
   }
 }
 
-function createFullTimeResult(sport, resultText, extraText, score) {
+function initFullTimeResult(score, resultText, extraText) {
   if (!resultText) {
     return;
   }
@@ -144,15 +136,59 @@ function createFullTimeResult(sport, resultText, extraText, score) {
   score.extra = extraText;
 }
 
-function analyzeResults(sport, score) {
-  if (score.hasPartTimeScores === false) {
+function addFullTimeResult(score) {
+  if (score.status !== 'finished') {
+    score.hasFTScore = false;
+    score.hasFTOTScore = false;
+    return;
+  }
+  if (score.isPenalties || score.isOvertime) {
+    score.score1FTOT = score.result.score1;
+    score.score2FTOT = score.result.score2;
+    score.hasFTOTScore = true;
+    if (score.hasPTScore) {
+      const ftScores = getFullTimeScoreFromPartTimeScores(score);
+      score.score1FT = ftScores.score1;
+      score.score2FT = ftScores.score2;
+      score.hasFTScore = true;
+    } else {
+      score.hasFTScore = false;
+    }
+  } else {
+    score.hasFTScore = true;
+    score.hasFTOTScore = false;
+    score.score1FT = score.result.score1;
+    score.score2FT = score.result.score2;
+  }
+}
+
+function getFullTimeScoreFromPartTimeScores(score) {
+  switch(score.sport) {
+    case 'soccer':
+      return {
+        score1: score.score1H1 + score.score1H2,
+        score2: score.score1H1 + score.score1H2
+      }
+    case 'tennis':
+      return {
+        score1: score.result.score1,
+        score2: score.result.score2
+      }
+    default:
+      throw new CustomError('Unsupported sport!', { score })
+  }
+}
+
+
+function analyzePartTimeScores(score) {
+  if (score.hasPTScore === false) {
     // already set, do nothing!
     return;
   }
 
-  switch (sport) {
+  switch (score.sport) {
     case 'soccer':
-      score.hasPartTimeScores =
+      score.hasPTScore =
         score.status === 'finished' &&
         score.score1H1 !== null &&
         score.score2H1 !== null &&
@@ -160,7 +196,7 @@ function analyzeResults(sport, score) {
         score.score2H2 !== null;
       break;
     case 'tennis':
-      score.hasPartTimeScores =
+      score.hasPTScore =
         score.status === 'finished' &&
         score.score1H1 !== null &&
         score.score2H1 !== null &&
@@ -168,11 +204,11 @@ function analyzeResults(sport, score) {
         score.score2H2 !== null;
       break;
     default:
-      score.hasPartTimeScores = false;
+      score.hasPTScore = false;
   }
 }
 
-function createPartTimeResults(sport, resultsText, score) {
+function initPartTimeResults(score, resultsText) {
   if (!resultsText) {
     return;
   }
@@ -184,7 +220,7 @@ function createPartTimeResults(sport, resultsText, score) {
     const score2 = numericScore(partResult[4]);
     const extraScore1 = numericScore(partResult[3]);
     const extraScore2 = numericScore(partResult[5]);
-    const extraScores = handleExtraScores(sport, extraScore1, extraScore2);
+    const extraScores = createExtraScores(score.sport, extraScore1, extraScore2);
     const partScore = {
       // matchedText: result[0],
       score1,
@@ -198,7 +234,7 @@ function createPartTimeResults(sport, resultsText, score) {
   score.results = results;
 }
 
-function handleExtraScores(sport, score1, score2) {
+function createExtraScores(sport, score1, score2) {
   switch (sport) {
     case 'tennis':
       return {
@@ -213,21 +249,18 @@ function handleExtraScores(sport, score1, score2) {
   }
 }
 
-function processPartTimeResults(sport, score) {
+function addPartTimeResults(score) {
   if (!score.extra) {
-    processPartTimeResultsNoOvertime(score);
-    return;
-  }
-  switch (sport) {
-    case 'soccer':
-      processPartTimeResultsOvertimeSoccer(score);
-      break;
-    default:
+    addPartTimeResultsNoOvertime(score);
+  } else if (score.sport === 'soccer') {
+    addPartTimeResultsOvertimeSoccer(score);
+  } else {
     // do nothing!
   }
+  analyzePartTimeScores(score);
 }
 
-function processPartTimeResultsNoOvertime(score) {
+function addPartTimeResultsNoOvertime(score) {
   if (!score.results) {
     return;
   }
@@ -241,24 +274,24 @@ function processPartTimeResultsNoOvertime(score) {
   }
 }
 
-function processPartTimeResultsOvertimeSoccer(score) {
+function addPartTimeResultsOvertimeSoccer(score) {
   if (score.extra === 'penalties') {
     score.isPenalties = true;
     if (score.results && score.results.length < 1) {
-      score.hasPartTimeScores = false;
+      score.hasPTScore = false;
     }
     if (score.results && score.results.length === 1) {
-      score.hasPartTimeScores = false;
+      score.hasPTScore = false;
       score.score1P = score.results[0].score1;
       score.score2P = score.results[0].score2;
     }
     if (score.results && score.results.length === 2) {
-      score.hasPartTimeScores = false;
+      score.hasPTScore = false;
       score.score1P = score.results[1].score1;
       score.score2P = score.results[1].score2;
     }
     if (score.results && score.results.length === 3) {
-      score.hasPartTimeScores = true;
+      score.hasPTScore = true;
       score.score1H1 = score.results[0].score1;
       score.score2H1 = score.results[0].score2;
       score.score1H2 = score.results[1].score1;
@@ -267,7 +300,7 @@ function processPartTimeResultsOvertimeSoccer(score) {
       score.score2P = score.results[2].score2;
     }
     if (score.results && score.results.length === 4) {
-      score.hasPartTimeScores = true;
+      score.hasPTScore = true;
       score.score1H1 = score.results[0].score1;
       score.score2H1 = score.results[0].score2;
       score.score1H2 = score.results[1].score1;
@@ -278,7 +311,7 @@ function processPartTimeResultsOvertimeSoccer(score) {
       score.score2P = score.results[3].score2;
     }
     if (score.results && score.results.length >= 5) {
-      score.hasPartTimeScores = true;
+      score.hasPTScore = true;
       score.score1H1 = score.results[0].score1;
       score.score2H1 = score.results[0].score2;
       score.score1H2 = score.results[1].score1;
@@ -294,10 +327,10 @@ function processPartTimeResultsOvertimeSoccer(score) {
   if (score.extra === 'ET') {
     score.isOvertime = true;
     if (score.results && score.results.length < 3) {
-      score.hasPartTimeScores = false;
+      score.hasPTScore = false;
     }
     if (score.results && score.results.length === 3) {
-      score.hasPartTimeScores = true;
+      score.hasPTScore = true;
       score.score1H1 = score.results[0].score1;
       score.score2H1 = score.results[0].score2;
       score.score1H2 = score.results[1].score1;
@@ -306,7 +339,7 @@ function processPartTimeResultsOvertimeSoccer(score) {
       score.score2OT = score.results[2].score2;
     }
     if (score.results && score.results.length >= 4) {
-      score.hasPartTimeScores = true;
+      score.hasPTScore = true;
       score.score1H1 = score.results[0].score1;
       score.score2H1 = score.results[0].score2;
       score.score1H2 = score.results[1].score1;
@@ -342,19 +375,39 @@ function createMultiOvertimeScores(results, fromIndex, toIndex) {
   return { scores1, scores2 };
 }
 
-function createScore(sport) {
-  return {
+export function scopeToScoreSuffix(sc) {
+  const scopeKey = config.sckey[`${sc}`];
+  switch (sc) {
+    case config.sc.FTOT:
+      return 'FTOT';
+    case config.sc.FT:
+      return 'FT';
+    case config.sc.PT:
+      return 'PT';
+    default:
+      return `H${scopeKey.slice(-1)}`
+  }
+}
+
+function createScore(sport, options = {}) {
+  const data = {
     sport,
     status: null,
     actor: null,
     result: null,
     results: null,
     extra: null,
-    hasPartTimeScores: null,
+    hasFTScore: null,
+    hasFTOTScore: null,
+    hasPTScore: null,
     isPenalties: false,
     isOvertime: false,
     startTime: null,
     timestamp: null,
+    score1FT: null,
+    score2FT: null,
+    score1FTOT: null,
+    score2FTOT: null,
     score1H1: null,
     score2H1: null,
     score1H2: null,
@@ -380,6 +433,8 @@ function createScore(sport) {
     extraScore1H5: null,
     extraScore2H5: null
   };
+
+  return { ...data, ...options };
 }
 
 export function createScores(score1, score2) {
@@ -394,7 +449,7 @@ export function createScoreOld(options = {}) {
     ok: false,
     status: '',
 
-    hasFullTimeScore: false,
+    hasFTScore: false,
     hasPartTimeScore: false,
     isOT: false,
     isPenalties: false,

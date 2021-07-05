@@ -4,7 +4,7 @@
  */
 
 import { createLogger, deleteLogFiles } from './lib/loggerlib';
-import { httpGetResponse } from './provider';
+import { moveBackToMatchLinksQueue } from './matchLink';
 
 const program = require('commander');
 
@@ -57,6 +57,11 @@ async function runCommand() {
         force: options.force
       });
       break;
+    case 'moveBackToMatchLinksQueue':
+      await setupDB();
+      await moveBackToMatchLinksQueue();
+      await closeDB();
+      break;
     case 'resetDB':
       await resetDB();
       break;
@@ -86,7 +91,10 @@ async function crawlMatchPages(args) {
     const numTimes = args.interval ? Infinity : 1;
     for (let ct = 1; ct <= numTimes; ct++) {
       log.info(`Run #${ct} started...`);
-      log.info('Result:', await crawlMatchPagesThread(args));
+      const crawlResult = await crawlMatchPagesThread(args);
+      if (!crawlResult) {
+        log.error('Crawl result:', crawlResult);
+      }
       if (ct < numTimes) {
         log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
         await utilslib.sleep(args.interval * 60 * 1000);

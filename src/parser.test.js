@@ -2,10 +2,10 @@ import fs from 'fs';
 
 import {
   parseMatchUrl,
+  parseFakedMatchUrl,
   parseNextMatchesData,
   parseNextMatchesHashes,
   parseNextMatchesJson,
-  parseScore
 } from './parser';
 
 const parser = require('./parser');
@@ -17,7 +17,7 @@ test('ping returns pong', () => {
   expect(parser.ping()).toBe('pong');
 });
 
-test('parseUrl()', () => {
+test('parseMatchUrl()', () => {
   // [type, sport, country, divisionCodeName, divisionCode, year, event, eventId];
   expect(parser.parseUrl('https://www.oddsportal.com/soccer/england/league-one-2019-2020/bolton-doncaster-QB1Cg43p/')).toEqual({
     type: 'event',
@@ -160,6 +160,20 @@ test('parseUrl()', () => {
     year: null,
     event: '',
     eventId: ''
+  });
+});
+
+test('parseFakedMatchUrl()', () => {
+  expect(parseFakedMatchUrl('0jqt7y3k', 'soccer/colombia/primera-b')).toEqual({
+    name: 'unknown',
+    sport: 'soccer',
+    country: 'colombia',
+    tournament: 'primera-b',
+    tournamentKey: 'soccer/colombia/primera-b',
+    match: 'unknown',
+    matchId: '0jqt7y3k',
+    matchUrl: '/soccer/colombia/primera-b/0jqt7y3k/',
+    sourceUrl: '/soccer/colombia/primera-b/0jqt7y3k/'
   });
 });
 

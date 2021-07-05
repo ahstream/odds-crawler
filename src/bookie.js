@@ -49,7 +49,7 @@ export function countSweden(bookies) {
   return count;
 }
 
-export function countExcluded(bookies) {
+export function countUndefined(bookies) {
   let count = 0;
   Object.keys(bookies).forEach((key, _index) => {
     if (config.bookies[key] === undefined) {

@@ -260,8 +260,8 @@ function calcAH(scores, handicap) {
     case 0.75:
       return calcAHSplit(scores, handicap);
     default:
-      log.debug('calcAH is null for:', scores, handicap);
-      throw new CustomError('Failed calcAH', { scores, handicap });
+      log.debug('Not supported AH:', handicap, scores);
+      return null;
   }
 }
 

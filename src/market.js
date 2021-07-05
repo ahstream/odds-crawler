@@ -19,7 +19,7 @@ const log = createLogger();
 
 export function addMarket(match, betArgs, bookies) {
   try {
-    if (!isMarketIncluded(match, betArgs)) {
+    if (!shouldMarketBeIncluded(match, betArgs)) {
       return null;
     }
 
@@ -37,9 +37,12 @@ export function addMarket(match, betArgs, bookies) {
     // market.attribute1 = attributes.attribute1;
     // market.attribute2 = attributes.attribute2;
 
-    const numTotalBookies = Object.keys(bookies).length;
-    market.numExcluded = bookielib.countExcluded(bookies);
-    market.numBookies = numTotalBookies - market.numExcluded;
+    const numBookies = Object.keys(bookies).length;
+    const numUndefined = bookielib.countUndefined(bookies);
+
+    market.numBookies = numBookies;
+    market.numIncluded = numBookies - numUndefined;
+    market.numUndefined = numUndefined;
     market.numSharp = bookielib.countSharp(bookies);
     market.numSoft = bookielib.countSoft(bookies);
     market.numSwe = bookielib.countSweden(bookies);
@@ -70,19 +73,9 @@ export function addMarket(match, betArgs, bookies) {
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-function isMarketIncluded(match, betArgs) {
+function shouldMarketBeIncluded(match, betArgs) {
   if (betArgs.isBack === 0) {
     return false; // Ignore lays bets for now! (Write lay bets to own table?!)
-  }
-
-  if (betArgs.sc < 2 || betArgs.sc > 4) {
-    return false; // Only process FT, H1 and H2!
-  }
-
-  if (betArgs.sc === 3 || betArgs.sc === 4) {
-    if (!match.score.hasPartTimeScore) {
-      return false;
-    }
   }
 
   switch (betArgs.bt) {
@@ -120,11 +113,12 @@ function createMarket(id) {
     // attribute2: null,
 
     numBookies: null,
-    numExcluded: null,
+    numIncluded: null,
+    numUndefined: null,
     numSharp: null,
     numSoft: null,
-    numSwe: null,
     numExchanges: null,
-    numBrokers: null
+    numBrokers: null,
+    numSwe: null,
   };
 }
