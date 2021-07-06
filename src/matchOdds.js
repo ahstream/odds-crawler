@@ -3,8 +3,11 @@
  * FILE DESCRIPTION
  */
 
+const { createLogger } = require('./lib/loggerlib');
 const marketoddslib = require('./marketOdds.js');
 const matchlib = require('./match.js');
+
+const log = createLogger();
 
 // ------------------------------------------------------------------------------------------------
 // MAIN FUNCTIONS
@@ -13,9 +16,11 @@ const matchlib = require('./match.js');
 export function processMatchOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem) {
   const oddsId = createId(match, betArgs, outcomeArgs, bookieArgs);
 
-  if (matchlib.isFinished(match)) {
+  if (matchlib.isFinished(match) && !match.skipMarkets) {
     match.odds[oddsId] = createOdds(oddsId, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
     marketoddslib.addMarketOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
+  } else if (match.skipMarkets) {
+      // log.info('skip markets in marketodds');
   }
 
   return oddsId;

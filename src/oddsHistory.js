@@ -86,12 +86,12 @@ export async function updateOddsHistoryDB(history) {
     .insertMany(oddsHistoryItems, { ordered: false })
     .catch((err, res) => {
       switch (err.code) {
-        case 121:
-          log.error('Mongo DB Error:', err.message);
+        case 121:  //
+          log.error('Mongo DB Error (Document validation failed):', err.message);
           log.debug('Mongo DB writeErrors[0]:', err.writeErrors[0]);
           return { insertedCount: err.result.result.nInserted };
         case 11000:
-          log.debug('Mongo DB Error:', err.message);
+          log.debug('Mongo DB Error (Duplicate key):', err.message);
           return { insertedCount: err.result.result.nInserted };
         default:
           log.error('Mongo DB Error:', err.message);

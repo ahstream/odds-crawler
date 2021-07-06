@@ -120,6 +120,7 @@ export async function moveBackToMatchLinksQueue() {
     try {
       const parsedUrl = parseFakedMatchUrl(matchLinkCompleted._id, matchLinkCompleted.tournamentKey);
       const matchLink = createMatchLink(parsedUrl, dateStr, now);
+      matchLink.status = 'new2';
       // log.info(matchLink);
       await matchLinksCol.insertOne(matchLink);
     } catch (error) {
@@ -132,12 +133,12 @@ export async function moveBackToMatchLinksQueue() {
 
 async function crawlMatchLink(matchLink, count, totalCount) {
   // todo: add to tournaments and check if should exclude or not.
-  const match = await getMatchFromWebPage(matchLink.parsedUrl);
+  const match = await getMatchFromWebPage(matchLink.parsedUrl, true);
   exportMatchToFile(match);
   //  const tournament = updateTournaments(match);
   const result = await updateMatchInDB(match);
   handleCrawlMatchLinkSuccess(matchLink, match);
-  log.info(`Match link ${count} of ${totalCount} crawled: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bookies, ${match.info.numBets} bets, ${matchLink.parsedUrl.matchUrl}`);
+  log.info(`Match link ${count} of ${totalCount} crawled: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bookies, ${match.info.numBets} bets, ${matchLink.dateStr}, ${matchLink.startTime ? matchLink.startTime.toLocaleDateString() : null}, ${matchLink.parsedUrl.matchUrl}`);
 }
 
 function handleCrawlMatchLinkSuccess(matchLink, match) {

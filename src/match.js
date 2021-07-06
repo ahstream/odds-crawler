@@ -26,11 +26,12 @@ export function exportMatchToFile(match) {
   writeToFile(match.score, match.sport);
 }
 
-export async function getMatchFromWebPage(parsedUrl) {
+export async function getMatchFromWebPage(parsedUrl, skipMarkets = false) {
   const url = `https://www.oddsportal.com${parsedUrl.matchUrl}`;
   const htmltext = await httpGetAllowedHtmltext([url]);
 
   const match = createMatch(parsedUrl);
+  match.skipMarkets = skipMarkets;
 
   match.params = parseMatchPageEvent(htmltext);
   match.score = await scorelib.getScore(match, htmltext);
@@ -55,7 +56,7 @@ export async function getMatchFromWebPage(parsedUrl) {
 
   addInfo(match);
 
-  log.verbose(match);
+  // log.verbose(match);
 
   return match;
 }

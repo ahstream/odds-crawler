@@ -49,8 +49,10 @@ export function addMarket(match, betArgs, bookies) {
     market.numExchanges = bookielib.countExchange(bookies);
     market.numBrokers = bookielib.countBroker(bookies);
 
-    if (hasNormalMatchResult(match)) {
+    if (hasNormalMatchResult(match) && !match.skipMarkets) {
       marketresultlib.addMarketResult(market, match, betArgs);
+    } else if (match.skipMarkets) {
+      // log.info('skip markets in market');
     }
 
     match.market[marketId] = market;

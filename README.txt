@@ -9,6 +9,7 @@ yarn cli crawlMatchPages --interval 5 --sport "soccer" --daysAfter 2 --daysBefor
 yarn cli crawlMatchPages --interval 500 --sport "soccer" --daysAfter 300 --daysBefore 1
 yarn cli crawlMatchPages --interval 5000 --sport "tennis" --daysAfter 300 --daysBefore 1
 
-yarn cli crawlMatchLinks --interval 50 --status ""
+yarn cli crawlMatchLinks --interval 60 --status ""
 yarn cli crawlMatchLinks --interval 5 --status "error"
+yarn cli crawlMatchLinks --interval 60 --status "new"
 
