@@ -19,7 +19,7 @@ const defaultOptions = {
 
 // exports.createLogger = createLogger;
 
-exports.deleteLogFiles = (dir) => {
+exports.deleteLogFiles = (dir = 'logfiles/') => {
   const dirVal = trimCharsRight(dir, '/');
 
   const errorFilepath = `${dirVal}/error.log`;
@@ -67,7 +67,7 @@ function utilFormatter() {
   return { transform };
 }
 
-export function createLogger(logLevel = '', dir = 'logs', options = {}) {
+export function createLogger(logLevel = '', dir = 'logfiles', options = {}) {
   const logLevelVal = logLevel !== '' ? logLevel : defaultOptions.level;
   const timestampFormatVal = options.timestampFormat ?? defaultOptions.timestampFormat;
 

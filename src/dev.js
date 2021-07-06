@@ -18,7 +18,7 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 async function run() {
-  deleteLogFiles('logs/');
+  deleteLogFiles();
   log.info('Dev start...');
 
   await mongo.connect();

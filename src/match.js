@@ -5,8 +5,9 @@
 
 import { writeToFile } from './dataWriter';
 import { CustomError } from './exceptions';
+import { updateMarketOdds } from './marketodds';
 import { updateOddsHistoryDB } from './oddsHistory';
-import { parseMatchPageEvent } from './parser';
+import { parseMatchPageEvent, parseMatchUrl } from './parser';
 import { httpGetAllowedHtmltext } from './provider';
 
 const _ = require('lodash');
@@ -20,11 +21,6 @@ const scorelib = require('./score');
 const log = createLogger();
 
 // MAIN FUNCTIONS ---------------------------------------------------------------------------------
-
-export function exportMatchToFile(match) {
-  match.score.url = match.url;
-  writeToFile(match.score, match.sport);
-}
 
 export async function getMatchFromWebPage(parsedUrl, skipMarkets = false) {
   const url = `https://www.oddsportal.com${parsedUrl.matchUrl}`;
@@ -46,26 +42,32 @@ export async function getMatchFromWebPage(parsedUrl, skipMarkets = false) {
   if (numBets < 1) {
     throw new CustomError('No bets in feed', { url: match.url, htmltext });
   }
-  match.numBets = numBets;
   log.debug(`Num bets in feed: ${numBets}`);
 
   match.hasOdds = _.isEmpty(match.odds) === false;
   if (match.hasOdds) {
-    // todo: marketoddslib.updateMarketOdds(match);
+    updateMarketOdds(match);
   }
 
-  addInfo(match);
+  addInfo(match, numBets);
 
   // log.verbose(match);
 
   return match;
 }
 
-function addInfo(match) {
-  match.info = {};
-  const mainMarket = match.market[`${match.id}_1_2_1_0.00`];
-  match.info.numBookies = mainMarket ? mainMarket.numBookies : null;
-  match.info.numBets = match.numBets;
+export async function getMatchFromWebPageUrl(url, skipMarkets = false) {
+  const parsedUrl = parseMatchUrl(url);
+  // log.verbose(parsedUrl);
+  const match = await getMatchFromWebPage(parsedUrl);
+  log.verbose(match);  // todo
+  return match;
+}
+
+
+export function exportMatchToFile(match) {
+  match.score.url = match.url;
+  writeToFile(match.score, match.sport);
 }
 
 export async function updateMatchInDB(match) {
@@ -80,6 +82,19 @@ export function hasNormalMatchResult(match) {
 
 export function isFinished(match) {
   return match.status === 'finished';
+}
+
+function addInfo(match, numBets) {
+  match.sportId = match.params.sportId;
+  match.tournamentId = match.params.tournamentId;
+  match.home = match.params.home;
+  match.away = match.params.away;
+  match.startTime = match.score.startTime;
+  match.timestamp = match.score.timestamp;
+  match.info = {};
+  const mainMarket = match.market[`${match.id}_1_2_1_0.00`];
+  match.info.numBookies = mainMarket ? mainMarket.numBookies : null;
+  match.info.numBets = numBets;
 }
 
 // CREATORS ----------------------------------------------------------------------------------------

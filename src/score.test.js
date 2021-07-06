@@ -4,10 +4,11 @@ const _ = require('lodash');
 
 test('parseScore()', () => {
   let ps;
+  const TIMESTAMP = 1625544525;
 
   // TENNIS: NotFinishedResult -----------------------------------------------------------------------------------------
 
-  ps = parseScore('tennis', '', '<p class="result-alert"><span class="bold">Canceled</span></p>');
+  ps = parseScore('tennis', TIMESTAMP, '', '<p class="result-alert"><span class="bold">Canceled</span></p>');
   expect(ps.status).toEqual('canceled');
   expect(ps.result).toEqual(null);
   expect(ps.results).toEqual(null);
@@ -18,8 +19,10 @@ test('parseScore()', () => {
   expect(ps.score2FT).toEqual(null);
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
+  expect(ps.startTime.getTime()).toEqual(TIMESTAMP * 1000);
+  expect(ps.timestamp).toEqual(TIMESTAMP);
 
-  ps = parseScore('tennis', '', '<p class="result-alert"><span class="bold">The match has already started.</span></p>');
+  ps = parseScore('tennis', TIMESTAMP, '', '<p class="result-alert"><span class="bold">The match has already started.</span></p>');
   expect(ps.status).toEqual('live');
   expect(ps.result).toEqual(null);
   expect(ps.results).toEqual(null);
@@ -31,7 +34,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('tennis', '', '<p class="result-alert"><span class="bold">Interrupted </span><strong>0:0</strong> (2:4)</p>');
+  ps = parseScore('tennis', TIMESTAMP, '', '<p class="result-alert"><span class="bold">Interrupted </span><strong>0:0</strong> (2:4)</p>');
   expect(ps.status).toEqual('interrupted');
   expect(ps.result).toEqual({ score1: 0, score2: 0 });
   expect(ps.extra).toEqual(null);
@@ -48,7 +51,7 @@ test('parseScore()', () => {
 
   // TENNIS: AbortedResult  --------------------------------------------------------------------------------------------
 
-  ps = parseScore('tennis', '<p class="result"><span class="bold"></span><strong>Aney J. walkover</strong></p>', '');
+  ps = parseScore('tennis', TIMESTAMP, '<p class="result"><span class="bold"></span><strong>Aney J. walkover</strong></p>', '');
   expect(ps.actor).toEqual('Aney J.');
   expect(ps.status).toEqual('walkover');
   expect(ps.result).toEqual(null);
@@ -61,7 +64,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('tennis', '<p class="result"><span class="bold"></span><strong>Agabigun S. retired</strong> (6:4, 6<sup>9</sup>:7, 1:4)</p>', '');
+  ps = parseScore('tennis', TIMESTAMP, '<p class="result"><span class="bold"></span><strong>Agabigun S. retired</strong> (6:4, 6<sup>9</sup>:7, 1:4)</p>', '');
   expect(ps.actor).toEqual('Agabigun S.');
   expect(ps.status).toEqual('retired');
   expect(ps.result).toEqual(null);
@@ -84,7 +87,7 @@ test('parseScore()', () => {
 
   // TENNIS: FinishedResult  -------------------------------------------------------------------------------------------
 
-  ps = parseScore('tennis', '<p class="result"><span class="bold">Final result </span><strong>0:2</strong> (0:6, 6<sup>2</sup>:7)</p>', '');
+  ps = parseScore('tennis', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>0:2</strong> (0:6, 6<sup>2</sup>:7)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 0, score2: 2 });
   expect(ps.extra).toEqual('');
@@ -109,7 +112,7 @@ test('parseScore()', () => {
 
   // SOCCER: NotFinishedResult -----------------------------------------------------------------------------------------
 
-  ps = parseScore('soccer', '', '<p class="result-alert"><span class="bold">Abandoned </span><strong>1:0</strong> (1:0)</p>');
+  ps = parseScore('soccer', TIMESTAMP, '', '<p class="result-alert"><span class="bold">Abandoned </span><strong>1:0</strong> (1:0)</p>');
   expect(ps.status).toEqual('abandoned');
   expect(ps.result).toEqual({ score1: 1, score2: 0 });
   expect(ps.extra).toEqual(null);
@@ -124,7 +127,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('soccer', '', '<p class="result-alert"><span class="bold">Canceled</span></p>');
+  ps = parseScore('soccer', TIMESTAMP, '', '<p class="result-alert"><span class="bold">Canceled</span></p>');
   expect(ps.status).toEqual('canceled');
   expect(ps.result).toEqual(null);
   expect(ps.extra).toEqual(null);
@@ -138,7 +141,7 @@ test('parseScore()', () => {
   expect(ps.score2FTOT).toEqual(null);
 
 
-  ps = parseScore('soccer', '', '<p class="result-alert"><span class="bold">Postponed</span></p>');
+  ps = parseScore('soccer', TIMESTAMP, '', '<p class="result-alert"><span class="bold">Postponed</span></p>');
   expect(ps.status).toEqual('postponed');
   expect(ps.result).toEqual(null);
   expect(ps.extra).toEqual(null);
@@ -151,7 +154,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('soccer', '', '<p class="result-alert"><span class="bold">The match has already started.</span></p>');
+  ps = parseScore('soccer', TIMESTAMP, '', '<p class="result-alert"><span class="bold">The match has already started.</span></p>');
   expect(ps.status).toEqual('live');
   expect(ps.result).toEqual(null);
   expect(ps.extra).toEqual(null);
@@ -166,7 +169,7 @@ test('parseScore()', () => {
 
   // SOCCER: AbortedResult  --------------------------------------------------------------------------------------------
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold"></span><strong>Asteras Vlachioti awarded</strong></p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold"></span><strong>Asteras Vlachioti awarded</strong></p>', '');
   expect(ps.actor).toEqual('Asteras Vlachioti');
   expect(ps.status).toEqual('awarded');
   expect(ps.result).toEqual(null);
@@ -179,7 +182,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold"></span><strong>Parnu JK Vaprus awarded</strong> (0:0, 0:1)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold"></span><strong>Parnu JK Vaprus awarded</strong> (0:0, 0:1)</p>', '');
   expect(ps.actor).toEqual('Parnu JK Vaprus');
   expect(ps.status).toEqual('awarded');
   expect(ps.result).toEqual(null);
@@ -199,7 +202,7 @@ test('parseScore()', () => {
 
   // SOCCER: FinishedResult  -------------------------------------------------------------------------------------------
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>0:2</strong></p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>0:2</strong></p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 0, score2: 2 });
   expect(ps.extra).toEqual('');
@@ -215,7 +218,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>7:0</strong> (7:0)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>7:0</strong> (7:0)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 7, score2: 0 });
   expect(ps.extra).toEqual('');
@@ -233,7 +236,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(null);
   expect(ps.score2FTOT).toEqual(null);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>2:1</strong> (1:0, 1:1)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>2:1</strong> (1:0, 1:1)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 2, score2: 1 });
   expect(ps.extra).toEqual('');
@@ -256,7 +259,7 @@ test('parseScore()', () => {
 
   // SOCCER: Overtime --------------------------------------------------------------------------------------------------
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong></p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong></p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 4, score2: 5 });
   expect(ps.extra).toEqual('ET');
@@ -272,7 +275,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(4);
   expect(ps.score2FTOT).toEqual(5);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 4, score2: 5 });
   expect(ps.extra).toEqual('ET');
@@ -290,7 +293,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(4);
   expect(ps.score2FTOT).toEqual(5);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0, 3:4)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0, 3:4)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 4, score2: 5 });
   expect(ps.extra).toEqual('ET');
@@ -309,7 +312,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(4);
   expect(ps.score2FTOT).toEqual(5);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0, 3:4, 0:1)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0, 3:4, 0:1)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 4, score2: 5 });
   expect(ps.extra).toEqual('ET');
@@ -335,7 +338,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(4);
   expect(ps.score2FTOT).toEqual(5);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0, 3:4, 0:0, 0:1)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>4:5 ET</strong> (1:0, 3:4, 0:0, 0:1)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 4, score2: 5 });
   expect(ps.extra).toEqual('ET');
@@ -364,7 +367,7 @@ test('parseScore()', () => {
 
   // SOCCER: Penalties -------------------------------------------------------------------------------------------------
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>3:4 penalties</strong> (0:0, 2:2, 1:1, 1:4)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>3:4 penalties</strong> (0:0, 2:2, 1:1, 1:4)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 3, score2: 4 });
   expect(ps.extra).toEqual('penalties');
@@ -391,7 +394,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(3);
   expect(ps.score2FTOT).toEqual(4);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>3:4 penalties</strong> (0:0, 2:2, 1:1, 2:2, 1:4)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>3:4 penalties</strong> (0:0, 2:2, 1:1, 2:2, 1:4)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 3, score2: 4 });
   expect(ps.extra).toEqual('penalties');
@@ -419,7 +422,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(3);
   expect(ps.score2FTOT).toEqual(4);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>1:0 penalties</strong> (0:0, 0:0, 3:1)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>1:0 penalties</strong> (0:0, 0:0, 3:1)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 1, score2: 0 });
   expect(ps.extra).toEqual('penalties');
@@ -443,7 +446,7 @@ test('parseScore()', () => {
   expect(ps.score1FTOT).toEqual(1);
   expect(ps.score2FTOT).toEqual(0);
 
-  ps = parseScore('soccer', '<p class="result"><span class="bold">Final result </span><strong>1:2 penalties</strong> (0:0, 2:4)</p>', '');
+  ps = parseScore('soccer', TIMESTAMP, '<p class="result"><span class="bold">Final result </span><strong>1:2 penalties</strong> (0:0, 2:4)</p>', '');
   expect(ps.status).toEqual('finished');
   expect(ps.result).toEqual({ score1: 1, score2: 2 });
   expect(ps.extra).toEqual('penalties');

@@ -6,6 +6,7 @@
 import { updateMatchInDB, getMatchFromWebPage, exportMatchToFile } from './match.js';
 import { parseFakedMatchUrl, parseNextMatchesData, parseNextMatchesHashes, parseNextMatchesJson } from './parser';
 import { createLongDateString, createLongTimestamp, httpGetAllowedHtmltext } from './provider';
+import { toShortDateStr } from './lib/utilslib';
 
 const { createLogger } = require('./lib/loggerlib');
 const matchlib = require('./match');
@@ -105,9 +106,10 @@ export async function crawlMatchLinks(status = null, force = false) {
     }
     scheduleNextCrawl(matchLink);
     await updateMatchLinkInDB(matchLink);
+    return true;
   }
 
-  return true;
+  // todo: return true;
 }
 
 export async function moveBackToMatchLinksQueue() {
@@ -138,7 +140,7 @@ async function crawlMatchLink(matchLink, count, totalCount) {
   //  const tournament = updateTournaments(match);
   const result = await updateMatchInDB(match);
   handleCrawlMatchLinkSuccess(matchLink, match);
-  log.info(`Match link ${count} of ${totalCount} crawled: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bookies, ${match.info.numBets} bets, ${matchLink.dateStr}, ${matchLink.startTime ? matchLink.startTime.toLocaleDateString() : null}, ${matchLink.parsedUrl.matchUrl}`);
+  log.info(`Match ${count}/${totalCount}: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bks, ${match.info.numBets} bets, ${matchLink.startTime ? toShortDateStr(matchLink.startTime) : null}, ${matchLink.parsedUrl.matchUrl}`);
 }
 
 function handleCrawlMatchLinkSuccess(matchLink, match) {
@@ -360,7 +362,8 @@ function createMatchLinkCompleted(matchLink) {
     _id: matchLink._id,
     tournamentId: matchLink.tournamentId,
     tournamentKey: matchLink.tournamentKey,
-    lastCrawlTime: matchLink.lastCrawlTime
+    lastCrawlTime: matchLink.lastCrawlTime,
+    url: matchLink.parsedUrl.matchUrl,
   };
 }
 

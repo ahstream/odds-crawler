@@ -38,13 +38,16 @@ export async function getScore(match) {
     throw new CustomError('Failed to JSON parse score for match', { urls, parsedScore, htmltext });
   }
 
-  const score = parseScore(match.sport, parsedScore.result, parsedScore['result-alert']);
+  log.debug('parsedScore', parsedScore);
+
+  const score = parseScore(match.sport, parsedScore.startTime, parsedScore.result, parsedScore['result-alert']);
   if (!score) {
     throw new CustomError('Failed to parse score for match', { urls, parsedScore, htmltext });
   }
 
   score.startTime = new Date(parsedScore.startTime * 1000);
   score.timestamp = parsedScore.startTime;
+
 
   return score;
 }
@@ -53,59 +56,59 @@ export async function getScore(match) {
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-export function parseScore(sport, result, resultAlert) {
+export function parseScore(sport, timestamp, result, resultAlert) {
+  const score = createScore(sport, {status: 'scheduled', startTime: new Date(timestamp * 1000), timestamp});
+
   const matchedFinishedResult = result.match(/Final result <\/span><strong>(\d+:\d+) ?([^<]*)<\/strong> ?\(?([^\)]*)?\)?<\/p>/i);
   if (matchedFinishedResult) {
-    return parseFinishedResult(sport, matchedFinishedResult);
+    parseFinishedResult(score, sport, matchedFinishedResult);
+    return score;
   }
 
   const matchedAbortedResult = result.match(/<strong>(.*) (awarded|retired|walkover)<\/strong> ?\(?([^\)]*)?\)?<\/p>/i);
   if (matchedAbortedResult) {
-    log.debug('matchedAbortedResult', matchedAbortedResult);
-    return parseAbortedResult(sport, matchedAbortedResult);
+    parseAbortedResult(score, sport, matchedAbortedResult);
+    return score;
   }
 
   const matchedNotFinishedResult = resultAlert.match(/<p class="result-alert"><span class="bold">(Abandoned|Canceled|Postponed|Interrupted|The match has already started\.) ?<\/span>(?:<strong>(\d+:\d+) ?([^<]*)<\/strong> ?\(?([^\)]*)\)?)?<\/p>/i);
   if (matchedNotFinishedResult) {
-    log.debug('matchedNotFinishedResult', matchedNotFinishedResult);
-    return parseNotFinishedResult(sport, matchedNotFinishedResult);
+    parseNotFinishedResult(score, sport, matchedNotFinishedResult);
+    return score;
   }
-
-  return createScore(sport);
-}
-
-function parseFinishedResult(sport, matchedResult) {
-  const result = matchedResult[1]; // '0:1'
-  const extra = matchedResult[2] ?? ''; // 'ET'
-  const results = matchedResult[3] ?? ''; // '0:0, 0:0, 0:1'
-
-  const score = createScore(sport, {status: 'finished'});
-  parseGeneralResult(score, result, extra, results);
 
   return score;
 }
 
-function parseAbortedResult(sport, matchedResult) {
+function parseFinishedResult(score, sport, matchedResult) {
+  const result = matchedResult[1]; // '0:1'
+  const extra = matchedResult[2] ?? ''; // 'ET'
+  const results = matchedResult[3] ?? ''; // '0:0, 0:0, 0:1'
+
+  score.status = 'finished';
+  parseGeneralResult(score, result, extra, results);
+}
+
+function parseAbortedResult(score, sport, matchedResult) {
   const actor = matchedResult[1];
   const status = convertStatus(matchedResult[2]); // 'Abandoned'
   const result = null;
   const extra = null;
   const results = textOrNull(matchedResult[3]); // '0:0, 0:0, 0:1'
 
-  const score = createScore(sport, {status, actor});
+  score.status = status;
+  score.actor = actor;
   parseGeneralResult(score, result, extra, results);
-  return score;
 }
 
-function parseNotFinishedResult(sport, matchedResult) {
+function parseNotFinishedResult(score, sport, matchedResult) {
   const status = convertStatus(matchedResult[1]); // 'Abandoned'
   const result = textOrNull(matchedResult[2]); // '0:1'
   const extra = textOrNull(matchedResult[3]); // 'ET'
   const results = textOrNull(matchedResult[4]); // '0:0, 0:0, 0:1'
 
-  const score = createScore(sport, {status});
+  score.status = status;
   parseGeneralResult(score, result, extra, results);
-  return score;
 }
 
 function parseGeneralResult(score, result, extra, results)  {
@@ -389,6 +392,13 @@ export function scopeToScoreSuffix(sc) {
   }
 }
 
+export function createScores(score1, score2) {
+  return {
+    _1: score1,
+    _2: score2
+  };
+}
+
 function createScore(sport, options = {}) {
   const data = {
     sport,
@@ -432,83 +442,6 @@ function createScore(sport, options = {}) {
     extraScore2H4: null,
     extraScore1H5: null,
     extraScore2H5: null
-  };
-
-  return { ...data, ...options };
-}
-
-export function createScores(score1, score2) {
-  return {
-    _1: score1,
-    _2: score2
-  };
-}
-
-export function createScoreOld(options = {}) {
-  const data = {
-    ok: false,
-    status: '',
-
-    hasFTScore: false,
-    hasPartTimeScore: false,
-    isOT: false,
-    isPenalties: false,
-
-    // isFinishedOk: false,
-    // isPostponed: false,
-    // finalResultOnly: false,
-
-    startTime: null,
-    timestamp: null,
-
-    result: null,
-    ptScores: null,
-    ptResult: null,
-    resultAlert: null,
-
-    sc1_1: null, // FTOT
-    sc1_2: null,
-    sc2_1: null, // FT
-    sc2_2: null,
-
-    sc3_1: null, // H1
-    sc3_2: null,
-    sc4_1: null, // H2
-    sc4_2: null,
-
-    /*
-    sc5_1: null, // P1
-    sc5_2: null,
-    sc6_1: null, // P2
-    sc6_2: null,
-    sc7_1: null, // P3
-    sc7_2: null,
-
-    sc8_1: null, // Q1
-    sc8_2: null,
-    sc9_1: null, // Q2
-    sc9_2: null,
-    sc10_1: null, // Q3
-    sc10_2: null,
-    sc11_1: null, // Q4
-    sc11_2: null,
-
-    sc12_1: null, // S1
-    sc12_2: null,
-    sc13_1: null, // S2
-    sc13_2: null,
-    sc14_1: null, // S3
-    sc14_2: null,
-    sc15_1: null, // S4
-    sc15_2: null,
-    sc16_1: null, // S5
-    sc16_2: null,
-    */
-
-    sc98_1: null, // OT/ET
-    sc98_2: null,
-    sc99_1: null, // Penalties
-    sc99_2: null
   };
 
   return { ...data, ...options };

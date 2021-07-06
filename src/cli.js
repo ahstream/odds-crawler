@@ -5,6 +5,7 @@
 
 import { createLogger, deleteLogFiles } from './lib/loggerlib';
 import { moveBackToMatchLinksQueue } from './matchLink';
+import { getMatchFromWebPageUrl } from './match';
 
 const program = require('commander');
 
@@ -17,9 +18,14 @@ const oddsHistory = require('./oddsHistory.js');
 
 const log = createLogger();
 
+// todo: lägg tillbaka marketResult i market
+// todo: ta bort odds?
+// todo: radera oddshistory och spara i db?
+
 // RUNTIME ----------------------------------------------------------------------------------
 
 program.option('--force', 'Force execution', false);
+program.option('--deleteLogFiles', 'Delete log files', false);
 program.option('--interval <value>', 'Minute interval for crawling', myParseInt, 60);
 program.option('--sport <value>', 'Sport name', 'soccer');
 // program.option('--sportId <value>', 'Sport ID', myParseInt, 1);
@@ -27,6 +33,7 @@ program.option('--datestr <value>', 'Date string (YYYYMMDD)', '');
 program.option('--daysAfter <value>', 'Days ahead', myParseInt, 0);
 program.option('--daysBefore <value>', 'Days before', myParseInt, 0);
 program.option('--status <value>', 'Status', null);
+program.option('--url <value>', 'URL', null);
 program.parse();
 
 runCommand();
@@ -38,8 +45,12 @@ runCommand();
  */
 async function runCommand() {
   const options = program.opts();
+  initLogFiles(options.deleteLogFiles);
   const cmd = program.args[0];
   switch (cmd) {
+    case 'getMatch':
+      await getMatchFromWebPageUrl(options.url);
+      break;
     case 'crawlMatchPages':
       await crawlMatchPages({
         interval: options.interval,
@@ -65,10 +76,8 @@ async function runCommand() {
     case 'resetDB':
       await resetDB();
       break;
-    case 'resetLogFiles':
-      log.info('Reset log files... ');
-      deleteLogFiles('logs/');
-      log.info('Done!');
+    case 'deleteLogFiles':
+      initLogFiles(true);
       break;
     case 'initOddsHistoryDB':
       await setupDB();
@@ -218,4 +227,11 @@ function myParseInt(value, dummyPrevious) {
  */
 function lookupSportId(sport) {
   return config.sport[sport];
+}
+
+function initLogFiles(doDelete) {
+  if (doDelete) {
+    log.info('Delete log files... ');
+    deleteLogFiles();
+  }
 }

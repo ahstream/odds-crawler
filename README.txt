@@ -1,5 +1,5 @@
 
-yarn cli resetLogFiles
+yarn cli deleteLogFiles
 yarn cli resetDB
 yarn cli initOddsHistoryDB
 yarn cli moveBackToMatchLinksQueue
@@ -10,6 +10,13 @@ yarn cli crawlMatchPages --interval 500 --sport "soccer" --daysAfter 300 --daysB
 yarn cli crawlMatchPages --interval 5000 --sport "tennis" --daysAfter 300 --daysBefore 1
 
 yarn cli crawlMatchLinks --interval 60 --status ""
+yarn cli crawlMatchLinks --interval 60 --status "" --deleteLogFiles
 yarn cli crawlMatchLinks --interval 5 --status "error"
 yarn cli crawlMatchLinks --interval 60 --status "new"
+
+
+yarn cli getMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/europe/champions-league/cfr-cluj-borac-banja-luka-I3ZO0jPa/'
+
+yarn cli getMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/argentina/primera-nacional/alvarado-chacarita-juniors-C2xos3i9/'
+
 

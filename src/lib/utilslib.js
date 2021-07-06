@@ -105,3 +105,10 @@ export function decodeEntitiesInString(encodedString) {
 export function normalizeText(text) {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
+
+export function toShortDateStr(date) {
+  if (date.toLocaleDateString) {
+    return date.toLocaleDateString().replaceAll('-', '');
+  }
+  return date;
+}
