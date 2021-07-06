@@ -7,7 +7,10 @@ import { CustomError } from './exceptions';
 import { httpGetManyUrls, createLongTimestamp, httpGetAllowedHtmltext } from './provider';
 
 const betlib = require('./bet.js');
+const { createLogger } = require('./lib/loggerlib');
 const parser = require('./parser');
+
+const log = createLogger();
 
 // ------------------------------------------------------------------------------------------------
 // MAIN FUNCTIONS
@@ -22,15 +25,15 @@ export async function processMatchFeeds(match) {
 }
 
 function processMatchFeedResults(match, feedResults) {
-  let numBets = 0;
+  let numMarkets = 0;
   for (const data of feedResults.data) {
     const feed = parser.parseMatchFeed(data.response.data);
     if (feed === null) {
       throw new CustomError('Match feed is null', { url: match.url, feedData: data });
     }
-    numBets += processMatchFeed(match, feed);
+    numMarkets += processMatchFeed(match, feed);
   }
-  return numBets;
+  return numMarkets;
 }
 
 function processMatchFeed(match, feed) {

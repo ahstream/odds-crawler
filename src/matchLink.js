@@ -3,10 +3,15 @@
  * FILE DESCRIPTION
  */
 
-import { updateMatchInDB, getMatchFromWebPage, exportMatchToFile } from './match.js';
+import { toShortDateStr } from './lib/utilslib';
+import {
+  updateMatchOddsHistoryDB,
+  getMatchFromWebPage,
+  exportMatchToFile,
+  addMatchToDBIfFinished
+} from './match.js';
 import { parseFakedMatchUrl, parseNextMatchesData, parseNextMatchesHashes, parseNextMatchesJson } from './parser';
 import { createLongDateString, createLongTimestamp, httpGetAllowedHtmltext } from './provider';
-import { toShortDateStr } from './lib/utilslib';
 
 const { createLogger } = require('./lib/loggerlib');
 const matchlib = require('./match');
@@ -117,7 +122,7 @@ export async function moveBackToMatchLinksQueue() {
   const dateStr = createLongDateString(now);
   const matchLinksCol = mongodb.db.collection(MATCH_LINKS);
   const matchLinksCompletedCol = mongodb.db.collection(MATCH_LINKS_COMPLETED);
-  const matchLinksCompleted = await matchLinksCompletedCol.find({ }).toArray();
+  const matchLinksCompleted = await matchLinksCompletedCol.find({}).toArray();
   for (const [idx, matchLinkCompleted] of matchLinksCompleted.entries()) {
     try {
       const parsedUrl = parseFakedMatchUrl(matchLinkCompleted._id, matchLinkCompleted.tournamentKey);
@@ -126,7 +131,7 @@ export async function moveBackToMatchLinksQueue() {
       // log.info(matchLink);
       await matchLinksCol.insertOne(matchLink);
     } catch (error) {
-      log.error(error);
+      log.error('Error in moveBackToMatchLinksQueue:', error);
     }
   }
 
@@ -138,9 +143,10 @@ async function crawlMatchLink(matchLink, count, totalCount) {
   const match = await getMatchFromWebPage(matchLink.parsedUrl, true);
   exportMatchToFile(match);
   //  const tournament = updateTournaments(match);
-  const result = await updateMatchInDB(match);
+  const result = await updateMatchOddsHistoryDB(match);
+  addMatchToDBIfFinished(match);
   handleCrawlMatchLinkSuccess(matchLink, match);
-  log.info(`Match ${count}/${totalCount}: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bks, ${match.info.numBets} bets, ${matchLink.startTime ? toShortDateStr(matchLink.startTime) : null}, ${matchLink.parsedUrl.matchUrl}`);
+  log.info(`Match ${count}/${totalCount}: ${result.oddsHistory.new} new odds, ${result.oddsHistory.existing} dups, ${match.info.numBookies} bks, ${match.info.numMarkets} markets, ${matchLink.startTime ? toShortDateStr(matchLink.startTime) : null}, ${matchLink.parsedUrl.matchUrl}`);
 }
 
 function handleCrawlMatchLinkSuccess(matchLink, match) {
@@ -163,7 +169,13 @@ function handleCrawlMatchLinkError(matchLink, error) {
   matchLink.isCompleted = null;
   matchLink.status = 'error';
   matchLink.errorMsg = error.message;
-  matchLink.error = { name: error.name, message: error.message, data: error.data, stack: error.stack, completeError: JSON.stringify(error) };
+  matchLink.error = {
+    name: error.name,
+    message: error.message,
+    data: error.data,
+    stack: error.stack,
+    completeError: JSON.stringify(error)
+  };
   matchLink.errorCount++;
 }
 
@@ -200,7 +212,7 @@ function calcHoursToNextCrawl(matchLink) {
     return 1;
   }
   if (matchLink.hoursToStart <= 48) {
-    return 2 ;
+    return 2;
   }
   if (matchLink.hoursToStart <= 72) {
     return 4;
@@ -245,7 +257,7 @@ async function getMatchLinksFromDB(status, force) {
   return [...nextMatchLinks, ...prevMatchLinks];
 }
 
-export async function updateMatchLinkInDB(matchLink) {
+export async function updateMatchLinkInDB(matchLink, match) {
   if (matchLink.isCompleted) {
     const completedItem = createMatchLinkCompleted(matchLink);
     await mongodb.db.collection(MATCH_LINKS_COMPLETED).updateOne({ _id: matchLink._id }, { $set: completedItem }, { upsert: true });
@@ -367,7 +379,7 @@ function createMatchLinkCompleted(matchLink) {
     tournamentId: matchLink.tournamentId,
     tournamentKey: matchLink.tournamentKey,
     lastCrawlTime: matchLink.lastCrawlTime,
-    url: matchLink.parsedUrl.matchUrl,
+    url: matchLink.parsedUrl.matchUrl
   };
 }
 

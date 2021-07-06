@@ -17,11 +17,12 @@ const log = createLogger();
 
 export function addMarketResult(market, match, betArgs) {
   const scoreSuffix = scorelib.scopeToScoreSuffix(market.sc);
+  log.info('scoreSuffix', scoreSuffix);
   const score1 = match.score[`score1${scoreSuffix}`];
   const score2 = match.score[`score2${scoreSuffix}`];
   if (score1 === null || score2 === null) {
-    log.info('No scores for scope:', scoreSuffix, market.sc, score1, score2)
-    log.debug('No scores for scope:', scoreSuffix, market.sc, match.score, betArgs, match.url)
+    log.info('No scores for scope:', scoreSuffix, market.sc, score1, score2);
+    log.debug('No scores for scope:', scoreSuffix, market.sc, match.score, betArgs, match.url);
     return;
   }
   const scores = scorelib.createScores(score1, score2);

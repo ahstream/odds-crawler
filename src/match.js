@@ -20,14 +20,15 @@ const scorelib = require('./score');
 
 const log = createLogger();
 
+const MATCHES = 'matches';
+
 // MAIN FUNCTIONS ---------------------------------------------------------------------------------
 
-export async function getMatchFromWebPage(parsedUrl, skipMarkets = false) {
+export async function getMatchFromWebPage(parsedUrl) {
   const url = `https://www.oddsportal.com${parsedUrl.matchUrl}`;
   const htmltext = await httpGetAllowedHtmltext([url]);
 
   const match = createMatch(parsedUrl);
-  match.skipMarkets = skipMarkets;
 
   match.params = parseMatchPageEvent(htmltext);
   match.score = await scorelib.getScore(match, htmltext);
@@ -38,25 +39,20 @@ export async function getMatchFromWebPage(parsedUrl, skipMarkets = false) {
     throw new CustomError('Failed getting bet types', { match, htmltext });
   }
 
-  const numBets = await feedlib.processMatchFeeds(match);
-  if (numBets < 1) {
-    throw new CustomError('No bets in feed', { url: match.url, htmltext });
-  }
-  log.debug(`Num bets in feed: ${numBets}`);
-
-  match.hasOdds = _.isEmpty(match.odds) === false;
-  if (match.hasOdds) {
-    updateMarketOdds(match);
+  match.info.numMarkets = await feedlib.processMatchFeeds(match);
+  if (match.info.numMarkets < 1) {
+    throw new CustomError('No markets in feed', { url: match.url, htmltext });
   }
 
-  addInfo(match, numBets);
+  updateMarketOdds(match);
+  updateMatchInfo(match);
 
   // log.verbose(match);
 
   return match;
 }
 
-export async function getMatchFromWebPageUrl(url, skipMarkets = false) {
+export async function getMatchFromWebPageUrl(url) {
   const parsedUrl = parseMatchUrl(url);
   // log.verbose(parsedUrl);
   const match = await getMatchFromWebPage(parsedUrl);
@@ -64,15 +60,31 @@ export async function getMatchFromWebPageUrl(url, skipMarkets = false) {
   return match;
 }
 
+export async function addMatchFromWebPageUrl(url) {
+  const match = await getMatchFromWebPageUrl(url);
+  await addMatchToDBIfFinished(match);
+}
 
 export function exportMatchToFile(match) {
   match.score.url = match.url;
   writeToFile(match.score, match.sport);
 }
 
-export async function updateMatchInDB(match) {
+export async function updateMatchOddsHistoryDB(match) {
   const result = await updateOddsHistoryDB(match.oddsHistory);
   return { oddsHistory: result };
+}
+
+export async function addMatchToDB(match) {
+  delete match.oddsHistory;
+  match._id = match.id;
+  await mongodb.db.collection(MATCHES).updateOne({ _id: match.id }, { $set: match }, { upsert: true });
+}
+
+export async function addMatchToDBIfFinished(match) {
+  if (isFinished(match)) {
+    await addMatchToDB(match);
+  }
 }
 
 export function hasNormalMatchResult(match) {
@@ -84,18 +96,25 @@ export function isFinished(match) {
   return match.status === 'finished';
 }
 
-function addInfo(match, numBets) {
+function updateMatchInfo(match) {
   match.sportId = match.params.sportId;
   match.tournamentId = match.params.tournamentId;
   match.home = match.params.home;
   match.away = match.params.away;
   match.startTime = match.score.startTime;
   match.timestamp = match.score.timestamp;
-  match.info = {};
-  const mainMarket = match.market[`${match.id}_1_2_1_0.00`];
-  match.info.numBookies = mainMarket ? mainMarket.numBookies : null;
-  match.info.numBets = numBets;
+  match.info.numBookies = getNumBookies(match);
 }
+
+function getNumBookies(match) {
+  const numBookies = match.market[`${match.id}_1_2_1_0.00_0`]?.numBookies || match.market[`${match.id}_3_2_1_0.00_0`]?.numBookies;
+  if (!numBookies) {
+    log.error('No bookies:', match.url);
+    return null;
+  }
+  return numBookies;
+}
+
 
 // CREATORS ----------------------------------------------------------------------------------------
 
@@ -109,17 +128,17 @@ function createMatch(parsedUrl) {
     tournament: parsedUrl.tournament,
     tournamentId: null,
     tournamentKey: parsedUrl.tournamentKey,
-    url: parsedUrl.matchUrl,
-    parsedUrl,
     startTime: null,
     timestamp: null,
     home: null,
     away: null,
+    url: parsedUrl.matchUrl,
+    parsedUrl,
     betTypes: null,
     market: {},
     marketResult: {},
     marketOdds: {},
-    odds: {},
-    oddsHistory: {}
+    oddsHistory: {},
+    info: {}
   };
 }

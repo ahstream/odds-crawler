@@ -16,11 +16,9 @@ const log = createLogger();
 export function processMatchOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem) {
   const oddsId = createId(match, betArgs, outcomeArgs, bookieArgs);
 
-  if (matchlib.isFinished(match) && !match.skipMarkets) {
-    match.odds[oddsId] = createOdds(oddsId, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
+  if (matchlib.isFinished(match)) {
+    // match.odds[oddsId] = createOdds(oddsId, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
     marketoddslib.addMarketOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
-  } else if (match.skipMarkets) {
-      // log.info('skip markets in marketodds');
   }
 
   return oddsId;
@@ -31,7 +29,7 @@ export function processMatchOdds(match, marketId, betArgs, outcomeArgs, bookieAr
 // ------------------------------------------------------------------------------------------------
 
 function createId(match, betArgs, outcomeArgs, bookieArgs) {
-  return `${match.id}_${betArgs.bt}_${betArgs.sc}_${betArgs.isBack}_${betArgs.attributeText}_${outcomeArgs.num}_${bookieArgs.id}`;
+  return `${match.id}_${betArgs.bt}_${betArgs.sc}_${betArgs.isBack}_${betArgs.attribute}_${betArgs.attributeType}_${outcomeArgs.num}_${bookieArgs.id}`;
 }
 
 function createOdds(id, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem) {
@@ -43,9 +41,9 @@ function createOdds(id, match, marketId, betArgs, outcomeArgs, bookieArgs, compl
     // bt,
     // sc,
     // back,
-    // attributeText,
-    // attribute1: attributes.attribute1,
-    // attribute2: attributes.attribute2,
+    // attribute,
+    // attributeValue1: attributes.value1,
+    // attributeValue2: attributes.value2,
 
     betArgs,
     outcome: outcomeArgs.num,

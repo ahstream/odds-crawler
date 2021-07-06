@@ -24,19 +24,21 @@ export function calcMarket(match, scores, betArgs) {
       case config.bt.Match:
         return backOrLay(betArgs.isBack, calcMatch(scores));
       case config.bt.OU:
-        return backOrLay(betArgs.isBack, calcOU(scores, betArgs.attributes.attribute1));
+        return backOrLay(betArgs.isBack, calcOU(scores, betArgs.attributes.value1));
+      case config.bt.HomeAway:
+        return backOrLay(betArgs.isBack, calcHomeAway(scores));
       case config.bt.DC:
         return backOrLay(betArgs.isBack, calcDC(scores));
       case config.bt.AH:
-        return backOrLay(betArgs.isBack, calcAH(scores, betArgs.attributes.attribute1));
+        return backOrLay(betArgs.isBack, calcAH(scores, betArgs.attributes.value1));
       case config.bt.DNB:
         return backOrLay(betArgs.isBack, calcDNB(scores));
       case config.bt.CS:
-        return backOrLay(betArgs.isBack, calcCS(scores, betArgs.attributes.attribute1, betArgs.attributes.attribute2));
+        return backOrLay(betArgs.isBack, calcCS(scores, betArgs.attributes.value1, betArgs.attributes.value2));
       case config.bt.HTFT:
-        return backOrLay(betArgs.isBack, calcHTFT(scores, betArgs.attributes.attribute1, betArgs.attributes.attribute2, match));
+        return backOrLay(betArgs.isBack, calcHTFT(scores, betArgs.attributes.value1, betArgs.attributes.value2, match));
       case config.bt.EH:
-        return backOrLay(betArgs.isBack, calcEH(scores, betArgs.attributes.attribute1));
+        return backOrLay(betArgs.isBack, calcEH(scores, betArgs.attributes.value1));
       case config.bt.BTS:
         return backOrLay(betArgs.isBack, calcBTS(scores));
       case config.bt.OE:
@@ -105,6 +107,17 @@ function calcMatch(scores) {
   }
   log.debug('calcMatch is null for:', scores);
   throw new CustomError('Failed calcMatch', { scores });
+}
+
+function calcHomeAway(scores) {
+  if (is1(scores)) {
+    return r(1, W, L);
+  }
+  if (is2(scores)) {
+    return r(2, L, W);
+  }
+  log.debug('calcHomeAway is null for:', scores);
+  throw new CustomError('Failed calcHomeAway', { scores });
 }
 
 function calcDC(scores) {

@@ -21,27 +21,18 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 export function processBets(match, feed, oddsFeed, bt, sc) {
-  const betKeys = getBetKeys(oddsFeed);
-
-  processBetKeys(betKeys, match, feed, oddsFeed, bt, sc);
-
-  return betKeys.length;
-}
-
-function processBetKeys(betKeys, match, feed, oddsFeed, bt, sc) {
-  betKeys.forEach(({ betKey, _attribute, _isMixedParameter, isBack }) => {
-    const betFeed = oddsFeed[betKey];
-    const attributeText = attributelib.getAttributeText(betFeed);
-    const attributes = attributelib.calcAttributes(attributeText, bt);
-    const betArgs = createBetArgs(bt, sc, isBack, attributeText, attributes);
+  const betMarkets = getBetMarkets(oddsFeed, bt, sc);
+  betMarkets.forEach((betArgs) => {
+    const betFeed = oddsFeed[betArgs.key];
     processBet(match, feed, betFeed, betArgs);
   });
+  return betMarkets.length;
 }
 
 function processBet(match, feed, oddsFeed, betArgs) {
   const marketId = marketlib.addMarket(match, betArgs, oddsFeed.act);
   if (!marketId) {
-    log.debug('Market is excluded:', betArgs, match.url)
+    log.debug('Market is excluded:', betArgs, match.url);
     return;
   }
 
@@ -71,110 +62,96 @@ export async function getBetTypes(match) {
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-function getBetKeys(oddsFeed) {
-  const betKeys = [];
-  Object.keys(oddsFeed).forEach((betKey, _index) => {
-    const isMixedParameter = oddsFeed[betKey].mixedParameterId > 0;
-    const attribute = oddsFeed[betKey].mixedParameterName || oddsFeed[betKey].handicapValue;
-    const isBack = oddsFeed[betKey].isBack ? 1 : 0;
-    betKeys.push({ betKey, attribute, isMixedParameter, isBack });
+function getBetMarkets(oddsFeed, bt, sc) {
+  const betMarkets = [];
+  Object.keys(oddsFeed).forEach((key, _index) => {
+    const isBack = oddsFeed[key].isBack ? 1 : 0;
+    const handicapType = oddsFeed[key].handicapType;
+    const handicapValue = oddsFeed[key].handicapValue;
+    const mixedParameterId = oddsFeed[key].mixedParameterId;
+    const mixedParameterName = oddsFeed[key].mixedParameterName;
+    const attribute = mixedParameterName || handicapValue;
+    const attributeSortKey = mixedParameterName || Number(handicapValue);
+    const attributes = attributelib.calcAttributes(attribute, bt);
+    betMarkets.push({
+      key,
+      bt,
+      sc,
+      isBack,
+      handicapType,
+      handicapValue,
+      mixedParameterId,
+      mixedParameterName,
+      attribute,
+      attributeSortKey,
+      attributeType: handicapType,
+      attributes,
+      betTypeName: getBetTypeName(bt),
+      scopeName: getScopeName(sc),
+      betName: getBetName(bt, sc, attribute, attributes, handicapType)
+    });
   });
-  betKeys.sort(betKeySorter);
-  return betKeys;
+  betMarkets.sort(betMarketSorter);
+  return betMarkets;
 }
 
-function betKeySorter(b1, b2) {
+function betMarketSorter(market1, market2) {
   // Sort asian handicap and correct score!
-  const attr1 = b1.attributeText;
-  const attr2 = b2.attributeText;
-  if (b1.isMixedParameter) {
-    if (attr1 < attr2) {
-      return -1;
-    }
-    return attr2 > attr1 ? 1 : 0;
-  }
-  const n1 = Number(attr1);
-  const n2 = Number(attr2);
-  if (n1 < n2) {
+  if (market1.attributeSortKey < market2.attributeSortKey) {
     return -1;
   }
-  return n2 > n1 ? 1 : 0;
+  return market2.attributeSortKey > market1.attributeSortKey ? 1 : 0;
 }
 
-function calcBetTypeName(bt) {
-  switch (bt) {
-    case config.bt.Match:
-      return '1X2';
-    case config.bt.OU:
-      return 'OU';
-    case config.bt.HomeAway:
-      return 'Home/Away';
-    case config.bt.DC:
-      return 'DC';
-    case config.bt.AH:
-      return 'AH';
-    case config.bt.DNB:
-      return 'DNB';
-    case config.bt.TQ:
-      return 'TQ';
-    case config.bt.CS:
-      return 'CS';
-    case config.bt.HTFT:
-      return 'HTFT';
-    case config.bt.OE:
-      return 'OE';
-    case config.bt.Winner:
-      return 'Winner';
-    case config.bt.EH:
-      return 'EH';
-    case config.bt.BTS:
-      return 'BTS';
-    default:
+function getBetTypeName(bt) {
+  return config.btName[`${bt}`] || 'UNKNOWN';
+}
+
+function getScopeName(sc) {
+  return config.scName[`${sc}`] || 'UNKNOWN';
+}
+
+function getHandicapTypeName(type) {
+  switch (type) {
+    case 0:
       return '';
-  }
-}
-
-function calcScopeName(sc) {
-  switch (sc) {
-    case config.sc.FT:
-      return 'FT';
-    case config.sc.H1:
-      return 'H1';
-    case config.sc.H2:
-      return 'H2';
-    case config.sc.FTOT:
-      return 'FTOT';
+    case 1:
+      return 'sets';
+    case 2:
+      return 'games';
+    case 7:
+      return 'legs';
     default:
       return 'UNKNOWN';
   }
 }
 
-function calcBetName(bt, sc, attributeText, attributes) {
+function getBetName(bt, sc, attribute, attributes, handicapType) {
+  const handicapTypeName = getHandicapTypeName(handicapType);
+  const attributeTypeText = handicapTypeName ? ` ${handicapTypeName}` : '';
+  const handicapSign = getHandicapSign(attributes.value1);
   switch (bt) {
     case config.bt.OU:
-      return `OU ${attributes.attribute1} ${calcScopeName(sc)}`;
+      return `OU ${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
     case config.bt.AH:
-      return `AH ${attributes.attribute1} ${calcScopeName(sc)}`;
+      return `AH ${handicapSign}${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
     case config.bt.CS:
-      return `CS ${attributes.attribute1}-${attributes.attribute2} ${calcScopeName(sc)}`;
+      return `CS ${attributes.value1}:${attributes.value2} ${getScopeName(sc)}`;
     case config.bt.HTFT:
-      return `HTFT ${attributeText}`;
+      return `HTFT ${attribute}`;
     case config.bt.EH:
-      return `EH ${attributes.attribute1} ${calcScopeName(sc)}`;
+      return `EH ${handicapSign}${attributes.value1} ${getScopeName(sc)}`;
     default:
-      return `${calcBetTypeName(bt)} ${calcScopeName(sc)}`;
+      return `${getBetTypeName(bt)} ${getScopeName(sc)}`;
   }
 }
 
-function createBetArgs(bt, sc, isBack, attributeText, attributes) {
-  return {
-    betTypeName: calcBetTypeName(bt),
-    scopeName: calcScopeName(sc),
-    betName: calcBetName(bt, sc, attributeText, attributes),
-    bt,
-    sc,
-    isBack,
-    attributeText,
-    attributes
-  };
+function getHandicapSign(handicapValue) {
+  if (handicapValue > 0) {
+    return '+';
+  }
+  if (handicapValue < 0) {
+    return '-';
+  }
+  return '';
 }

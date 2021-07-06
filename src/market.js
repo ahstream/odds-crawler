@@ -23,7 +23,7 @@ export function addMarket(match, betArgs, bookies) {
       return null;
     }
 
-    const marketId = `${match.id}_${betArgs.bt}_${betArgs.sc}_${betArgs.isBack}_${betArgs.attributeText}`;
+    const marketId = `${match.id}_${betArgs.bt}_${betArgs.sc}_${betArgs.isBack}_${betArgs.attribute}_${betArgs.attributeType}`;
     const market = createMarket(marketId);
 
     market.matchId = match.id;
@@ -33,9 +33,9 @@ export function addMarket(match, betArgs, bookies) {
     market.bt = betArgs.bt;
     market.sc = betArgs.sc;
     market.isBack = betArgs.isBack;
-    market.attributeText = betArgs.attributeText;
-    // market.attribute1 = attributes.attribute1;
-    // market.attribute2 = attributes.attribute2;
+    market.attribute = betArgs.attribute;
+    market.attributes = betArgs.attributes;
+    market.attributeType = betArgs.attributeType;
 
     const numBookies = Object.keys(bookies).length;
     const numUndefined = bookielib.countUndefined(bookies);
@@ -45,14 +45,12 @@ export function addMarket(match, betArgs, bookies) {
     market.numUndefined = numUndefined;
     market.numSharp = bookielib.countSharp(bookies);
     market.numSoft = bookielib.countSoft(bookies);
-    market.numSwe = bookielib.countSweden(bookies);
     market.numExchanges = bookielib.countExchange(bookies);
     market.numBrokers = bookielib.countBroker(bookies);
+    market.numSwe = bookielib.countSweden(bookies);
 
-    if (hasNormalMatchResult(match) && !match.skipMarkets) {
+    if (hasNormalMatchResult(match)) {
       marketresultlib.addMarketResult(market, match, betArgs);
-    } else if (match.skipMarkets) {
-      // log.info('skip markets in market');
     }
 
     match.market[marketId] = market;
@@ -83,15 +81,17 @@ function shouldMarketBeIncluded(match, betArgs) {
   switch (betArgs.bt) {
     case config.bt.Match:
     case config.bt.OU:
+    case config.bt.HomeAway:
     case config.bt.DC:
     case config.bt.AH:
     case config.bt.DNB:
+    case config.bt.TQ:
     case config.bt.CS:
     case config.bt.HTFT:
+    case config.bt.OE:
+    case config.bt.Winner:
     case config.bt.EH:
     case config.bt.BTS:
-    case config.bt.OE:
-    case config.bt.TQ:
       break; // do nothing
     default:
       return false;
@@ -111,9 +111,9 @@ function createMarket(id) {
     bt: null,
     sc: null,
     isBack: null,
-    attributeText: null,
-    // attribute1: null,
-    // attribute2: null,
+    attribute: null, // '0.00', '+1.5', '1:2',
+    attributes: null, // 1.5
+    attributeType: null, // 0: goals/sets; 1: games
 
     numBookies: null,
     numIncluded: null,
@@ -122,6 +122,6 @@ function createMarket(id) {
     numSoft: null,
     numExchanges: null,
     numBrokers: null,
-    numSwe: null,
+    numSwe: null
   };
 }

@@ -9,46 +9,42 @@ const config = require('../config/config.json');
 // MAIN FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-export function calcAttributes(attributeText, bt) {
+export function calcAttributes(attribute, bt) {
   const attributes = createAttributes();
   switch (bt) {
     case config.bt.OU:
-      attributes.attribute1 = parseFloat(attributeText);
+      attributes.value1 = parseFloat(attribute);
       break;
     case config.bt.AH:
-      attributes.attribute1 = parseFloat(attributeText);
+      attributes.value1 = parseFloat(attribute);
       break;
     case config.bt.CS:
-      const goals = attributeText.split(':');
+      const goals = attribute.split(':');
       if (goals.length === 2) {
-        attributes.attribute1 = parseInt(goals[0], 10);
-        attributes.attribute2 = parseInt(goals[1], 10);
+        attributes.value1 = parseInt(goals[0], 10);
+        attributes.value2 = parseInt(goals[1], 10);
       }
       break;
     case config.bt.HTFT:
-      const signs = attributeText.split('/');
+      const signs = attribute.split('/');
       if (signs.length === 2) {
         const sign1 = signs[0];
         const sign2 = signs[1];
         const outcomeHT = convertOutcomeSignToNum(sign1);
         const outcomeFT = convertOutcomeSignToNum(sign2);
         if (outcomeHT > 0 && outcomeFT > 0) {
-          attributes.attribute1 = outcomeHT;
-          attributes.attribute2 = outcomeFT;
+          attributes.value1 = outcomeHT;
+          attributes.value2 = outcomeFT;
         }
       }
       break;
     case config.bt.EH:
-      attributes.attribute1 = parseInt(attributeText, 10);
+      attributes.value1 = parseInt(attribute, 10);
       break;
     default:
     // do nothing
   }
   return attributes;
-}
-
-export function getAttributeText(betFeed) {
-  return betFeed.mixedParameterName || betFeed.handicapValue;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -68,9 +64,9 @@ function convertOutcomeSignToNum(sign) {
   }
 }
 
-function createAttributes(attribute1 = null, attribute2 = null) {
+function createAttributes(value1 = null, value2 = null) {
   return {
-    attribute1,
-    attribute2
+    value1,
+    value2
   };
 }

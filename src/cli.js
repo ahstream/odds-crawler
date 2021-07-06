@@ -4,8 +4,8 @@
  */
 
 import { createLogger, deleteLogFiles } from './lib/loggerlib';
+import { addMatchFromWebPageUrl, getMatchFromWebPageUrl } from './match';
 import { moveBackToMatchLinksQueue } from './matchLink';
-import { getMatchFromWebPageUrl } from './match';
 
 const program = require('commander');
 
@@ -19,8 +19,11 @@ const oddsHistory = require('./oddsHistory.js');
 const log = createLogger();
 
 // todo: lägg tillbaka marketResult i market
-// todo: ta bort odds?
-// todo: radera oddshistory och spara i db?
+// todo: crawlMatchPages för flera sporter samtidigt
+// todo: hantera isFinished + hasNormalResult: isCompleted, isFinished, isAborted, isNotFinished, isScheduled, isLive
+// todo: handicapType, games vs sets
+// todo: Final result 3:2 OT (1:0, 0:1, 1:1, 1:0), https://www.oddsportal.com/hockey/usa/nhl/montreal-canadiens-tampa-bay-lightning-WtYDB3K8/
+// todo: half1 = q1+q2, osv
 
 // RUNTIME ----------------------------------------------------------------------------------
 
@@ -44,49 +47,55 @@ runCommand();
  * runCommand()
  */
 async function runCommand() {
-  const options = program.opts();
-  initLogFiles(options.deleteLogFiles);
-  const cmd = program.args[0];
-  switch (cmd) {
-    case 'getMatch':
-      await getMatchFromWebPageUrl(options.url);
-      break;
-    case 'crawlMatchPages':
-      await crawlMatchPages({
-        interval: options.interval,
-        sport: options.sport,
-        sportId: lookupSportId(options.sport),
-        datestr: options.datestr,
-        daysAfter: options.daysAfter,
-        daysBefore: options.daysBefore
-      });
-      break;
-    case 'crawlMatchLinks':
-      await crawlMatchLinks({
-        interval: options.interval,
-        status: options.status,
-        force: options.force
-      });
-      break;
-    case 'moveBackToMatchLinksQueue':
-      await setupDB();
-      await moveBackToMatchLinksQueue();
-      await closeDB();
-      break;
-    case 'resetDB':
-      await resetDB();
-      break;
-    case 'deleteLogFiles':
-      initLogFiles(true);
-      break;
-    case 'initOddsHistoryDB':
-      await setupDB();
-      await oddsHistory.initOddsHistoryDB();
-      await closeDB();
-      break;
-    default:
-      // throw new program.InvalidArgumentError('Unknown command!');
-      log.error(`Unknown command: ${cmd}`);
+  try {
+    const options = program.opts();
+    initLogFiles(options.deleteLogFiles);
+    log.info('Run command...');
+
+    await setupDB();
+
+    const cmd = program.args[0];
+    switch (cmd) {
+      case 'getMatch':
+        await getMatchFromWebPageUrl(options.url);
+        break;
+      case 'addMatch':
+        await addMatchFromWebPageUrl(options.url);
+        break;
+      case 'crawlMatchPages':
+        await crawlMatchPages({
+          interval: options.interval,
+          sport: options.sport,
+          sportId: lookupSportId(options.sport),
+          datestr: options.datestr,
+          daysAfter: options.daysAfter,
+          daysBefore: options.daysBefore
+        });
+        break;
+      case 'crawlMatchLinks':
+        await crawlMatchLinks({
+          interval: options.interval,
+          status: options.status,
+          force: options.force
+        });
+        break;
+      case 'moveBackToMatchLinksQueue':
+        await moveBackToMatchLinksQueue();
+        break;
+      case 'deleteLogFiles':
+        initLogFiles(true);
+        break;
+      case 'initOddsHistoryDB':
+        await oddsHistory.initOddsHistoryDB();
+        break;
+      default:
+        // throw new program.InvalidArgumentError('Unknown command!');
+        log.error(`Unknown command: ${cmd}`);
+    }
+  } catch (err) {
+    log.error('Error in runCommand:', err);
+  } finally {
+    await closeDB();
   }
 }
 

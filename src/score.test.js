@@ -330,8 +330,8 @@ test('parseScore()', () => {
   expect(ps.score2H2).toEqual(4);
   expect(ps.score1OT).toEqual(0);
   expect(ps.score2OT).toEqual(1);
-  expect(ps.score1P).toEqual(null);
-  expect(ps.score2P).toEqual(null);
+  expect(ps.score1PT).toEqual(null);
+  expect(ps.score2PT).toEqual(null);
   expect(ps.hasFTOTScore).toEqual(true);
   expect(ps.score1FT).toEqual(4);
   expect(ps.score2FT).toEqual(4);
@@ -357,8 +357,8 @@ test('parseScore()', () => {
   expect(ps.score2H2).toEqual(4);
   expect(ps.score1OT).toEqual([0, 0]);
   expect(ps.score2OT).toEqual([0, 1]);
-  expect(ps.score1P).toEqual(null);
-  expect(ps.score2P).toEqual(null);
+  expect(ps.score1PT).toEqual(null);
+  expect(ps.score2PT).toEqual(null);
   expect(ps.hasFTOTScore).toEqual(true);
   expect(ps.score1FT).toEqual(4);
   expect(ps.score2FT).toEqual(4);
@@ -386,8 +386,8 @@ test('parseScore()', () => {
   expect(ps.score2H2).toEqual(2);
   expect(ps.score1OT).toEqual(1);
   expect(ps.score2OT).toEqual(1);
-  expect(ps.score1P).toEqual(1);
-  expect(ps.score2P).toEqual(4);
+  expect(ps.score1PT).toEqual(1);
+  expect(ps.score2PT).toEqual(4);
   expect(ps.hasFTOTScore).toEqual(true);
   expect(ps.score1FT).toEqual(2);
   expect(ps.score2FT).toEqual(2);
@@ -414,8 +414,8 @@ test('parseScore()', () => {
   expect(ps.score2H2).toEqual(2);
   expect(ps.score1OT).toEqual([1, 2]);
   expect(ps.score2OT).toEqual([1, 2]);
-  expect(ps.score1P).toEqual(1);
-  expect(ps.score2P).toEqual(4);
+  expect(ps.score1PT).toEqual(1);
+  expect(ps.score2PT).toEqual(4);
   expect(ps.hasFTOTScore).toEqual(true);
   expect(ps.score1FT).toEqual(2);
   expect(ps.score2FT).toEqual(2);
@@ -438,8 +438,8 @@ test('parseScore()', () => {
   expect(ps.score2H1).toEqual(0);
   expect(ps.score1H2).toEqual(0);
   expect(ps.score2H2).toEqual(0);
-  expect(ps.score1P).toEqual(3);
-  expect(ps.score2P).toEqual(1);
+  expect(ps.score1PT).toEqual(3);
+  expect(ps.score2PT).toEqual(1);
   expect(ps.hasFTOTScore).toEqual(true);
   expect(ps.score1FT).toEqual(0);
   expect(ps.score2FT).toEqual(0);
@@ -460,8 +460,8 @@ test('parseScore()', () => {
   expect(ps.isOvertime).toEqual(false);
   expect(ps.score1H1).toEqual(null);
   expect(ps.score2H1).toEqual(null);
-  expect(ps.score1P).toEqual(2);
-  expect(ps.score2P).toEqual(4);
+  expect(ps.score1PT).toEqual(2);
+  expect(ps.score2PT).toEqual(4);
   expect(ps.hasFTOTScore).toEqual(true);
   expect(ps.score1FT).toEqual(null);
   expect(ps.score2FT).toEqual(null);

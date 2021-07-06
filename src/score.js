@@ -57,7 +57,7 @@ export async function getScore(match) {
 // ------------------------------------------------------------------------------------------------
 
 export function parseScore(sport, timestamp, result, resultAlert) {
-  const score = createScore(sport, {status: 'scheduled', startTime: new Date(timestamp * 1000), timestamp});
+  const score = createScore(sport, { status: 'scheduled', startTime: new Date(timestamp * 1000), timestamp });
 
   const matchedFinishedResult = result.match(/Final result <\/span><strong>(\d+:\d+) ?([^<]*)<\/strong> ?\(?([^\)]*)?\)?<\/p>/i);
   if (matchedFinishedResult) {
@@ -111,7 +111,7 @@ function parseNotFinishedResult(score, sport, matchedResult) {
   parseGeneralResult(score, result, extra, results);
 }
 
-function parseGeneralResult(score, result, extra, results)  {
+function parseGeneralResult(score, result, extra, results) {
   initFullTimeResult(score, result, extra);
   initPartTimeResults(score, results);
   addPartTimeResults(score);
@@ -166,19 +166,19 @@ function addFullTimeResult(score) {
 }
 
 function getFullTimeScoreFromPartTimeScores(score) {
-  switch(score.sport) {
+  switch (score.sport) {
     case 'soccer':
       return {
         score1: score.score1H1 + score.score1H2,
         score2: score.score1H1 + score.score1H2
-      }
+      };
     case 'tennis':
       return {
         score1: score.result.score1,
         score2: score.result.score2
-      }
+      };
     default:
-      throw new CustomError('Unsupported sport!', { score })
+      throw new CustomError('Unsupported sport!', { score });
   }
 }
 
@@ -285,13 +285,13 @@ function addPartTimeResultsOvertimeSoccer(score) {
     }
     if (score.results && score.results.length === 1) {
       score.hasPTScore = false;
-      score.score1P = score.results[0].score1;
-      score.score2P = score.results[0].score2;
+      score.score1PT = score.results[0].score1;
+      score.score2PT = score.results[0].score2;
     }
     if (score.results && score.results.length === 2) {
       score.hasPTScore = false;
-      score.score1P = score.results[1].score1;
-      score.score2P = score.results[1].score2;
+      score.score1PT = score.results[1].score1;
+      score.score2PT = score.results[1].score2;
     }
     if (score.results && score.results.length === 3) {
       score.hasPTScore = true;
@@ -299,8 +299,8 @@ function addPartTimeResultsOvertimeSoccer(score) {
       score.score2H1 = score.results[0].score2;
       score.score1H2 = score.results[1].score1;
       score.score2H2 = score.results[1].score2;
-      score.score1P = score.results[2].score1;
-      score.score2P = score.results[2].score2;
+      score.score1PT = score.results[2].score1;
+      score.score2PT = score.results[2].score2;
     }
     if (score.results && score.results.length === 4) {
       score.hasPTScore = true;
@@ -310,8 +310,8 @@ function addPartTimeResultsOvertimeSoccer(score) {
       score.score2H2 = score.results[1].score2;
       score.score1OT = score.results[2].score1;
       score.score2OT = score.results[2].score2;
-      score.score1P = score.results[3].score1;
-      score.score2P = score.results[3].score2;
+      score.score1PT = score.results[3].score1;
+      score.score2PT = score.results[3].score2;
     }
     if (score.results && score.results.length >= 5) {
       score.hasPTScore = true;
@@ -322,8 +322,8 @@ function addPartTimeResultsOvertimeSoccer(score) {
       const textScores = createMultiOvertimeScores(score.results, 2, score.results.length - 2);
       score.score1OT = textScores.scores1;
       score.score2OT = textScores.scores2;
-      score.score1P = score.results[score.results.length - 1].score1;
-      score.score2P = score.results[score.results.length - 1].score2;
+      score.score1PT = score.results[score.results.length - 1].score1;
+      score.score2PT = score.results[score.results.length - 1].score2;
     }
   }
 
@@ -379,7 +379,7 @@ function createMultiOvertimeScores(results, fromIndex, toIndex) {
 }
 
 export function scopeToScoreSuffix(sc) {
-  const scopeKey = config.sckey[`${sc}`];
+  const scopeKey = config.scShortName[`${sc}`];
   switch (sc) {
     case config.sc.FTOT:
       return 'FTOT';
@@ -388,7 +388,7 @@ export function scopeToScoreSuffix(sc) {
     case config.sc.PT:
       return 'PT';
     default:
-      return `H${scopeKey.slice(-1)}`
+      return `H${scopeKey.slice(-1)}`;
   }
 }
 
@@ -430,8 +430,8 @@ function createScore(sport, options = {}) {
     score2H5: null,
     score1OT: null,
     score2OT: null,
-    score1P: null,
-    score2P: null,
+    score1PT: null,
+    score2PT: null,
     extraScore1H1: null,
     extraScore2H1: null,
     extraScore1H2: null,
