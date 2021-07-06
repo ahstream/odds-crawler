@@ -106,10 +106,10 @@ export async function crawlMatchLinks(status = null, force = false) {
     }
     scheduleNextCrawl(matchLink);
     await updateMatchLinkInDB(matchLink);
-    return true;
+    // return true;
   }
 
-  // todo: return true;
+  return true;
 }
 
 export async function moveBackToMatchLinksQueue() {

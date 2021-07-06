@@ -91,6 +91,7 @@ function shouldMarketBeIncluded(match, betArgs) {
     case config.bt.EH:
     case config.bt.BTS:
     case config.bt.OE:
+    case config.bt.TQ:
       break; // do nothing
     default:
       return false;
