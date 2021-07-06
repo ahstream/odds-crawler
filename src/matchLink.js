@@ -196,18 +196,22 @@ function calcHoursToNextCrawl(matchLink) {
   if (matchLink.hoursToStart <= 1) {
     return 0.5;
   }
-  if (matchLink.hoursToStart <= 6) {
+  if (matchLink.hoursToStart <= 24) {
     return 1;
   }
-  if (matchLink.hoursToStart <= 12) {
-    return 2;
+  if (matchLink.hoursToStart <= 48) {
+    return 2 ;
   }
-  if (matchLink.hoursToStart <= 24) {
-    return 3;
+  if (matchLink.hoursToStart <= 72) {
+    return 4;
+  }
+  if (matchLink.hoursToStart <= 96) {
+    return 8;
   }
   if (matchLink.hoursToStart > 96) {
     return 24;
   }
+
   return 4;
 }
 
