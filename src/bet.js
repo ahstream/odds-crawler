@@ -42,7 +42,7 @@ function processBet(match, feed, oddsFeed, betArgs) {
 }
 
 export async function getBetTypes(match) {
-  const feed = await feedlib.getMatchFeed(match, config.bt.Match, config.sc.FT);
+  const feed = await feedlib.getMatchFeed(match, config.bt.Match, config.sc.FullTime);
   if (feed === null || feed.nav === undefined) {
     throw new CustomError('Failed getting bet types', { feed, match });
   }

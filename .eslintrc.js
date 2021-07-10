@@ -24,6 +24,7 @@ module.exports = {
     'no-continue': 'off',
     'no-param-reassign': 'off',
     'no-case-declarations': 'off',
+    'no-multiple-empty-lines': 'warn',
 
     'import/no-named-as-default-member': 'off',
     'import/prefer-default-export': 'off',

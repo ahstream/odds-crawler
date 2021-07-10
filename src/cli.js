@@ -234,8 +234,8 @@ function myParseInt(value, dummyPrevious) {
 /**
  * lookupSportId()
  */
-function lookupSportId(sport) {
-  return config.sport[sport];
+function lookupSportId(sportName) {
+  return config.sport.nameToId[sportName];
 }
 
 function initLogFiles(doDelete) {
