@@ -4,267 +4,482 @@
   "delayBetweenHttpRequests": 1,
   "pathToDataFolder": "data",
   "pathToCrawlerQueue": "data/queue/crawler-queue.txt",
-  "bt": {
-    "Match": 1,
-    "OU": 2,
-    "HomeAway": 3,
-    "DC": 4,
-    "AH": 5,
-    "DNB": 6,
-    "TQ": 7,
-    "CS": 8,
-    "HTFT": 9,
-    "OE": 10,
-    "Winner": 11,
-    "EH": 12,
-    "BTS": 13
+  "betType": {
+    "1X2": {
+      "id": 1,
+      "name": "1X2",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "O/U": {
+      "id": 2,
+      "name": "O/U",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "Home/Away": {
+      "id": 3,
+      "name": "Home/Away",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "DC": {
+      "id": 4,
+      "name": "DC",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "AH": {
+      "id": 5,
+      "name": "AH",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "DNB": {
+      "id": 6,
+      "name": "DNB",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "TQ": {
+      "id": 7,
+      "name": "TQ",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "CS": {
+      "id": 8,
+      "name": "CS",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "HT/FT": {
+      "id": 9,
+      "name": "HT/FT",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "O/E": {
+      "id": 10,
+      "name": "O/E",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "Winner": {
+      "id": 11,
+      "name": "Winner",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "EH": {
+      "id": 12,
+      "name": "EH",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    },
+    "BTS": {
+      "id": 13,
+      "name": "BTS",
+      "longName": "xxxx",
+      "guiName": "xxxxxx",
+      "active": true
+    }
   },
-  "btName": {
-    "1": "1X2",
-    "2": "OU",
-    "3": "Home/Away",
-    "4": "DC",
-    "5": "AH",
-    "6": "DNB",
-    "7": "TQ",
-    "8": "CS",
-    "9": "HT/FT",
-    "10": "O/E",
-    "11": "Winner",
-    "12": "EH",
-    "13": "BTS"
+  "scope": {
+    "FTOT": {
+      "id": 1,
+      "name": "FTOT",
+      "longName": "Full Time inc. OT",
+      "active": true
+    },
+    "FT": {
+      "id": 2,
+      "name": "FT",
+      "longName": "Full Time",
+      "active": true
+    },
+    "H1": {
+      "id": 3,
+      "name": "H1",
+      "longName": "1st Half",
+      "active": true
+    },
+    "H2": {
+      "id": 4,
+      "name": "H2",
+      "longName": "2nd Half",
+      "active": true
+    },
+    "P1": {
+      "id": 5,
+      "name": "P1",
+      "longName": "1st Period",
+      "active": true
+    },
+    "P2": {
+      "id": 6,
+      "name": "P2",
+      "longName": "2nd Period",
+      "active": true
+    },
+    "P3": {
+      "id": 7,
+      "name": "P3",
+      "longName": "3rd Period",
+      "active": true
+    },
+    "Q1": {
+      "id": 8,
+      "name": "Q1",
+      "longName": "1st Quarter",
+      "active": true
+    },
+    "Q2": {
+      "id": 9,
+      "name": "Q2",
+      "longName": "2nd Quarter",
+      "active": true
+    },
+    "Q3": {
+      "id": 10,
+      "name": "Q3",
+      "longName": "3rd Quarter",
+      "active": true
+    },
+    "Q4": {
+      "id": 11,
+      "name": "Q4",
+      "longName": "4th Quarter",
+      "active": true
+    },
+    "S1": {
+      "id": 12,
+      "name": "S1",
+      "longName": "1st Set",
+      "active": true
+    },
+    "S2": {
+      "id": 13,
+      "name": "S2",
+      "longName": "2nd Set",
+      "active": true
+    },
+    "S3": {
+      "id": 14,
+      "name": "S3",
+      "longName": "3rd Set",
+      "active": true
+    },
+    "S4": {
+      "id": 15,
+      "name": "S4",
+      "longName": "4th Set",
+      "active": true
+    },
+    "S5": {
+      "id": 16,
+      "name": "S5",
+      "longName": "5th Set",
+      "active": true
+    },
+    "I1": {
+      "id": 17,
+      "name": "I1",
+      "longName": "1st Inning",
+      "active": true
+    },
+    "I2": {
+      "id": 18,
+      "name": "I2",
+      "longName": "2nd Inning",
+      "active": true
+    },
+    "I3": {
+      "id": 19,
+      "name": "I3",
+      "longName": "3rd Inning",
+      "active": true
+    },
+    "I4": {
+      "id": 20,
+      "name": "I4",
+      "longName": "4th Inning",
+      "active": true
+    },
+    "I5": {
+      "id": 21,
+      "name": "I5",
+      "longName": "5th Inning",
+      "active": true
+    },
+    "I6": {
+      "id": 22,
+      "name": "I6",
+      "longName": "6th Inning",
+      "active": true
+    },
+    "I7": {
+      "id": 23,
+      "name": "I7",
+      "longName": "7th Inning",
+      "active": true
+    },
+    "I8": {
+      "id": 24,
+      "name": "I8",
+      "longName": "8th Inning",
+      "active": true
+    },
+    "I9": {
+      "id": 25,
+      "name": "I9",
+      "longName": "9th Inning",
+      "active": true
+    },
+    "NextSet": {
+      "id": 26,
+      "name": "NextSet",
+      "longName": "Next Set",
+      "active": true
+    },
+    "CurrentSet": {
+      "id": 27,
+      "name": "CurrentSet",
+      "longName": "Current Set",
+      "active": true
+    },
+    "NextGame": {
+      "id": 28,
+      "name": "NextGame",
+      "longName": "Next Game",
+      "active": true
+    },
+    "CurrentGame": {
+      "id": 29,
+      "name": "CurrentGame",
+      "longName": "Current Game",
+      "active": true
+    },
+    "OT": {
+      "id": 97,
+      "name": "OT",
+      "longName": "Overtime",
+      "active": true
+    },
+    "OTS": {
+      "id": 98,
+      "name": "OTS",
+      "longName": "Overtimes",
+      "active": true
+    },
+    "PT": {
+      "id": 99,
+      "name": "PT",
+      "longName": "Penalties",
+      "active": true
+    }
   },
-  "sc": {
-    "id": {
-      "FTOT": 1,
-      "FT": 2,
-      "H1": 3,
-      "H2": 4,
-      "P1": 5,
-      "P2": 6,
-      "P3": 7,
-      "Q1": 8,
-      "Q2": 9,
-      "Q3": 10,
-      "Q4": 11,
-      "S1": 12,
-      "S2": 13,
-      "S3": 14,
-      "S4": 15,
-      "S5": 16,
-      "I1": 17,
-      "I2": 18,
-      "I3": 19,
-      "I4": 20,
-      "I5": 21,
-      "I6": 22,
-      "I7": 23,
-      "I8": 24,
-      "I9": 25,
-      "NextSet": 26,
-      "CurrentSet": 27,
-      "NextGame": 28,
-      "CurrentGame": 29,
-      "OT": 97,
-      "OTS": 98,
-      "PT": 99
+  "handicap": {
+    "0": {
+      "id": 0,
+      "name": "",
+      "active": true
     },
-    "name": {
-      "1": "FTOT",
-      "2": "FT",
-      "3": "H1",
-      "4": "H2",
-      "5": "P1",
-      "6": "P2",
-      "7": "P3",
-      "8": "Q1",
-      "9": "Q2",
-      "10": "Q3",
-      "11": "Q4",
-      "12": "S1",
-      "13": "S2",
-      "14": "S3",
-      "15": "S4",
-      "16": "S5",
-      "17": "I1",
-      "18": "I2",
-      "19": "I3",
-      "20": "I4",
-      "21": "I5",
-      "22": "I6",
-      "23": "I7",
-      "24": "I8",
-      "25": "I9",
-      "26": "NS",
-      "27": "CS",
-      "28": "NG",
-      "29": "CG",
-      "97": "OT",
-      "98": "OTS",
-      "99": "PT"
+    "1": {
+      "id": 0,
+      "name": "sets",
+      "active": true
     },
-    "nameLong": {
-      "1": "Full Time inc. OT",
-      "2": "Full Time",
-      "3": "1st Half",
-      "4": "2nd Half",
-      "5": "1st Period",
-      "6": "2nd Period",
-      "7": "3rd Period",
-      "8": "1st Quarter",
-      "9": "2nd Quarter",
-      "10": "3rd Quarter",
-      "11": "4th Quarter",
-      "12": "1st Set",
-      "13": "2nd Set",
-      "14": "3rd Set",
-      "15": "4th Set",
-      "16": "5th Set",
-      "17": "1st Inning",
-      "18": "2nd Inning",
-      "19": "3rd Inning",
-      "20": "4th Inning",
-      "21": "5th Inning",
-      "22": "6th Inning",
-      "23": "7th Inning",
-      "24": "8th Inning",
-      "25": "9th Inning",
-      "26": "Next Set",
-      "27": "Current Set",
-      "28": "Next Game",
-      "29": "Current Game",
-      "97": "Overtime",
-      "98": "Overtimes",
-      "99": "PT"
+    "2": {
+      "id": 0,
+      "name": "games",
+      "active": true
     },
-    "idLong": {
-      "FTOT": 1,
-      "FullTime": 2,
-      "Half1": 3,
-      "Half2": 4,
-      "Period1": 5,
-      "Period2": 6,
-      "Period3": 7,
-      "Quarter1": 8,
-      "Quarter2": 9,
-      "Quarter3": 10,
-      "Quarter4": 11,
-      "Set1": 12,
-      "Set2": 13,
-      "Set3": 14,
-      "Set4": 15,
-      "Set5": 16,
-      "Inning1": 17,
-      "Inning2": 18,
-      "Inning3": 19,
-      "Inning4": 20,
-      "Inning5": 21,
-      "Inning6": 22,
-      "Inning7": 23,
-      "Inning8": 24,
-      "Inning9": 25,
-      "NextSet": 26,
-      "CurrentSet": 27,
-      "NextGame": 28,
-      "CurrentGame": 29,
-      "Overtime": 97,
-      "Overtimes": 98,
-      "Penalties": 99
+    "3": {
+      "id": 0,
+      "name": "",
+      "active": true
+    },
+    "7": {
+      "id": 0,
+      "name": "legs",
+      "active": true
     }
   },
   "sport": {
-    "name": {
-      "1": "soccer",
-      "3": "basketball",
-      "6": "baseball",
-      "4": "hockey",
-      "2": "tennis",
-      "5": "american-football",
-      "18": "aussie-rules",
-      "21": "badminton",
-      "10": "bandy",
-      "26": "beach-soccer",
-      "17": "beach-volleyball",
-      "16": "boxing",
-      "13": "cricket",
-      "14": "darts",
-      "36": "esports",
-      "9": "floorball",
-      "11": "futsal",
-      "7": "handball",
-      "28": "mma",
-      "30": "pesapallo",
-      "19": "rugby-league",
-      "8": "rugby-union",
-      "15": "snooker",
-      "12": "volleyball",
-      "22": "water-polo"
+    "american-football": {
+      "id": 5,
+      "name": "american-football",
+      "active": true,
+      "matchLength": 4
     },
-    "id": {
-      "soccer": 1,
-      "basketball": 3,
-      "baseball": 6,
-      "hockey": 4,
-      "tennis": 2,
-      "american-football": 5,
-      "aussie-rules": 18,
-      "badminton": 21,
-      "bandy": 10,
-      "beach-soccer": 26,
-      "beach-volleyball": 17,
-      "boxing": 16,
-      "cricket": 13,
-      "darts": 14,
-      "esports": 36,
-      "floorball": 9,
-      "futsal": 11,
-      "handball": 7,
-      "mma": 28,
-      "pesapallo": 30,
-      "rugby-league": 19,
-      "rugby-union": 8,
-      "snooker": 15,
-      "volleyball": 12,
-      "water-polo": 22
+    "aussie-rules": {
+      "id": 18,
+      "name": "aussie-rules",
+      "active": false,
+      "matchLength": null
     },
-    "matchLength": {
-      "soccer": 2,
-      "basketball": 4,
-      "hockey": 3,
-      "tennis": [
-        2,
-        5
-      ],
-      "american-football": 4,
-      "baseball": -1,
-      "aussie-rules": -1,
-      "badminton": [
+    "badminton": {
+      "id": 21,
+      "name": "badminton",
+      "active": true,
+      "matchLength": [
         2,
         3
-      ],
-      "bandy": 2,
-      "beach-soccer": -1,
-      "beach-volleyball": [
-        2,
-        3
-      ],
-      "boxing": -1,
-      "cricket": -1,
-      "darts": -1,
-      "esports": -1,
-      "floorball": 3,
-      "futsal": 2,
-      "handball": 2,
-      "mma": -1,
-      "pesapallo": 2,
-      "rugby-league": 2,
-      "rugby-union": 2,
-      "snooker": 0,
-      "volleyball": [
+      ]
+    },
+    "bandy": {
+      "id": 10,
+      "name": "bandy",
+      "active": true,
+      "matchLength": 2
+    },
+    "baseball": {
+      "id": 6,
+      "name": "baseball",
+      "active": false,
+      "matchLength": null
+    },
+    "basketball": {
+      "id": 3,
+      "name": "basketball",
+      "active": true,
+      "matchLength": 4
+    },
+    "beach-soccer": {
+      "id": 26,
+      "name": "beach-soccer",
+      "active": false,
+      "matchLength": null
+    },
+    "beach-volleyball": {
+      "id": 17,
+      "name": "beach-volleyball",
+      "active": true,
+      "matchLength": [
         3,
         5
-      ],
-      "water-polo": -1
+      ]
+    },
+    "boxing": {
+      "id": 16,
+      "name": "boxing",
+      "active": false,
+      "matchLength": null
+    },
+    "cricket": {
+      "id": 13,
+      "name": "cricket",
+      "active": false,
+      "matchLength": null
+    },
+    "darts": {
+      "id": 14,
+      "name": "darts",
+      "active": false,
+      "matchLength": null
+    },
+    "esports": {
+      "id": 36,
+      "name": "esports",
+      "active": false,
+      "matchLength": null
+    },
+    "floorball": {
+      "id": 9,
+      "name": "floorball",
+      "active": true,
+      "matchLength": 3
+    },
+    "futsal": {
+      "id": 11,
+      "name": "futsal",
+      "active": true,
+      "matchLength": 2
+    },
+    "handball": {
+      "id": 7,
+      "name": "handball",
+      "active": true,
+      "matchLength": 2
+    },
+    "hockey": {
+      "id": 4,
+      "name": "hockey",
+      "active": true,
+      "matchLength": 3
+    },
+    "mma": {
+      "id": 28,
+      "name": "mma",
+      "active": false,
+      "matchLength": null
+    },
+    "pesapallo": {
+      "id": 30,
+      "name": "pesapallo",
+      "active": true,
+      "matchLength": 2
+    },
+    "rugby-league": {
+      "id": 19,
+      "name": "rugby-league",
+      "active": true,
+      "matchLength": 2
+    },
+    "rugby-union": {
+      "id": 8,
+      "name": "rugby-union",
+      "active": true,
+      "matchLength": 2
+    },
+    "snooker": {
+      "id": 15,
+      "name": "snooker",
+      "active": true,
+      "matchLength": null
+    },
+    "soccer": {
+      "id": 1,
+      "name": "soccer",
+      "active": true,
+      "matchLength": 2
+    },
+    "tennis": {
+      "id": 2,
+      "name": "tennis",
+      "active": true,
+      "matchLength": [
+        3,
+        5
+      ]
+    },
+    "volleyball": {
+      "id": 12,
+      "name": "volleyball",
+      "active": true,
+      "matchLength": [
+        3,
+        5
+      ]
+    },
+    "water-polo": {
+      "id": 22,
+      "name": "water-polo",
+      "active": false,
+      "matchLength": null
     }
   },
   "bookies": {

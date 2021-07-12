@@ -12,20 +12,20 @@ const config = require('../config/config.json');
 export function calcAttributes(attribute, bt) {
   const attributes = createAttributes();
   switch (bt) {
-    case config.bt.OU:
+    case config.betType['O/U'].id:
       attributes.value1 = parseFloat(attribute);
       break;
-    case config.bt.AH:
+    case config.betType.AH.id:
       attributes.value1 = parseFloat(attribute);
       break;
-    case config.bt.CS:
+    case config.betType.CS.id:
       const goals = attribute.split(':');
       if (goals.length === 2) {
         attributes.value1 = parseInt(goals[0], 10);
         attributes.value2 = parseInt(goals[1], 10);
       }
       break;
-    case config.bt.HTFT:
+    case config.betType['HT/FT'].id:
       const signs = attribute.split('/');
       if (signs.length === 2) {
         const sign1 = signs[0];
@@ -38,7 +38,7 @@ export function calcAttributes(attribute, bt) {
         }
       }
       break;
-    case config.bt.EH:
+    case config.betType.EH.id:
       attributes.value1 = parseInt(attribute, 10);
       break;
     default:

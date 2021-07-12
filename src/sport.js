@@ -4,26 +4,32 @@
  */
 
 const config = require('../config/config.json');
+const { createLogger } = require('./lib/loggerlib');
+
+const log = createLogger();
 
 // ------------------------------------------------------------------------------------------------
 // MAIN FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-export function getSportId(name) {
-  return config.sport.id[name];
+export function getSportId(sportName) {
+  const objKey = Object.keys(config.sport).find(key => config.sport[key].name === sportName);
+  return config.sport[objKey]?.id;
 }
 
-export function getSportName(id) {
-  return config.sport.name[id];
+export function getSportName(sportId) {
+  const objKey = Object.keys(config.sport).find(key => config.sport[key].id === sportId);
+  return config.sport[objKey]?.name;
 }
 
-export function getMinMaxMatchLength(sportName) {
-  const len = config.sport.matchLength[sportName];
-  if (Array.isArray(len)) {
-    return { min: len[0], max: len[1] };
+export function getMatchLength(sportName) {
+  const objKey = Object.keys(config.sport).find(key => config.sport[key].name === sportName);
+  const matchLength = config.sport[objKey]?.matchLength;
+  if (Array.isArray(matchLength)) {
+    return { min: matchLength[0], max: matchLength[1] };
   }
-  if (typeof len === 'number') {
-    return { min: len, max: len };
+  if (typeof matchLength === 'number') {
+    return { min: matchLength, max: matchLength };
   }
-  return { min: -1, max: -1 };
+  return { min: null, max: null };
 }

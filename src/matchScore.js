@@ -5,7 +5,7 @@
 
 import { CustomError } from './exceptions';
 import { httpGetAllowedHtmltext, createLongTimestamp } from './provider';
-import { getMinMaxMatchLength } from './sport';
+import { getMatchLength } from './sport';
 
 const _ = require('lodash');
 
@@ -395,7 +395,7 @@ function addSubResult(matchScore) {
 }
 
 function getSubResultParts(matchScore) {
-  const matchLength = getMinMaxMatchLength(matchScore.sportName);
+  const matchLength = getMatchLength(matchScore.sportName);
   if (!matchLength || matchLength.min <= 0) {
     return null;
   }

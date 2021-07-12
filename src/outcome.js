@@ -23,25 +23,25 @@ export function getOutcomeList(oddsFeed) {
 
 export function expectedNumOfOutcomes(bt) {
   switch (bt) {
-    case config.bt.Match:
+    case config.betType['1X2'].id:
       return 3;
-    case config.bt.OU:
+    case config.betType['O/U'].id:
       return 2;
-    case config.bt.DC:
+    case config.betType.DC.id:
       return 3;
-    case config.bt.AH:
+    case config.betType.AH.id:
       return 2;
-    case config.bt.DNB:
+    case config.betType.DNB.id:
       return 2;
-    case config.bt.CS:
+    case config.betType.CS.id:
       return 1;
-    case config.bt.HTFT:
+    case config.betType['HT/FT'].id:
       return 1;
-    case config.bt.EH:
+    case config.betType.EH.id:
       return 3;
-    case config.bt.BTS:
+    case config.betType.BTS.id:
       return 2;
-    case config.bt.OE:
+    case config.betType['O/E'].id:
       return 2;
     default:
       return null;

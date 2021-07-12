@@ -139,7 +139,7 @@ export function updateMarketOdds(match) {
 
 function calcOverround(bt, odds1, odds2, odds3) {
   // DC bets have a book of 200%, need to divide with 2 to get real overround!
-  const divider = bt === config.bt.DC ? 2 : 1;
+  const divider = bt === config.betType.DC.id ? 2 : 1;
   const overround = (odds1 ? 1 / odds1 : 0) + (odds2 ? 1 / odds2 : 0) + (odds3 ? 1 / odds3 : 0);
   return overround / divider;
 }

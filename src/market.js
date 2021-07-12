@@ -78,25 +78,6 @@ function shouldMarketBeIncluded(match, betArgs) {
     return false; // Ignore lays bets for now! (Write lay bets to own table?!)
   }
 
-  switch (betArgs.bt) {
-    case config.bt.Match:
-    case config.bt.OU:
-    case config.bt.HomeAway:
-    case config.bt.DC:
-    case config.bt.AH:
-    case config.bt.DNB:
-    case config.bt.TQ:
-    case config.bt.CS:
-    case config.bt.HTFT:
-    case config.bt.OE:
-    case config.bt.Winner:
-    case config.bt.EH:
-    case config.bt.BTS:
-      break; // do nothing
-    default:
-      return false;
-  }
-
   return true;
 }
 

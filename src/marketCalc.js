@@ -21,27 +21,27 @@ const D = 0;
 export function calcMarket(match, score, betArgs) {
   try {
     switch (betArgs.bt) {
-      case config.bt.Match:
+      case config.betType['1X2'].id:
         return backOrLay(betArgs.isBack, calcMatch(score));
-      case config.bt.OU:
+      case config.betType['O/U'].id:
         return backOrLay(betArgs.isBack, calcOU(score, betArgs.attributes.value1));
-      case config.bt.HomeAway:
+      case config.betType['Home/Away'].id:
         return backOrLay(betArgs.isBack, calcHomeAway(score));
-      case config.bt.DC:
+      case config.betType.DC.id:
         return backOrLay(betArgs.isBack, calcDC(score));
-      case config.bt.AH:
+      case config.betType.AH.id:
         return backOrLay(betArgs.isBack, calcAH(score, betArgs.attributes.value1));
-      case config.bt.DNB:
+      case config.betType.DNB.id:
         return backOrLay(betArgs.isBack, calcDNB(score));
-      case config.bt.CS:
+      case config.betType.CS.id:
         return backOrLay(betArgs.isBack, calcCS(score, betArgs.attributes.value1, betArgs.attributes.value2));
-      case config.bt.HTFT:
+      case config.betType['HT/FT'].id:
         return backOrLay(betArgs.isBack, calcHTFT(score, betArgs.attributes.value1, betArgs.attributes.value2, match));
-      case config.bt.EH:
+      case config.betType.EH.id:
         return backOrLay(betArgs.isBack, calcEH(score, betArgs.attributes.value1));
-      case config.bt.BTS:
+      case config.betType.BTS.id:
         return backOrLay(betArgs.isBack, calcBTS(score));
-      case config.bt.OE:
+      case config.betType['O/E'].id:
         return backOrLay(betArgs.isBack, calcOE(score));
       default:
         log.debug('calcMarket is null for:', score, betArgs, match.url, match.params, match.matchScore);

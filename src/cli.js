@@ -15,6 +15,7 @@ const utilslib = require('./lib/utilslib');
 const matchLink = require('./matchLink.js');
 const mongodb = require('./mongodb.js');
 const oddsHistory = require('./oddsHistory.js');
+const sportlib = require('./sport.js');
 
 const log = createLogger();
 
@@ -232,7 +233,7 @@ function myParseInt(value, dummyPrevious) {
  * lookupSportId()
  */
 function lookupSportId(sportName) {
-  return config.sport.nameToId[sportName];
+  return sportlib.getSportId(sportName);
 }
 
 function initLogFiles(doDelete) {

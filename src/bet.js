@@ -3,8 +3,10 @@
  * FILE DESCRIPTION
  */
 
+import { getBetTypeName } from './betType';
 import { CustomError } from './exceptions';
 import { createLogger } from './lib/loggerlib';
+import { getScopeName } from './scope';
 
 const config = require('../config/config.json');
 const attributelib = require('./attribute.js');
@@ -42,7 +44,7 @@ function processBet(match, feed, oddsFeed, betArgs) {
 }
 
 export async function getBetTypes(match) {
-  const feed = await feedlib.getMatchFeed(match, config.bt.Match, config.sc.id.FT);
+  const feed = await feedlib.getMatchFeed(match, config.betType['1X2'].id, config.scope.FT.id);
   if (feed === null || feed.nav === undefined) {
     throw new CustomError('Failed getting bet types', { feed, match });
   }
@@ -103,18 +105,6 @@ function betMarketSorter(market1, market2) {
   return market2.attributeSortKey > market1.attributeSortKey ? 1 : 0;
 }
 
-function getBetTypeName(bt) {
-  return config.btName[`${bt}`] || 'UNKNOWN';
-}
-
-function getScopeName(sc) {
-  return config.sc.name[sc] || 'UNKNOWN';
-}
-
-function getScopeNameLong(sc) {
-  return config.sc.nameLong[sc] || 'UNKNOWN';
-}
-
 function getHandicapTypeName(type) {
   switch (type) {
     case 0:
@@ -135,15 +125,15 @@ function getBetName(bt, sc, attribute, attributes, handicapType) {
   const attributeTypeText = handicapTypeName ? ` ${handicapTypeName}` : '';
   const handicapSign = getHandicapSign(attributes.value1);
   switch (bt) {
-    case config.bt.OU:
+    case config.betType['O/U'].id:
       return `OU ${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
-    case config.bt.AH:
+    case config.betType.AH.id:
       return `AH ${handicapSign}${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
-    case config.bt.CS:
+    case config.betType.CS.id:
       return `CS ${attributes.value1}:${attributes.value2} ${getScopeName(sc)}`;
-    case config.bt.HTFT:
+    case config.betType['HT/FT'].id:
       return `HTFT ${attribute}`;
-    case config.bt.EH:
+    case config.betType.EH.id:
       return `EH ${handicapSign}${attributes.value1} ${getScopeName(sc)}`;
     default:
       return `${getBetTypeName(bt)} ${getScopeName(sc)}`;

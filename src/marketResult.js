@@ -7,6 +7,7 @@ const config = require('../config/config.json');
 const { createLogger } = require('./lib/loggerlib');
 const marketcalclib = require('./marketCalc');
 const matchscorelib = require('./matchScore.js');
+const scopelib = require('./scope.js');
 const scorelib = require('./score.js');
 
 const log = createLogger();
@@ -16,7 +17,7 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 function getScopeScore(match, sc) {
-  const scopeName = config.sc.name[sc];
+  const scopeName = scopelib.getScopeName(sc);
   return scorelib.createScore(match.matchScore.scores[scopeName].home, match.matchScore.scores[scopeName].away);
 }
 
@@ -24,24 +25,24 @@ function getSubScopeScores(match, sport) {
   const scores = [];
   switch (sport) {
     case 'tennis':
-      scores.push(getScopeScore(match, config.sc.id.S1));
-      scores.push(getScopeScore(match, config.sc.id.S2));
-      scores.push(getScopeScore(match, config.sc.id.S3));
-      scores.push(getScopeScore(match, config.sc.id.S4));
-      scores.push(getScopeScore(match, config.sc.id.S5));
+      scores.push(getScopeScore(match, config.scope.S1.id));
+      scores.push(getScopeScore(match, config.scope.S2.id));
+      scores.push(getScopeScore(match, config.scope.S3.id));
+      scores.push(getScopeScore(match, config.scope.S4.id));
+      scores.push(getScopeScore(match, config.scope.S5.id));
       break;
     case 'volleyball':
-      scores.push(getScopeScore(match, config.sc.id.S1));
-      scores.push(getScopeScore(match, config.sc.id.S2));
-      scores.push(getScopeScore(match, config.sc.id.S3));
+      scores.push(getScopeScore(match, config.scope.S1.id));
+      scores.push(getScopeScore(match, config.scope.S2.id));
+      scores.push(getScopeScore(match, config.scope.S3.id));
       break;
     case 'beach-volleyball':
-      scores.push(getScopeScore(match, config.sc.id.S1));
-      scores.push(getScopeScore(match, config.sc.id.S2));
-      scores.push(getScopeScore(match, config.sc.id.S3));
+      scores.push(getScopeScore(match, config.scope.S1.id));
+      scores.push(getScopeScore(match, config.scope.S2.id));
+      scores.push(getScopeScore(match, config.scope.S3.id));
       break;
     default:
-      scores.push(getScopeScore(match, config.sc.id.FT));
+      scores.push(getScopeScore(match, config.scope.FT.id));
   }
   const finalScore = scorelib.createScore(0, 0);
   scores.forEach(score => {
@@ -57,7 +58,7 @@ function getMarketScore(match, betArgs) {
     return getScopeScore(match, betArgs.sc);
   }
   if (hct === 2 || hct === 3) {
-    if (betArgs.sc === config.sc.id.FT) {
+    if (betArgs.sc === config.scope.FT.id) {
       return getSubScopeScores(match, match.sportName);
     }
     return getScopeScore(match, betArgs.sc);
