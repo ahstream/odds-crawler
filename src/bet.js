@@ -42,7 +42,7 @@ function processBet(match, feed, oddsFeed, betArgs) {
 }
 
 export async function getBetTypes(match) {
-  const feed = await feedlib.getMatchFeed(match, config.bt.Match, config.sc.FullTime);
+  const feed = await feedlib.getMatchFeed(match, config.bt.Match, config.sc.id.FT);
   if (feed === null || feed.nav === undefined) {
     throw new CustomError('Failed getting bet types', { feed, match });
   }
@@ -108,7 +108,11 @@ function getBetTypeName(bt) {
 }
 
 function getScopeName(sc) {
-  return config.scName[`${sc}`] || 'UNKNOWN';
+  return config.sc.name[sc] || 'UNKNOWN';
+}
+
+function getScopeNameLong(sc) {
+  return config.sc.nameLong[sc] || 'UNKNOWN';
 }
 
 function getHandicapTypeName(type) {

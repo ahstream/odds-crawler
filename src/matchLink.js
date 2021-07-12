@@ -155,7 +155,7 @@ function handleCrawlMatchLinkSuccess(matchLink, match) {
   matchLink.lastCrawlTimeSuccess = now;
   matchLink.isCompleted = matchlib.isFinished(match);
   matchLink.status = match.status;
-  matchLink.startTime = match.score.startTime;
+  matchLink.startTime = match.matchScore.startTime;
   matchLink.tournamentId = match.params.tournamentId;
   matchLink.sportId = match.params.sportId;
 }
@@ -349,7 +349,7 @@ async function validateTournament(parsedUrl) {
 function createMatchLink(parsedUrl, dateStr, now) {
   return {
     _id: parsedUrl.matchId,
-    sport: parsedUrl.sport,
+    sportName: parsedUrl.sport,
     sportId: null,
     country: parsedUrl.country,
     tournament: parsedUrl.tournament,

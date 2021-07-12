@@ -19,8 +19,8 @@ yarn cli getMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/euro
 
 yarn cli getMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/argentina/primera-nacional/alvarado-chacarita-juniors-C2xos3i9/'
 
-yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/tennis/tunisia/itf-m15-monastir-25-men/weightman-oscar-lee-duck-hee-MmnTbwBe/'
+yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/tennis/kazakhstan/nur-sultan-3-challenger-men/kirkin-ergi-krutykh-oleksii-Asz72O91/'
 
-
+yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/basketball/usa/wnba/chicago-sky-washington-mystics-KrbyQRZu/'
 
 

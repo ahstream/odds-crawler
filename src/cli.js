@@ -20,10 +20,6 @@ const log = createLogger();
 
 // todo: lägg tillbaka marketResult i market
 // todo: crawlMatchPages för flera sporter samtidigt
-// todo: hantera isFinished + hasNormalResult: isCompleted, isFinished, isAborted, isNotFinished, isScheduled, isLive
-// todo: handicapType, games vs sets
-// todo: Final result 3:2 OT (1:0, 0:1, 1:1, 1:0), https://www.oddsportal.com/hockey/usa/nhl/montreal-canadiens-tampa-bay-lightning-WtYDB3K8/
-// todo: half1 = q1+q2, osv
 
 // RUNTIME ----------------------------------------------------------------------------------
 
@@ -94,6 +90,7 @@ async function runCommand() {
     }
   } catch (err) {
     log.error('Error in runCommand:', err);
+    log.verbose('Error in runCommand:', JSON.stringify(err));
   } finally {
     await closeDB();
   }

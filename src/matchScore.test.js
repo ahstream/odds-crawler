@@ -1,0 +1,404 @@
+import { parseMatchScore } from './matchScore';
+
+const _ = require('lodash');
+
+test('parseMatchScore()', () => {
+  let ps;
+  const TIMESTAMP = 1625544525;
+
+  // SCHEDULED -----------------------------------------------------------------------------------------
+
+  ps = parseMatchScore('tennis', TIMESTAMP, 'h', 'a', '', '');
+  expect(ps.status).toEqual('scheduled');
+  expect(ps.type).toEqual('scheduled');
+  expect(ps.finalResultWinner).toEqual('');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(false);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+
+  // CANCELED -----------------------------------------------------------------------------------------
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'home', 'away', '', '<p class="result-alert"><span class="bold">Canceled</span></p>');
+  expect(ps.status).toEqual('canceled');
+  expect(ps.type).toEqual('canceled');
+  expect(ps.finalResultWinner).toEqual('');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(false);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('');
+  expect(ps.resultText).toEqual('canceled');
+  expect(ps.startTime.getTime()).toEqual(TIMESTAMP * 1000);
+  expect(ps.timestamp).toEqual(TIMESTAMP);
+
+  // POSTPONED -----------------------------------------------------------------------------------------
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'home', 'away', '', '<p class="result-alert"><span class="bold">Postponed</span></p>');
+  expect(ps.status).toEqual('postponed');
+  expect(ps.type).toEqual('postponed');
+  expect(ps.finalResultWinner).toEqual('');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(false);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('');
+  expect(ps.resultText).toEqual('postponed');
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'home', 'away', '', '<p class="result-alert"><span class="bold">Abandoned </span><strong>1:0</strong> (1:0)</p>');
+  expect(ps.status).toEqual('abandoned');
+  expect(ps.type).toEqual('postponed');
+  expect(ps.finalResultWinner).toEqual('');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(false);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('1:0 (1:0)');
+  expect(ps.resultText).toEqual('abandoned at 1:0 (1:0)');
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'home', 'away', '', '<p class="result-alert"><span class="bold">Interrupted </span><strong>0:0</strong> (2:4)</p>');
+  expect(ps.status).toEqual('interrupted');
+  expect(ps.type).toEqual('postponed');
+  expect(ps.finalResultWinner).toEqual('');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(false);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('0:0 (2:4)');
+  expect(ps.resultText).toEqual('interrupted at 0:0 (2:4)');
+
+  // LIVE -----------------------------------------------------------------------------------------
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'home', 'away', '', '<p class="result-alert"><span class="bold">The match has already started.</span></p>');
+  expect(ps.status).toEqual('live');
+  expect(ps.type).toEqual('live');
+  expect(ps.finalResultWinner).toEqual('');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(false);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('');
+  expect(ps.resultText).toEqual('live');
+
+  // AWARDED -----------------------------------------------------------------------------------------
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'liverpool', 'away', '<p class="result"><span class="bold"></span><strong>liverpool awarded</strong></p>', '');
+  expect(ps.status).toEqual('awarded');
+  expect(ps.type).toEqual('awarded');
+  expect(ps.finalResultWinner).toEqual('home');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('');
+  expect(ps.resultText).toEqual('home awarded');
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'liverpool', 'away', '<p class="result"><span class="bold"></span><strong>liverpool awarded</strong> (0:0, 0:1)</p>', '');
+  expect(ps.status).toEqual('awarded');
+  expect(ps.type).toEqual('awarded');
+  expect(ps.finalResultWinner).toEqual('home');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('(0:0, 0:1)');
+  expect(ps.resultText).toEqual('home awarded at (0:0, 0:1)');
+
+  ps = parseMatchScore('tennis', TIMESTAMP, 'a.b.', 'c.d.', '<p class="result"><span class="bold"></span><strong>a.b. retired</strong> (6:4, 6<sup>9</sup>:7, 1:4)</p>', '');
+  expect(ps.status).toEqual('retired');
+  expect(ps.type).toEqual('awarded');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('(6:4, 6:7[9], 1:4)');
+  expect(ps.resultText).toEqual('home retired at (6:4, 6:7[9], 1:4)');
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'liverpool', 'away', '<p class="result"><span class="bold"></span><strong>liverpool walkover</strong></p>', '');
+  expect(ps.status).toEqual('walkover');
+  expect(ps.type).toEqual('awarded');
+  expect(ps.finalResultWinner).toEqual('home');
+  expect(ps.fullTimeResultWinner).toEqual('');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('');
+  expect(ps.resultText).toEqual('home walkover');
+
+  // FINISHED -----------------------------------------------------------------------------------------
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'home', 'away', '<p class="result"><span class="bold">Final result </span><strong>0:0</strong></p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('draw');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('0:0');
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1).toEqual(null);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>7:0</strong> (7:0)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('home');
+  expect(ps.fullTimeResultWinner).toEqual('home');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.scoreText).toEqual('7:0 (7:0)');
+  expect(ps.scores.FT.home).toEqual(7);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1).toEqual(null);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:0</strong> (0:0, 0:0)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('draw');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('0:0 (0:0, 0:0)');
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1.home).toEqual(0);
+  expect(ps.scores.H1.away).toEqual(0);
+  expect(ps.scores.H2.home).toEqual(0);
+  expect(ps.scores.H2.away).toEqual(0);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:1 ET</strong> (0:0, 0:0, 0:1)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.isOvertime).toEqual(true);
+  expect(ps.scoreText).toEqual('0:1 ET (0:0, 0:0, 0:1)');
+  expect(ps.scores.FTOT.home).toEqual(0);
+  expect(ps.scores.FTOT.away).toEqual(1);
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1.home).toEqual(0);
+  expect(ps.scores.H1.away).toEqual(0);
+  expect(ps.scores.H2.home).toEqual(0);
+  expect(ps.scores.H2.away).toEqual(0);
+  expect(ps.scores.OT.home).toEqual(0);
+  expect(ps.scores.OT.away).toEqual(1);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:1 penalties</strong> (0:0, 0:0, 0:0, 1:4)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.isOvertime).toEqual(false);
+  expect(ps.isPenalties).toEqual(true);
+  expect(ps.scoreText).toEqual('0:1 penalties (0:0, 0:0, 0:0, 1:4)');
+  expect(ps.scores.FTOT.home).toEqual(0);
+  expect(ps.scores.FTOT.away).toEqual(1);
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1.home).toEqual(0);
+  expect(ps.scores.H1.away).toEqual(0);
+  expect(ps.scores.H2.home).toEqual(0);
+  expect(ps.scores.H2.away).toEqual(0);
+  expect(ps.scores.OT.home).toEqual(0);
+  expect(ps.scores.OT.away).toEqual(0);
+  expect(ps.scores.PT.home).toEqual(1);
+  expect(ps.scores.PT.away).toEqual(4);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>1:2 penalties</strong> (0:0, 0:0, 0:0, 1:1, 1:4)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.isOvertime).toEqual(false);
+  expect(ps.isPenalties).toEqual(true);
+  expect(ps.scoreText).toEqual('1:2 penalties (0:0, 0:0, 0:0, 1:1, 1:4)');
+  expect(ps.scores.FTOT.home).toEqual(1);
+  expect(ps.scores.FTOT.away).toEqual(2);
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1.home).toEqual(0);
+  expect(ps.scores.H1.away).toEqual(0);
+  expect(ps.scores.H2.home).toEqual(0);
+  expect(ps.scores.H2.away).toEqual(0);
+  expect(ps.scores.OT.home).toEqual(1);
+  expect(ps.scores.OT.away).toEqual(1);
+  expect(ps.scores.PT.home).toEqual(1);
+  expect(ps.scores.PT.away).toEqual(4);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:1 penalties</strong> (0:0, 0:0, 1:4)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.isOvertime).toEqual(false);
+  expect(ps.isPenalties).toEqual(true);
+  expect(ps.scoreText).toEqual('0:1 penalties (0:0, 0:0, 1:4)');
+  expect(ps.scores.FTOT.home).toEqual(0);
+  expect(ps.scores.FTOT.away).toEqual(1);
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(0);
+  expect(ps.scores.H1.home).toEqual(0);
+  expect(ps.scores.H1.away).toEqual(0);
+  expect(ps.scores.H2.home).toEqual(0);
+  expect(ps.scores.H2.away).toEqual(0);
+  expect(ps.scores.OT).toEqual(null);
+  expect(ps.scores.PT.home).toEqual(1);
+  expect(ps.scores.PT.away).toEqual(4);
+
+  ps = parseMatchScore('soccer', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:1 penalties</strong> (0:0, 1:4)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(false);
+  expect(ps.hasPartTimeResult).toEqual(false);
+  expect(ps.isOvertime).toEqual(false);
+  expect(ps.isPenalties).toEqual(true);
+  expect(ps.scoreText).toEqual('0:1 penalties (0:0, 1:4)');
+  expect(ps.scores.FTOT.home).toEqual(0);
+  expect(ps.scores.FTOT.away).toEqual(1);
+  expect(ps.scores.FT).toEqual(null);
+  expect(ps.scores.H1).toEqual(null);
+  expect(ps.scores.OT).toEqual(null);
+  expect(ps.scores.PT).toEqual(null);
+
+  ps = parseMatchScore('tennis', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:2</strong> (2:6, 0:6)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('away');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('0:2 (2:6, 0:6)');
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(2);
+  expect(ps.scores.S1.home).toEqual(2);
+  expect(ps.scores.S1.away).toEqual(6);
+  expect(ps.scores.S2.home).toEqual(0);
+  expect(ps.scores.S2.away).toEqual(6);
+  expect(ps.scores.PTS.home).toEqual(2);
+  expect(ps.scores.PTS.away).toEqual(12);
+
+  ps = parseMatchScore('tennis', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:2</strong> (0:6, 6<sup>2</sup>:7)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('away');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('0:2 (0:6, 6:7[2])');
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(2);
+  expect(ps.scores.S1.home).toEqual(0);
+  expect(ps.scores.S1.away).toEqual(6);
+  expect(ps.scores.S2.home).toEqual(6);
+  expect(ps.scores.S2.away).toEqual(7);
+  expect(ps.scores.S2.homeMeta).toEqual(2);
+  expect(ps.scores.S2.awayMeta).toEqual(null);
+  expect(ps.scores.PTS.home).toEqual(6);
+  expect(ps.scores.PTS.away).toEqual(13);
+
+  ps = parseMatchScore('tennis', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result </span><strong>0:2</strong> (0:6, 6<sup>9</sup>:7)</p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('away');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('0:2 (0:6, 6:7[9])');
+  expect(ps.scores.FT.home).toEqual(0);
+  expect(ps.scores.FT.away).toEqual(2);
+  expect(ps.scores.S1.home).toEqual(0);
+  expect(ps.scores.S1.away).toEqual(6);
+  expect(ps.scores.S2.home).toEqual(6);
+  expect(ps.scores.S2.away).toEqual(7);
+  expect(ps.scores.S2.homeMeta).toEqual(9);
+  expect(ps.scores.S2.awayMeta).toEqual(null);
+  expect(ps.scores.PTS.home).toEqual(6);
+  expect(ps.scores.PTS.away).toEqual(13);
+
+  ps = parseMatchScore('basketball', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result <\/span><strong>85:89 OT (82:82)<\/strong> (22:31, 22:15, 18:24, 20:12, 3:7)<\/p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('85:89 OT (22:31, 22:15, 18:24, 20:12, 3:7)');
+  expect(ps.scores.FTOT.home).toEqual(85);
+  expect(ps.scores.FTOT.away).toEqual(89);
+  expect(ps.scores.FT.home).toEqual(82);
+  expect(ps.scores.FT.away).toEqual(82);
+  expect(ps.scores.H1.home).toEqual(44);
+  expect(ps.scores.H1.away).toEqual(46);
+  expect(ps.scores.H2.home).toEqual(38);
+  expect(ps.scores.H2.away).toEqual(36);
+
+  ps = parseMatchScore('hockey', TIMESTAMP, 'h', 'a', '<p class="result"><span class="bold">Final result <\/span><strong>3:2 OT<\/strong> (1:0, 0:1, 1:1, 1:0)<\/p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('home');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('3:2 OT (1:0, 0:1, 1:1, 1:0)');
+  expect(ps.scores.FTOT.home).toEqual(3);
+  expect(ps.scores.FTOT.away).toEqual(2);
+  expect(ps.scores.FT.home).toEqual(2);
+  expect(ps.scores.FT.away).toEqual(2);
+  expect(ps.scores.P1.home).toEqual(1);
+  expect(ps.scores.P1.away).toEqual(0);
+  expect(ps.scores.P2.home).toEqual(0);
+  expect(ps.scores.P2.away).toEqual(1);
+  expect(ps.scores.P3.home).toEqual(1);
+  expect(ps.scores.P3.away).toEqual(1);
+  expect(ps.scores.OT.home).toEqual(1);
+  expect(ps.scores.OT.away).toEqual(0);
+
+  ps = parseMatchScore('american-football', TIMESTAMP, 'h', 'a', '<p class=\"result\"><span class=\"bold\">Final result <\/span><strong>27:30 OT<\/strong> (3:7, 7:10, 7:7, 7:0, 3:6)<\/p>', '');
+  expect(ps.status).toEqual('finished');
+  expect(ps.type).toEqual('finished');
+  expect(ps.finalResultWinner).toEqual('away');
+  expect(ps.fullTimeResultWinner).toEqual('draw');
+  expect(ps.hasFinalResult).toEqual(true);
+  expect(ps.hasFullTimeResult).toEqual(true);
+  expect(ps.hasPartTimeResult).toEqual(true);
+  expect(ps.scoreText).toEqual('27:30 OT (3:7, 7:10, 7:7, 7:0, 3:6)');
+  expect(ps.scores.FTOT.home).toEqual(27);
+  expect(ps.scores.FTOT.away).toEqual(30);
+  expect(ps.scores.FT.home).toEqual(24);
+  expect(ps.scores.FT.away).toEqual(24);
+  expect(ps.scores.Q1.home).toEqual(3);
+  expect(ps.scores.Q1.away).toEqual(7);
+  expect(ps.scores.Q2.home).toEqual(7);
+  expect(ps.scores.Q2.away).toEqual(10);
+  expect(ps.scores.Q3.home).toEqual(7);
+  expect(ps.scores.Q3.away).toEqual(7);
+  expect(ps.scores.Q4.home).toEqual(7);
+  expect(ps.scores.Q4.away).toEqual(0);
+  expect(ps.scores.OT.home).toEqual(3);
+  expect(ps.scores.OT.away).toEqual(6);
+});

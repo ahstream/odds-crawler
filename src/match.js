@@ -15,8 +15,8 @@ const _ = require('lodash');
 const betlib = require('./bet');
 const feedlib = require('./feed');
 const { createLogger } = require('./lib/loggerlib');
+const scorelib = require('./matchScore');
 const mongodb = require('./mongodb.js');
-const scorelib = require('./score');
 
 const log = createLogger();
 
@@ -31,8 +31,8 @@ export async function getMatchFromWebPage(parsedUrl) {
   const match = createMatch(parsedUrl);
 
   match.params = parseMatchPageEvent(htmltext);
-  match.score = await scorelib.getScore(match, htmltext);
-  match.status = match.score.status ?? match.status;
+  match.matchScore = await scorelib.getMatchScore(match, htmltext);
+  match.status = match.matchScore.status ?? match.status;
 
   match.betTypes = await betlib.getBetTypes(match);
   if (!match.betTypes || Object.keys(match.betTypes).length === 0) {
@@ -56,7 +56,7 @@ export async function getMatchFromWebPageUrl(url) {
   const parsedUrl = parseMatchUrl(url);
   // log.verbose(parsedUrl);
   const match = await getMatchFromWebPage(parsedUrl);
-  log.verbose(match);  // todo
+  // log.verbose(match);  // todo
   return match;
 }
 
@@ -66,8 +66,8 @@ export async function addMatchFromWebPageUrl(url) {
 }
 
 export function exportMatchToFile(match) {
-  match.score.url = match.url;
-  writeToFile(match.score, match.sport);
+  match.matchScore.url = match.url;
+  writeToFile(match.matchScore, match.sportName);
 }
 
 export async function updateMatchOddsHistoryDB(match) {
@@ -88,7 +88,6 @@ export async function addMatchToDBIfFinished(match) {
 }
 
 export function hasNormalMatchResult(match) {
-  // return match?.score?.status === 'finished';
   return match.status === 'finished';
 }
 
@@ -99,10 +98,10 @@ export function isFinished(match) {
 function updateMatchInfo(match) {
   match.sportId = match.params.sportId;
   match.tournamentId = match.params.tournamentId;
-  match.home = match.params.home;
-  match.away = match.params.away;
-  match.startTime = match.score.startTime;
-  match.timestamp = match.score.timestamp;
+  match.homeTeam = match.params.home;
+  match.awayTeam = match.params.away;
+  match.startTime = match.matchScore.startTime;
+  match.timestamp = match.matchScore.timestamp;
   match.info.numBookies = getNumBookies(match);
 }
 
@@ -115,14 +114,13 @@ function getNumBookies(match) {
   return numBookies;
 }
 
-
 // CREATORS ----------------------------------------------------------------------------------------
 
 function createMatch(parsedUrl) {
   return {
     id: parsedUrl.matchId,
     status: 'new',
-    sport: parsedUrl.sport,
+    sportName: parsedUrl.sport,
     sportId: null,
     country: parsedUrl.country,
     tournament: parsedUrl.tournament,

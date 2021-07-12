@@ -73,7 +73,11 @@ export function parseNextMatchesHashes(htmltext) {
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    throw new CustomError('Failed to JSON parse in parseNextMatchesHashes', { errorMsg: error.message, error, htmltext });
+    throw new CustomError('Failed to JSON parse in parseNextMatchesHashes', {
+      errorMsg: error.message,
+      error,
+      htmltext
+    });
   }
 }
 
@@ -128,6 +132,7 @@ export function parseMatchPageEvent(htmltext) {
 }
 
 export function parseMatchFeed(htmltext) {
+
   validateHtmltext(htmltext);
 
   const result = htmltext.match(/^globals.jsonpCallback\('[^']*'\, (\{.*refresh"\:[0-9]+\})\)\;/im);
@@ -160,14 +165,14 @@ export function parseError(htmltext) {
     return 0;
   }
 
-  const result1 = getRegexMatch(1, htmltext.match(/{"E":"([^"]*)"}/im));
-  if (result1) {
-    return result1;
-  }
-
   const result2 = getRegexMatch(1, htmltext.match(/{'E':'([^']*)'}/im));
   if (result2) {
     return result2;
+  }
+
+  const result21 = getRegexMatch(1, htmltext.match(/{E:'([^']*)'}/im));
+  if (result21) {
+    return result21;
   }
 
   const result3 = getRegexMatch(null, htmltext.match(/notAllowed/im));

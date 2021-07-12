@@ -1,4 +1,5 @@
 import { CustomError } from './exceptions';
+import { getMatchFeed } from './feed';
 
 /**
  * Copyright (c) 2021
@@ -27,6 +28,9 @@ export async function httpGetAllowedHtmltext(urls, delay = 300) {
   const htmltext = getHtmltextFromResponse(response, urls);
   if (!htmltext) {
     throw new CustomError('Failed getting allowed htmltext from URL', { urls, data: response.data });
+  }
+  if (typeof htmltext !== 'string') {
+    return JSON.stringify(htmltext);
   }
   return htmltext;
 }
