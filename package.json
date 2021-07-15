@@ -8,7 +8,7 @@
     "test2": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test": "jest",
     "dev": "babel-node src/dev.js",
-    "cli": "babel-node src/cli.js",
+    "cli": "babel-node src/cli.js --trace-warnings ",
     "debug": "babel-node src/dev.js --inspect",
     "profile": "babel-node --prof src/dev.js",
     "prettier:report": "prettier \"**/*.{js,ts,json,md}\" --check",

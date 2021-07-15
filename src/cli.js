@@ -19,19 +19,19 @@ const sportlib = require('./sport.js');
 
 const log = createLogger();
 
-// todo: lägg tillbaka marketResult i market
-// todo: crawlMatchPages för flera sporter samtidigt
-
 // RUNTIME ----------------------------------------------------------------------------------
 
 program.option('--force', 'Force execution', false);
 program.option('--deleteLogFiles', 'Delete log files', false);
+program.option('--initWithMaxDays', 'Run forst crawling with max days', false);
 program.option('--interval <value>', 'Minute interval for crawling', myParseInt, 60);
-program.option('--sport <value>', 'Sport name', 'soccer');
-// program.option('--sportId <value>', 'Sport ID', myParseInt, 1);
+program.option('--intervalMax <value>', 'Minute interval for max crawling', myParseInt, 0);
+program.option('--sportName <value>', 'Sport name', 'soccer');
 program.option('--datestr <value>', 'Date string (YYYYMMDD)', '');
-program.option('--daysAfter <value>', 'Days ahead', myParseInt, 0);
+program.option('--daysAfter <value>', 'Days after', myParseInt, 0);
+program.option('--daysAfterMax <value>', 'Days after max', myParseInt, 0);
 program.option('--daysBefore <value>', 'Days before', myParseInt, 0);
+program.option('--daysBeforeMax <value>', 'Days before max', myParseInt, 0);
 program.option('--status <value>', 'Status', null);
 program.option('--url <value>', 'URL', null);
 program.parse();
@@ -61,12 +61,23 @@ async function runCommand() {
         break;
       case 'crawlMatchPages':
         await crawlMatchPages({
-          interval: options.interval,
-          sport: options.sport,
-          sportId: lookupSportId(options.sport),
           datestr: options.datestr,
+          sportName: options.sportName,
+          interval: options.interval,
           daysAfter: options.daysAfter,
           daysBefore: options.daysBefore
+        });
+        break;
+      case 'crawlAllSportsMatchPages':
+        await crawlAllSportsMatchPages({
+          datestr: options.datestr,
+          interval: options.interval,
+          intervalMax: options.intervalMax,
+          daysAfter: options.daysAfter,
+          daysBefore: options.daysBefore,
+          daysAfterMax: options.daysAfterMax,
+          daysBeforeMax: options.daysBeforeMax,
+          initWithMaxDays: options.initWithMaxDays
         });
         break;
       case 'crawlMatchLinks':
@@ -99,11 +110,11 @@ async function runCommand() {
 
 /**
  * crawlMatchPages()
- * @param args: { interval, sport, sportId, datestr, daysAfter, daysBefore}
+ * @param args: { interval, sportName, datestr, daysAfter, daysBefore}
  */
 async function crawlMatchPages(args) {
   try {
-    log.info('Begin crawl match links... ', args);
+    log.info('Begin crawl match pages... ', JSON.stringify(args));
     const numTimes = args.interval ? Infinity : 1;
     for (let ct = 1; ct <= numTimes; ct++) {
       log.info(`Run #${ct} started...`);
@@ -111,6 +122,7 @@ async function crawlMatchPages(args) {
       if (!crawlResult) {
         log.error('Crawl result:', crawlResult);
       }
+      log.info(`Result: ${crawlResult.numMatchLinks.total}/${crawlResult.numMatchLinks.new}/${crawlResult.numMatchLinks.existing}/${crawlResult.numMatchLinks.ignored}; ${crawlResult.numOtherLinks.total}/${crawlResult.numOtherLinks.new}/${crawlResult.numOtherLinks.existing}/${crawlResult.numOtherLinks.ignored} (total/new/dups/ignored)`);
       if (ct < numTimes) {
         log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
         await utilslib.sleep(args.interval * 60 * 1000);
@@ -122,16 +134,62 @@ async function crawlMatchPages(args) {
   }
 }
 
-async function crawlMatchPagesThread({ sport, sportId, datestr, daysAfter, daysBefore }) {
+function addMinutesToDate(minutes, date) {
+  return new Date(date.getTime() + minutes * 60 * 1000);
+}
+
+/**
+ * crawlAllSportsMatchPages()
+ * @param args: { ... }
+ */
+async function crawlAllSportsMatchPages(args) {
+  try {
+    log.info('Begin crawl all sports match pages... ', JSON.stringify(args));
+    let nextMaxRunDate = args.intervalMax <= 0 ? new Date('2199-01-01') : addMinutesToDate(args.intervalMax, new Date());
+    if (args.initWithMaxDays) {
+      nextMaxRunDate = new Date();
+    }
+
+    const sportNames = sportlib.getSportNames();
+    const numTimes = args.interval ? Infinity : 1;
+    for (let ct = 1; ct <= numTimes; ct++) {
+      const runDate = new Date();
+      const daysAfter = runDate < nextMaxRunDate ? args.daysAfter : args.daysAfterMax;
+      const daysBefore = runDate < nextMaxRunDate ? args.daysBefore : args.daysBeforeMax;
+      log.info(`Run #${ct} started... (${daysAfter}/${daysBefore})`);
+      log.debug('runDate, nextMaxRunDate, daysAfter, daysBefore', runDate, nextMaxRunDate, daysAfter, daysBefore);
+
+      for (const sportName of sportNames) {
+        const newArgs = { sportName, datestr: args.datestr, daysAfter, daysBefore };
+        const crawlResult = await crawlMatchPagesThread(newArgs);
+        if (!crawlResult) {
+          log.error('Crawl result error:', crawlResult);
+        }
+      }
+
+      if (runDate >= nextMaxRunDate) {
+        nextMaxRunDate = addMinutesToDate(args.intervalMax, new Date());
+        log.debug('new nextMaxRunDate', nextMaxRunDate);
+      }
+
+      if (ct < numTimes) {
+        log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
+        await utilslib.sleep(args.interval * 60 * 1000);
+      }
+    }
+    log.info('Done!');
+  } catch (e) {
+    log.error('Error:', e.message, e);
+  }
+}
+
+async function crawlMatchPagesThread({ sportName, datestr, daysAfter, daysBefore }) {
   try {
     const date = datestrToDate(datestr);
-    await setupDB();
-    return await matchLink.crawlMatchPages(sport, sportId, date, daysAfter, daysBefore);
+    return await matchLink.crawlMatchPages(sportName, date, daysAfter, daysBefore);
   } catch (e) {
     log.error('Error:', e.message, e);
     return null;
-  } finally {
-    await closeDB();
   }
 }
 
@@ -159,13 +217,10 @@ async function crawlMatchLinks(args) {
 
 async function crawlMatchLinksThread({ status = null, force = false }) {
   try {
-    await setupDB();
     return await matchLink.crawlMatchLinks(status, force);
   } catch (e) {
     log.error('Error:', e.message, e);
     return null;
-  } finally {
-    await closeDB();
   }
 }
 
@@ -181,25 +236,6 @@ async function setupDB() {
  */
 async function closeDB() {
   await mongodb.close();
-}
-
-/**
- * resetDB()
- */
-async function resetDB() {
-  try {
-    log.info('Reset DB...');
-    await setupDB();
-    await mongodb.dropCollection('matchLinks');
-    await mongodb.dropCollection('matchLinksCompleted');
-    await mongodb.dropCollection('otherLinks');
-    await mongodb.dropCollection('ignoredLinks');
-    log.info('Done!');
-  } catch (e) {
-    log.error('Error:', e.message, e);
-  } finally {
-    await closeDB();
-  }
 }
 
 // HELPERS ----------------------------------------------------------------------------------
@@ -227,13 +263,6 @@ function myParseInt(value, dummyPrevious) {
     throw new program.InvalidArgumentError('Not a number!');
   }
   return parsedValue;
-}
-
-/**
- * lookupSportId()
- */
-function lookupSportId(sportName) {
-  return sportlib.getSportId(sportName);
 }
 
 function initLogFiles(doDelete) {

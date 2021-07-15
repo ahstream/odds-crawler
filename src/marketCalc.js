@@ -27,6 +27,8 @@ export function calcMarket(match, score, betArgs) {
         return backOrLay(betArgs.isBack, calcOU(score, betArgs.attributes.value1));
       case config.betType['Home/Away'].id:
         return backOrLay(betArgs.isBack, calcHomeAway(score));
+      case config.betType.TQ.id:
+        return backOrLay(betArgs.isBack, calcTQ(score));
       case config.betType.DC.id:
         return backOrLay(betArgs.isBack, calcDC(score));
       case config.betType.AH.id:
@@ -48,6 +50,7 @@ export function calcMarket(match, score, betArgs) {
         throw new Error(`Unexpected betType: ${betArgs.bt}`);
     }
   } catch (error) {
+    log.debug('CustomError: Failed calc market', { errorMsg: error.message, score, betArgs, error });
     throw new CustomError('Failed calc market', { errorMsg: error.message, score, betArgs, error });
   }
 }
@@ -78,8 +81,8 @@ function getOutcome(home, away) {
   if (home < away) {
     return 3;
   }
-  log.debug('getOutcome is null for:', home, away);
-  throw new CustomError('Failed getOutcome', { home, away });
+  log.debug('CustomError: Failed getOutcome for:', { home, away });
+  throw new CustomError('Failed getOutcome for:', { home, away });
 }
 
 const is1 = (score) => score.home > score.away;
@@ -105,8 +108,8 @@ function calcMatch(score) {
   if (is2(score)) {
     return r(3, L, L, W);
   }
-  log.debug('calcMatch is null for:', score);
-  throw new CustomError('Failed calcMatch', { score });
+  log.debug('CustomError: Failed calcMatch for:', { score });
+  throw new CustomError('Failed calcMatch for:', { score });
 }
 
 function calcHomeAway(score) {
@@ -119,8 +122,22 @@ function calcHomeAway(score) {
   if (isX(score)) {
     return r(0, D, D);
   }
-  log.debug('calcHomeAway is null for:', score);
-  throw new CustomError('Failed calcHomeAway', { score });
+  log.debug('CustomError: Failed calcHomeAway for:', { score });
+  throw new CustomError('Failed calcHomeAway for:', { score });
+}
+
+function calcTQ(score) {
+  if (is1(score)) {
+    return r(1, W, L);
+  }
+  if (is2(score)) {
+    return r(2, L, W);
+  }
+  if (isX(score)) {
+    return r(0, D, D);
+  }
+  log.debug('CustomError: Failed calcHomeAway for:', { score });
+  throw new CustomError('Failed calcHomeAway for:', { score });
 }
 
 function calcDC(score) {
@@ -133,8 +150,8 @@ function calcDC(score) {
   if (is2(score)) {
     return r(5, L, W, W);
   }
-  log.debug('calcDC is null for:', score);
-  throw new CustomError('Failed calcDC', { score });
+  log.debug('CustomError: Failed calcDC for:', { score });
+  throw new CustomError('Failed calcDC for:', { score });
 }
 
 function calcDNB(score) {
@@ -147,8 +164,8 @@ function calcDNB(score) {
   if (isX(score)) {
     return r(0, D, D);
   }
-  log.debug('calcDNB is null for:', score);
-  throw new CustomError('Failed calcDNB', { score });
+  log.debug('CustomError: Failed calcDNB for:', { score });
+  throw new CustomError('Failed calcDNB for:', { score });
 }
 
 function calcCS(score, goals1, goals2) {
@@ -162,8 +179,8 @@ function calcBTS(score) {
   if (isBTSNo(score)) {
     return r(2, L, W);
   }
-  log.debug('calcBTS is null for:', score);
-  throw new CustomError('Failed calcBTS', { score });
+  log.debug('CustomError: Failed calcBTS for:', { score });
+  throw new CustomError('Failed calcBTS for:', { score });
 }
 
 function calcOE(score) {
@@ -173,20 +190,20 @@ function calcOE(score) {
   if (isEven(score)) {
     return r(2, L, W);
   }
-  log.debug('calcOE is null for:', score);
-  throw new CustomError('Failed calcOE', { score });
+  log.debug('CustomError: Failed calcOE for:', { score });
+  throw new CustomError('Failed calcOE for:', { score });
 }
 
 function calcHTFT(score, outcomeHT, outcomeFT, match) {
-  const ht = getOutcome(match.sc3_1, match.sc3_2);
+  const ht = getOutcome(match.matchScore.scores.H1.home, match.matchScore.scores.H1.away);
   const ft = getOutcome(score.home, score.away);
 
   return isHTFT(ht, ft, outcomeHT, outcomeFT) ? r(1, W) : r(0, L);
 }
 
-function calcEH(score, handicap) {
+function calcEH(score, handicapValue) {
   const newScore = { ...score };
-  newScore.home += handicap;
+  newScore.home += handicapValue;
   newScore.away = score.away;
 
   if (is1(newScore)) {
@@ -198,8 +215,8 @@ function calcEH(score, handicap) {
   if (is2(newScore)) {
     return r(3, L, L, W);
   }
-  log.debug('calcEH is null for:', score, handicap);
-  throw new CustomError('Failed calcEH', { score, handicap });
+  log.debug('CustomError: Failed calcEH for:', { score, handicapValue });
+  throw new CustomError('Failed calcEH for:', { score, handicapValue });
 }
 
 function calcOU(score, tg) {
@@ -214,8 +231,8 @@ function calcOU(score, tg) {
     case 0.75:
       return calcOUSplit(score, tg);
     default:
-      log.debug('calcOU is null for:', score, tg);
-      throw new CustomError('Failed calcOU', { score, tg });
+      log.debug('CustomError: Failed calcOU for:', { score, tg });
+      throw new CustomError('Failed calcOU for:', { score, tg });
   }
 }
 
@@ -229,8 +246,8 @@ function calcOUEven(score, tg) {
   if (isUnder(score, tg)) {
     return r(2, L, W);
   }
-  log.debug('calcOUEven is null for:', score, tg);
-  throw new CustomError('Failed calcOUEven', { score, tg });
+  log.debug('CustomError: Failed calcOUEven for:', { score, tg });
+  throw new CustomError('Failed calcOUEven for:', { score, tg });
 }
 
 function calcOUHalf(score, tg) {
@@ -240,7 +257,8 @@ function calcOUHalf(score, tg) {
   if (isUnder(score, tg)) {
     return r(2, L, W);
   }
-  throw new CustomError('Failed calcOUHalf', { score, tg });
+  log.debug('CustomError: Failed calcOUHalf for:', { score, tg });
+  throw new CustomError('Failed calcOUHalf for:', { score, tg });
 }
 
 function calcOUSplit(score, tg) {
@@ -263,20 +281,20 @@ function calcOUSplit(score, tg) {
   return r(outcome, win1, win2);
 }
 
-function calcAH(score, handicap) {
-  const decimalPart = handicap - Math.trunc(handicap);
+function calcAH(score, handicapValue) {
+  const decimalPart = handicapValue - Math.trunc(handicapValue);
   const decimalPartAbs = Math.abs(decimalPart);
   switch (decimalPartAbs) {
     case 0:
-      return calcAH00(score, handicap);
+      return calcAH00(score, handicapValue);
     case 0.25:
-      return calcAHSplit(score, handicap);
+      return calcAHSplit(score, handicapValue);
     case 0.5:
-      return calcAH50(score, handicap);
+      return calcAH50(score, handicapValue);
     case 0.75:
-      return calcAHSplit(score, handicap);
+      return calcAHSplit(score, handicapValue);
     default:
-      log.debug('Not supported AH:', handicap, score);
+      log.debug('Not supported AH:', handicapValue, score);
       return null;
   }
 }
@@ -291,13 +309,13 @@ function calcAH00Outcome(score) {
   if (is2(score)) {
     return r(2, L, W);
   }
-  log.debug('calcAH00Outcome is null for:', score);
-  throw new CustomError('Failed calcAH00Outcome', { score });
+  log.debug('CustomError: Failed calcAH00Outcome for:', { score });
+  throw new CustomError('Failed calcAH00Outcome for:', { score });
 }
 
-function calcAH00(score, handicap) {
+function calcAH00(score, handicapValue) {
   const newScore = { ...score };
-  newScore.home += handicap;
+  newScore.home += handicapValue;
   newScore.away = score.away;
   const result = calcAH00Outcome(newScore);
   const win1 = result.win1;
@@ -324,13 +342,13 @@ function calcAH50Outcome(score) {
   if (is2(score)) {
     return r(2, L, W);
   }
-  log.debug('calcAH50Outcome is null for:', score);
-  throw new CustomError('Failed calcAH50Outcome', { score });
+  log.debug('CustomError: Failed calcAH50Outcome for:', { score });
+  throw new CustomError('Failed calcAH50Outcome for:', { score });
 }
 
-function calcAH50(score, handicap) {
+function calcAH50(score, handicapValue) {
   const newScore = { ...score };
-  newScore.home += handicap;
+  newScore.home += handicapValue;
   newScore.away = score.away;
   const result = calcAH50Outcome(newScore);
   const win1 = result.win1;
@@ -350,9 +368,9 @@ function calcAH50(score, handicap) {
   return r(outcome, win1, win2);
 }
 
-function calcAHSplit(score, handicap) {
-  const resultBet1 = calcAH(score, handicap - 0.25);
-  const resultBet2 = calcAH(score, handicap + 0.25);
+function calcAHSplit(score, handicapValue) {
+  const resultBet1 = calcAH(score, handicapValue - 0.25);
+  const resultBet2 = calcAH(score, handicapValue + 0.25);
   const win1 = (resultBet1.win1 + resultBet2.win1) / 2;
   const win2 = (resultBet1.win2 + resultBet2.win2) / 2;
 

@@ -33,15 +33,18 @@ export async function getMatchFromWebPage(parsedUrl) {
   match.params = parseMatchPageEvent(htmltext);
   match.matchScore = await scorelib.getMatchScore(match, htmltext);
   match.status = match.matchScore.status ?? match.status;
+  match.statusType = match.matchScore.type;
 
   match.betTypes = await betlib.getBetTypes(match);
   if (!match.betTypes || Object.keys(match.betTypes).length === 0) {
-    throw new CustomError('Failed getting bet types', { match, htmltext });
+    log.debug('CustomError: Failed getting bet types for:', { match, htmltext });
+    throw new CustomError('Failed getting bet types for:', { match, htmltext });
   }
 
   match.info.numMarkets = await feedlib.processMatchFeeds(match);
   if (match.info.numMarkets < 1) {
-    throw new CustomError('No markets in feed', { url: match.url, htmltext });
+    log.debug('CustomError: No markets in feed for:', { url: match.url, htmltext });
+    throw new CustomError('No markets in feed for:', { url: match.url, htmltext });
   }
 
   updateMarketOdds(match);
@@ -62,7 +65,7 @@ export async function getMatchFromWebPageUrl(url) {
 
 export async function addMatchFromWebPageUrl(url) {
   const match = await getMatchFromWebPageUrl(url);
-  await addMatchToDBIfFinished(match);
+  await addMatchToDBIfCompleted(match);
 }
 
 export function exportMatchToFile(match) {
@@ -81,8 +84,8 @@ export async function addMatchToDB(match) {
   await mongodb.db.collection(MATCHES).updateOne({ _id: match.id }, { $set: match }, { upsert: true });
 }
 
-export async function addMatchToDBIfFinished(match) {
-  if (isFinished(match)) {
+export async function addMatchToDBIfCompleted(match) {
+  if (isCompleted(match)) {
     await addMatchToDB(match);
   }
 }
@@ -93,6 +96,20 @@ export function hasNormalMatchResult(match) {
 
 export function isFinished(match) {
   return match.status === 'finished';
+}
+
+export function isCompleted(match) {
+  return match.matchScore.type === 'finished' ||
+    match.matchScore.type === 'canceled' ||
+    match.matchScore.type === 'awarded';
+}
+
+export function isScheduled(match) {
+  return match.matchScore.type === 'scheduled';
+}
+
+export function isRescheduled(match) {
+  return match.matchScore.type === 'postponed';
 }
 
 function updateMatchInfo(match) {
@@ -120,6 +137,7 @@ function createMatch(parsedUrl) {
   return {
     id: parsedUrl.matchId,
     status: 'new',
+    statusType: null,
     sportName: parsedUrl.sport,
     sportId: null,
     country: parsedUrl.country,
@@ -128,13 +146,12 @@ function createMatch(parsedUrl) {
     tournamentKey: parsedUrl.tournamentKey,
     startTime: null,
     timestamp: null,
-    home: null,
-    away: null,
+    homeTeam: null,
+    awayTeam: null,
     url: parsedUrl.matchUrl,
     parsedUrl,
     betTypes: null,
     market: {},
-    marketResult: {},
     marketOdds: {},
     oddsHistory: {},
     info: {}

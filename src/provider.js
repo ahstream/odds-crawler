@@ -27,6 +27,7 @@ export async function httpGetAllowedHtmltext(urls, delay = 300) {
   const response = await httpGetAllowedResponse(urls, delay);
   const htmltext = getHtmltextFromResponse(response, urls);
   if (!htmltext) {
+    log.debug('CustomError: Failed getting allowed htmltext from URL', { urls, data: response.data });
     throw new CustomError('Failed getting allowed htmltext from URL', { urls, data: response.data });
   }
   if (typeof htmltext !== 'string') {
@@ -57,6 +58,7 @@ export async function httpGetAllowedResponse(urls, delay = 300) {
     return response;
   }
 
+  log.debug('CustomError: Failed getting allowed response from URL', { urls, delay, data: response.data });
   throw new CustomError('Failed getting allowed response from URL', { urls, delay, data: response.data });
 }
 
@@ -74,6 +76,7 @@ export function httpGetManyUrls(urls, maxTries = 10, delayBetweenTries = 300) {
 
 export function getHtmltextFromResponse(response, url) {
   if (!response || !response.data) {
+    log.debug('CustomError: No response when getting web page', { url, response });
     throw new CustomError(`No response when getting web page`, { url, response });
   }
 
@@ -81,6 +84,7 @@ export function getHtmltextFromResponse(response, url) {
 
   const error = parser.parseError(htmltext);
   if (error) {
+    log.debug(`CustomError ${error} when getting web page`, { url, error, data: response.data });
     throw new CustomError(`Error ${error} when getting web page`, { url, error, data: response.data });
   }
 

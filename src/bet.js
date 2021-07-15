@@ -5,8 +5,9 @@
 
 import { getBetTypeName } from './betType';
 import { CustomError } from './exceptions';
+import { getHandicapName, getHandicapSign, convertHandicapType } from './handicap';
 import { createLogger } from './lib/loggerlib';
-import { getScopeName } from './scope';
+import { getScopeName, convertScope } from './scope';
 
 const config = require('../config/config.json');
 const attributelib = require('./attribute.js');
@@ -23,10 +24,12 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 export function processBets(match, feed, oddsFeed, bt, sc) {
-  const betMarkets = getBetMarkets(oddsFeed, bt, sc);
+  const betMarkets = getBetMarkets(match, oddsFeed, bt, sc);
   betMarkets.forEach((betArgs) => {
-    const betFeed = oddsFeed[betArgs.key];
-    processBet(match, feed, betFeed, betArgs);
+    betArgs.objKeys.forEach(objKey => {
+      const betFeed = oddsFeed[objKey];
+      processBet(match, feed, betFeed, betArgs);
+    });
   });
   return betMarkets.length;
 }
@@ -46,7 +49,8 @@ function processBet(match, feed, oddsFeed, betArgs) {
 export async function getBetTypes(match) {
   const feed = await feedlib.getMatchFeed(match, config.betType['1X2'].id, config.scope.FT.id);
   if (feed === null || feed.nav === undefined) {
-    throw new CustomError('Failed getting bet types', { feed, match });
+    log.debug('CustomError: Failed getting bet types for:', { feed, match });
+    throw new CustomError('Failed getting bet types for:', { feed, match });
   }
 
   const betTypes = {};
@@ -64,35 +68,47 @@ export async function getBetTypes(match) {
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-function getBetMarkets(oddsFeed, bt, sc) {
+function getBetMarkets(match, oddsFeed, bt, baseScope) {
   const betMarkets = [];
-  Object.keys(oddsFeed).forEach((key, _index) => {
-    const isBack = oddsFeed[key].isBack ? 1 : 0;
-    const handicapType = oddsFeed[key].handicapType;
-    const handicapValue = oddsFeed[key].handicapValue;
-    const mixedParameterId = oddsFeed[key].mixedParameterId;
-    const mixedParameterName = oddsFeed[key].mixedParameterName;
+  for (const objectKey of Object.keys(oddsFeed)) {
+    const isBack = oddsFeed[objectKey].isBack ? 1 : 0;
+    const baseHandicapType = oddsFeed[objectKey].handicapType;
+    const handicapValue = oddsFeed[objectKey].handicapValue;
+    const mixedParameterId = oddsFeed[objectKey].mixedParameterId;
+    const mixedParameterName = oddsFeed[objectKey].mixedParameterName;
     const attribute = mixedParameterName || handicapValue;
     const attributeSortKey = mixedParameterName || Number(handicapValue);
     const attributes = attributelib.calcAttributes(attribute, bt);
-    betMarkets.push({
-      key,
-      bt,
-      sc,
-      isBack,
-      handicapType,
-      handicapValue,
-      mixedParameterId,
-      mixedParameterName,
-      attribute,
-      attributeSortKey,
-      attributeType: handicapType,
-      attributes,
-      betTypeName: getBetTypeName(bt),
-      scopeName: getScopeName(sc),
-      betName: getBetName(bt, sc, attribute, attributes, handicapType)
-    });
-  });
+
+    const sc = convertScope(match.sportName, bt, baseScope, null);
+    const handicapType = convertHandicapType(match.sportName, bt, null, baseHandicapType);
+
+    const marketKey = `E-${bt}-${sc}-${handicapType}-${handicapValue}-${mixedParameterId}`;
+    const existingBetMarket = betMarkets.find(item => item.key === marketKey);
+    if (existingBetMarket) {
+      log.debug('Add to existing market:', bt, sc, handicapType, baseScope, baseHandicapType);
+      existingBetMarket.objKeys.push(objectKey);
+    } else {
+      betMarkets.push({
+        key: marketKey,
+        objKeys: [objectKey],
+        bt,
+        sc,
+        isBack,
+        handicapType,
+        handicapValue,
+        mixedParameterId,
+        mixedParameterName,
+        attribute,
+        attributeSortKey,
+        attributeType: baseHandicapType,
+        attributes,
+        betTypeName: getBetTypeName(bt),
+        scopeName: getScopeName(sc),
+        betName: getBetName(bt, sc, attribute, attributes, handicapType)
+      });
+    }
+  }
   betMarkets.sort(betMarketSorter);
   return betMarkets;
 }
@@ -105,47 +121,22 @@ function betMarketSorter(market1, market2) {
   return market2.attributeSortKey > market1.attributeSortKey ? 1 : 0;
 }
 
-function getHandicapTypeName(type) {
-  switch (type) {
-    case 0:
-      return '';
-    case 1:
-      return 'sets';
-    case 2:
-      return 'games';
-    case 7:
-      return 'legs';
-    default:
-      return 'UNKNOWN';
-  }
-}
-
 function getBetName(bt, sc, attribute, attributes, handicapType) {
-  const handicapTypeName = getHandicapTypeName(handicapType);
+  const handicapTypeName = getHandicapName(handicapType);
   const attributeTypeText = handicapTypeName ? ` ${handicapTypeName}` : '';
   const handicapSign = getHandicapSign(attributes.value1);
   switch (bt) {
     case config.betType['O/U'].id:
-      return `OU ${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
+      return `O/U ${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
     case config.betType.AH.id:
       return `AH ${handicapSign}${attributes.value1}${attributeTypeText} ${getScopeName(sc)}`;
     case config.betType.CS.id:
       return `CS ${attributes.value1}:${attributes.value2} ${getScopeName(sc)}`;
     case config.betType['HT/FT'].id:
-      return `HTFT ${attribute}`;
+      return `HT/FT ${attribute}`;
     case config.betType.EH.id:
       return `EH ${handicapSign}${attributes.value1} ${getScopeName(sc)}`;
     default:
       return `${getBetTypeName(bt)} ${getScopeName(sc)}`;
   }
-}
-
-function getHandicapSign(handicapValue) {
-  if (handicapValue > 0) {
-    return '+';
-  }
-  if (handicapValue < 0) {
-    return '-';
-  }
-  return '';
 }

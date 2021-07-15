@@ -45,7 +45,8 @@ export function addHistory(match, feed, marketId, oddsId, betArgs, outcomeArgs, 
       addOdds(match, marketId, oddsId, betArgs, outcomeArgs, bookieArgs, oddsItem);
     });
   } catch (error) {
-    throw new CustomError('Failed add history', {
+    log.debug('CustomError: Failed add history:', error.message, match.url);
+    throw new CustomError('Failed add history:', {
       errorMsg: error.message,
       url: match.url,
       marketId,

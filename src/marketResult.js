@@ -1,3 +1,6 @@
+import { hasNormalMatchResult } from './match';
+import { isScopeTooLong } from './scope';
+
 /**
  * Copyright (c) 2021
  * FILE DESCRIPTION
@@ -18,6 +21,9 @@ const log = createLogger();
 
 function getScopeScore(match, sc) {
   const scopeName = scopelib.getScopeName(sc);
+  if (!match.matchScore.scores[scopeName]) {
+    return null;
+  }
   return scorelib.createScore(match.matchScore.scores[scopeName].home, match.matchScore.scores[scopeName].away);
 }
 
@@ -46,18 +52,20 @@ function getSubScopeScores(match, sport) {
   }
   const finalScore = scorelib.createScore(0, 0);
   scores.forEach(score => {
-    finalScore.home += score.home;
-    finalScore.away += score.away;
+    if (score) {
+      finalScore.home += score.home;
+      finalScore.away += score.away;
+    }
   });
   return finalScore;
 }
 
 function getMarketScore(match, betArgs) {
   const hct = betArgs.handicapType;
-  if (hct === 0 || hct === 1) {
+  if (hct === 0 || hct === 1 || hct === 4 || hct === 5) {
     return getScopeScore(match, betArgs.sc);
   }
-  if (hct === 2 || hct === 3) {
+  if (hct === 2 || hct === 3 || hct === 6) {
     if (betArgs.sc === config.scope.FT.id) {
       return getSubScopeScores(match, match.sportName);
     }
@@ -68,41 +76,56 @@ function getMarketScore(match, betArgs) {
 }
 
 export function addMarketResult(market, match, betArgs) {
+  const marketResult = createMarketResult(market, match, betArgs);
+  if (marketResult !== null) {
+    match.marketResult[market.id] = marketResult;
+  }
+}
+
+export function createMarketResult(market, match, betArgs) {
+  if (!hasNormalMatchResult(match)) {
+    return null;
+  }
+
   const score = getMarketScore(match, betArgs);
   if (!score) {
-    log.info('No score:', betArgs);
-    log.debug('No score:', betArgs, match.matchScore, match.url);
-    return;
+    if (!scopelib.isScopeTooLong(betArgs.sc, match.matchScore.periods)) {
+      log.info('No score:', betArgs);
+      log.debug('No score:', betArgs, match.matchScore, match.url);
+    }
+    return null;
   }
 
   const marketCalc = marketcalclib.calcMarket(match, score, betArgs);
   if (marketCalc === null || marketCalc.outcome === null) {
     log.info('marketCalc is null for betArgs:', betArgs);
-    return;
+    return null;
   }
 
-  const marketResult = createMarketResult(market.id);
+  const marketResult = createMarketResultObject(market.id);
 
   marketResult.home = score.home;
   marketResult.away = score.away;
+  marketResult.total = score.home + score.away;
   marketResult.outcome = marketCalc.outcome;
 
   marketResult.win1 = marketCalc.win1;
   marketResult.win2 = marketCalc.win2;
   marketResult.win3 = marketCalc.win3;
 
-  match.marketResult[market.id] = marketResult;
+  return marketResult;
 }
 
 // ------------------------------------------------------------------------------------------------
 // HELPER FUNCTIONS
 // ------------------------------------------------------------------------------------------------
 
-function createMarketResult(marketId) {
+function createMarketResultObject(marketId) {
   return {
     marketId,
     home: null,
     away: null,
+    total: null,
     outcome: null,
     win1: null,
     win2: null,

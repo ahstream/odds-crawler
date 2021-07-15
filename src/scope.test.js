@@ -1,4 +1,4 @@
-import { getScopeId, getScopeName } from './scope';
+import { getScopeId, getScopeName, getScopeNth, isScopeTooLong } from './scope';
 
 test('getScopeId()', () => {
   expect(getScopeId(undefined)).toEqual(undefined);
@@ -14,4 +14,17 @@ test('getScopeName()', () => {
   expect(getScopeName('')).toEqual(undefined);
   expect(getScopeName(0)).toEqual(undefined);
   expect(getScopeName(2)).toEqual('FT');
+});
+
+test('getScopeNth()', () => {
+  expect(getScopeNth(undefined)).toEqual(undefined);
+  expect(getScopeNth(null)).toEqual(undefined);
+  expect(getScopeNth('')).toEqual(undefined);
+  expect(getScopeNth(1)).toEqual(null);
+  expect(getScopeNth(16)).toEqual(5);
+});
+
+test('isShortMatch()', () => {
+  expect(isScopeTooLong(16, [1, 2, 3, 4])).toEqual(true);
+  expect(isScopeTooLong(16, [1, 2, 3, 4, 5])).toEqual(false);
 });

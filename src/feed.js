@@ -29,6 +29,7 @@ function processMatchFeedResults(match, feedResults) {
   for (const data of feedResults.data) {
     const feed = parser.parseMatchFeed(data.response.data);
     if (feed === null) {
+      log.debug('CustomError: Match feed is null', { url: match.url, feedData: data });
       throw new CustomError('Match feed is null', { url: match.url, feedData: data });
     }
     numMarkets += processMatchFeed(match, feed);
@@ -40,7 +41,8 @@ function processMatchFeed(match, feed) {
   if (feed?.oddsdata?.back) {
     return betlib.processBets(match, feed, feed.oddsdata.back, feed.bt, feed.sc);
   }
-  throw new CustomError('Failed getting oddsdata', { url: match.url, feed });
+  log.debug('CustomError: Failed getting oddsdata for:', { url: match.url, feed });
+  throw new CustomError('Failed getting oddsdata for:', { url: match.url, feed });
 }
 
 export async function getMatchFeed(match, betType, scope) {

@@ -1,4 +1,4 @@
-import { getSportId, getSportName, getMatchLength } from './sport';
+import { getSportId, getSportName, getSportNames, getMatchLength } from './sport';
 
 const _ = require('lodash');
 
@@ -16,6 +16,10 @@ test('getSportName()', () => {
   expect(getSportName('')).toEqual(undefined);
   expect(getSportName(0)).toEqual(undefined);
   expect(getSportName(1)).toEqual('soccer');
+});
+
+test('getSportNames()', () => {
+  console.log(getSportNames());
 });
 
 test('getMatchLength()', () => {

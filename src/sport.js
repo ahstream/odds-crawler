@@ -22,6 +22,12 @@ export function getSportName(sportId) {
   return config.sport[objKey]?.name;
 }
 
+export function getSportNames() {
+  const objKeys = Object.keys(config.sport).filter(key => config.sport[key].active === true);
+  const sportIds = objKeys.map(key => config.sport[key].id).sort((a, b) => a - b);
+  return sportIds.map(id => getSportName(id));
+}
+
 export function getMatchLength(sportName) {
   const objKey = Object.keys(config.sport).find(key => config.sport[key].name === sportName);
   const matchLength = config.sport[objKey]?.matchLength;

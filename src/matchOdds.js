@@ -16,7 +16,7 @@ const log = createLogger();
 export function processMatchOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem) {
   const oddsId = createId(match, betArgs, outcomeArgs, bookieArgs);
 
-  if (matchlib.isFinished(match)) {
+  if (matchlib.isCompleted(match)) {
     // match.odds[oddsId] = createOdds(oddsId, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
     marketoddslib.addMarketOdds(match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem);
   }

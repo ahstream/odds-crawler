@@ -4,12 +4,13 @@
  */
 
 import { CustomError } from './exceptions';
+import { createMarketResult } from './marketResult';
+const marketresultlib = require('./marketResult');
 import { hasNormalMatchResult } from './match';
 
 const config = require('../config/config.json');
 const bookielib = require('./bookie.js');
 const { createLogger } = require('./lib/loggerlib');
-const marketresultlib = require('./marketResult');
 
 const log = createLogger();
 
@@ -37,6 +38,18 @@ export function addMarket(match, betArgs, bookies) {
     market.attributes = betArgs.attributes;
     market.attributeType = betArgs.attributeType;
 
+    const result = createMarketResult(market, match, betArgs);
+    market.result = result;
+    if (result !== null) {
+      market.home = result.home;
+      market.away = result.away;
+      market.total = result.total;
+      market.outcome = result.outcome;
+      market.win1 = result.win1;
+      market.win2 = result.win2;
+      market.win3 = result.win3;
+    }
+
     const numBookies = Object.keys(bookies).length;
     const numUndefined = bookielib.countUndefined(bookies);
 
@@ -49,16 +62,25 @@ export function addMarket(match, betArgs, bookies) {
     market.numBrokers = bookielib.countBroker(bookies);
     market.numSwe = bookielib.countSweden(bookies);
 
-    if (hasNormalMatchResult(match)) {
-      marketresultlib.addMarketResult(market, match, betArgs);
+    if (match.market[marketId]) {
+      log.debug('Add market to existing market:', market, match.market[marketId]);
+      addMarketToExistingMarket(market, match.market[marketId]);
+      return marketId;
     }
 
     match.market[marketId] = market;
 
     return marketId;
   } catch (error) {
-    log.debug('Error at addMarket:', error, betArgs, match.url, match.params, match.matchScore);
-    throw new CustomError('Failed adding market', {
+    log.debug('CustomError: Failed adding market for:', {
+      errorMsg: error.message,
+      betArgs,
+      url: match.url,
+      params: match.params,
+      matchScore: match.matchScore,
+      error
+    });
+    throw new CustomError('Failed adding market for:', {
       errorMsg: error.message,
       betArgs,
       url: match.url,
@@ -67,6 +89,17 @@ export function addMarket(match, betArgs, bookies) {
       error
     });
   }
+}
+
+function addMarketToExistingMarket(market, existingMarket) {
+  existingMarket.numBookies += market.numBookies;
+  existingMarket.numIncluded += market.numIncluded;
+  existingMarket.numUndefined += market.numUndefined;
+  existingMarket.numSharp += market.numSharp;
+  existingMarket.numSoft += market.numSoft;
+  existingMarket.numExchanges += market.numExchanges;
+  existingMarket.numBrokers += market.numBrokers;
+  existingMarket.numSwe += market.numSwe;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -95,6 +128,15 @@ function createMarket(id) {
     attribute: null, // '0.00', '+1.5', '1:2',
     attributes: null, // 1.5
     attributeType: null, // 0: goals/sets; 1: games
+
+    home: null,
+    away: null,
+    total: null,
+    outcome: null,
+    win1: null,
+    win2: null,
+    win3: null,
+    result: null,
 
     numBookies: null,
     numIncluded: null,

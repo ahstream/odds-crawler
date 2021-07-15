@@ -102,192 +102,224 @@
       "id": 1,
       "name": "FTOT",
       "longName": "Full Time inc. OT",
+      "nth": null,
       "active": true
     },
     "FT": {
       "id": 2,
       "name": "FT",
       "longName": "Full Time",
+      "nth": null,
       "active": true
     },
     "H1": {
       "id": 3,
       "name": "H1",
       "longName": "1st Half",
+      "nth": 1,
       "active": true
     },
     "H2": {
       "id": 4,
       "name": "H2",
       "longName": "2nd Half",
+      "nth": 2,
       "active": true
     },
     "P1": {
       "id": 5,
       "name": "P1",
       "longName": "1st Period",
+      "nth": 1,
       "active": true
     },
     "P2": {
       "id": 6,
       "name": "P2",
       "longName": "2nd Period",
+      "nth": 2,
       "active": true
     },
     "P3": {
       "id": 7,
       "name": "P3",
       "longName": "3rd Period",
+      "nth": 3,
       "active": true
     },
     "Q1": {
       "id": 8,
       "name": "Q1",
       "longName": "1st Quarter",
+      "nth": 1,
       "active": true
     },
     "Q2": {
       "id": 9,
       "name": "Q2",
       "longName": "2nd Quarter",
+      "nth": 2,
       "active": true
     },
     "Q3": {
       "id": 10,
       "name": "Q3",
       "longName": "3rd Quarter",
+      "nth": 3,
       "active": true
     },
     "Q4": {
       "id": 11,
       "name": "Q4",
       "longName": "4th Quarter",
+      "nth": 4,
       "active": true
     },
     "S1": {
       "id": 12,
       "name": "S1",
       "longName": "1st Set",
+      "nth": 1,
       "active": true
     },
     "S2": {
       "id": 13,
       "name": "S2",
       "longName": "2nd Set",
+      "nth": 2,
       "active": true
     },
     "S3": {
       "id": 14,
       "name": "S3",
       "longName": "3rd Set",
+      "nth": 3,
       "active": true
     },
     "S4": {
       "id": 15,
       "name": "S4",
       "longName": "4th Set",
+      "nth": 4,
       "active": true
     },
     "S5": {
       "id": 16,
       "name": "S5",
       "longName": "5th Set",
+      "nth": 5,
       "active": true
     },
     "I1": {
       "id": 17,
       "name": "I1",
       "longName": "1st Inning",
+      "nth": 1,
       "active": true
     },
     "I2": {
       "id": 18,
       "name": "I2",
       "longName": "2nd Inning",
+      "nth": 2,
       "active": true
     },
     "I3": {
       "id": 19,
       "name": "I3",
       "longName": "3rd Inning",
+      "nth": 3,
       "active": true
     },
     "I4": {
       "id": 20,
       "name": "I4",
       "longName": "4th Inning",
+      "nth": 4,
       "active": true
     },
     "I5": {
       "id": 21,
       "name": "I5",
       "longName": "5th Inning",
+      "nth": 5,
       "active": true
     },
     "I6": {
       "id": 22,
       "name": "I6",
       "longName": "6th Inning",
+      "nth": 6,
       "active": true
     },
     "I7": {
       "id": 23,
       "name": "I7",
       "longName": "7th Inning",
+      "nth": 7,
       "active": true
     },
     "I8": {
       "id": 24,
       "name": "I8",
       "longName": "8th Inning",
+      "nth": 8,
       "active": true
     },
     "I9": {
       "id": 25,
       "name": "I9",
       "longName": "9th Inning",
+      "nth": 9,
       "active": true
     },
     "NextSet": {
       "id": 26,
       "name": "NextSet",
       "longName": "Next Set",
+      "nth": null,
       "active": true
     },
     "CurrentSet": {
       "id": 27,
       "name": "CurrentSet",
       "longName": "Current Set",
+      "nth": null,
       "active": true
     },
     "NextGame": {
       "id": 28,
       "name": "NextGame",
       "longName": "Next Game",
+      "nth": null,
       "active": true
     },
     "CurrentGame": {
       "id": 29,
       "name": "CurrentGame",
       "longName": "Current Game",
+      "nth": null,
       "active": true
     },
     "OT": {
       "id": 97,
       "name": "OT",
       "longName": "Overtime",
+      "nth": null,
       "active": true
     },
     "OTS": {
       "id": 98,
       "name": "OTS",
       "longName": "Overtimes",
+      "nth": null,
       "active": true
     },
     "PT": {
       "id": 99,
       "name": "PT",
       "longName": "Penalties",
+      "nth": null,
       "active": true
     }
   },
@@ -298,23 +330,38 @@
       "active": true
     },
     "1": {
-      "id": 0,
-      "name": "sets",
+      "id": 1,
+      "name": "Sets",
       "active": true
     },
     "2": {
-      "id": 0,
-      "name": "games",
+      "id": 2,
+      "name": "Games",
       "active": true
     },
     "3": {
-      "id": 0,
-      "name": "",
+      "id": 3,
+      "name": "Points",
+      "active": true
+    },
+    "4": {
+      "id": 4,
+      "name": "Frames",
+      "active": true
+    },
+    "5": {
+      "id": 5,
+      "name": "Goals",
+      "active": true
+    },
+    "6": {
+      "id": 6,
+      "name": "Runs",
       "active": true
     },
     "7": {
-      "id": 0,
-      "name": "legs",
+      "id": 7,
+      "name": "Legs",
       "active": true
     }
   },
@@ -369,8 +416,8 @@
       "name": "beach-volleyball",
       "active": true,
       "matchLength": [
-        3,
-        5
+        2,
+        3
       ]
     },
     "boxing": {
@@ -462,7 +509,7 @@
       "name": "tennis",
       "active": true,
       "matchLength": [
-        3,
+        2,
         5
       ]
     },

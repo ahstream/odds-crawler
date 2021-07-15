@@ -28,17 +28,20 @@ export async function getMatchScore(match) {
   const reScore = /"d":({[^}]*})/im;
   const scrapedScore = htmltext.match(reScore);
   if (!scrapedScore || scrapedScore.length !== 2) {
-    throw new CustomError('Failed to scrape matchScore for match', { urls, scrapedScore, htmltext });
+    log.debug('CustomError: Failed to scrape matchScore for match:', { urls, scrapedScore, htmltext });
+    throw new CustomError('Failed to scrape matchScore for match:', { urls, scrapedScore, htmltext });
   }
 
   const parsedScore = JSON.parse(scrapedScore[1]);
   if (parsedScore === undefined || parsedScore.startTime === undefined || parsedScore.result === undefined) {
-    throw new CustomError('Failed to JSON parse matchScore for match', { urls, parsedScore, htmltext });
+    log.debug('CustomError: Failed to JSON parse matchScore for match:', { urls, parsedScore, htmltext });
+    throw new CustomError('Failed to JSON parse matchScore for match:', { urls, parsedScore, htmltext });
   }
 
   const matchScore = parseMatchScore(match.sportName, parsedScore.startTime, match.params.home, match.params.away, parsedScore.result, parsedScore['result-alert']);
   if (!matchScore) {
-    throw new CustomError('Failed to parse matchScore for match', { urls, parsedScore, htmltext });
+    log.debug('CustomError: Failed to parse matchScore for match:', { urls, parsedScore, htmltext });
+    throw new CustomError('Failed to parse matchScore for match:', { urls, parsedScore, htmltext });
   }
 
   matchScore.startTime = new Date(parsedScore.startTime * 1000);
@@ -283,6 +286,7 @@ function addFinalResult(matchScore) {
     matchScore.scores.OT = matchScore.hasOvertime ? overtimeResult : null;
     matchScore.scores.PT = matchScore.hasPenalties ? penaltiesResult : null;
   } else {
+    matchScore.scores.FTOT = matchScore.finalResult;
     matchScore.scores.FT = matchScore.finalResult;
   }
 }
@@ -390,6 +394,7 @@ function addSubResult(matchScore) {
       matchScore.scores.PTS = scorelib.add([matchScore.scores.S1, matchScore.scores.S2, matchScore.scores.S3]);
       break;
     default:
+      log.debug(`CustomError: Unsupported sport: ${matchScore.sportName}`);
       throw new CustomError(`Unsupported sport: ${matchScore.sportName}`);
   }
 }
