@@ -113,7 +113,6 @@ export async function crawlMatchLinks(status = null, force = false) {
   const matchLinks = await getMatchLinksFromDB(status, force);
   log.info(`Crawl ${matchLinks.length} match links...`);
   for (const [idx, matchLink] of matchLinks.entries()) {
-    // todo: hantera postponed/canceled/etc matches
     try {
       await crawlMatchLink(matchLink, idx + 1, matchLinks.length);
     } catch (error) {
@@ -121,7 +120,6 @@ export async function crawlMatchLinks(status = null, force = false) {
     }
     scheduleNextCrawl(matchLink);
     await updateMatchLinkInDB(matchLink);
-    // return true;
   }
 
   return true;
@@ -151,7 +149,7 @@ export async function moveBackToMatchLinksQueue() {
 async function crawlMatchLink(matchLink, count, totalCount) {
   // todo: add to tournaments and check if should exclude or not.
   const match = await getMatchFromWebPage(matchLink.parsedUrl, true);
-  exportMatchToFile(match); // todo
+  // exportMatchToFile(match); // todo
   //  const tournament = updateTournaments(match);
   const result = await updateMatchOddsHistoryDB(match);
   await addMatchToDBIfCompleted(match);
