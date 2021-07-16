@@ -24,42 +24,95 @@ export function parseMatchUrl(url) {
   const sport = utilslib.trimChars(result[1] ?? '', '/').trim();
   const country = utilslib.trimChars(result[2] ?? '', '/').trim();
   const tournament = utilslib.trimChars(result[3] ?? '', '/').trim();
-  const tournamentKey = `${sport}/${country}/${tournament}`;
+  const tournamentNameWithYear = tournament;
   const match = utilslib.trimChars(result[4] ?? '', '/').trim();
-  const matchUrl = `/${sport}/${country}/${tournament}/${match}/`;
+
+  const tournamentPathData = parseTournamentPath(tournament);
+  const tournamentName = tournamentPathData.name.trim();
+  const tournamentYear = tournamentPathData.year.trim();
+  const tournamentKey = `${sport}/${country}/${tournamentName}`;
+  const tournamentKeyWithYear = `${sport}/${country}/${tournament}`;
 
   const matchIdTmp = match.match(/.*-([0-9A-Z]*)$/i);
   const matchId = matchIdTmp && matchIdTmp.length === 2 ? matchIdTmp[1] : '';
-
-  const name = match.replace(`-${matchId}`, '').trim();
+  const matchName = match.replace(`-${matchId}`, '').trim();
+  const matchUrl = `/${sport}/${country}/${tournament}/${match}/`;
 
   return {
-    name,
     sport,
     country,
     tournament,
-    tournamentKey,
     match,
+    tournamentName,
+    tournamentNameWithYear,
+    tournamentKey,
+    tournamentKeyWithYear,
+    tournamentYear,
+    matchName,
     matchId,
     matchUrl,
     sourceUrl: url
   };
 }
 
-export function parseFakedMatchUrl(matchId, tournamentKey) {
-  // Example tournamentKey: soccer/colombia/primera-b
-  const items = tournamentKey.split('/');
+export function parseFakedMatchUrl(matchId, tournamentKeyWithYear) {
+  // Example tournamentNameYearKey: soccer/colombia/primera-b-2020-2021
+  const items = tournamentKeyWithYear.split('/');
+
+  const sport = utilslib.trimChars(items[0] ?? '', '/').trim();
+  const country = utilslib.trimChars(items[1] ?? '', '/').trim();
+  const tournament = utilslib.trimChars(items[2] ?? '', '/').trim();
+  const tournamentNameWithYear = tournament;
+  const tournamentPathData = parseTournamentPath(tournament);
+  const tournamentName = tournamentPathData.name.trim();
+  const tournamentYear = tournamentPathData.year.trim();
+  const tournamentKey = `${sport}/${country}/${tournamentName}`;
+
   return {
-    name: 'unknown',
-    sport: items[0],
-    country: items[1],
-    tournament: items[2],
+    sport,
+    country,
+    tournament,
+    match: '',
+    tournamentName,
+    tournamentNameWithYear,
     tournamentKey,
-    match: 'unknown',
+    tournamentKeyWithYear,
+    tournamentYear,
+    matchName: '',
     matchId,
-    matchUrl: `/${tournamentKey}/${matchId}/`,
-    sourceUrl: `/${tournamentKey}/${matchId}/`
+    matchUrl: `/${tournamentKeyWithYear}/${matchId}/`,
+    sourceUrl: `/${tournamentKeyWithYear}/${matchId}/`
   };
+}
+
+export function parseTournamentName(htmltext) {
+  const matchedData = htmltext.match(/Show all "(?!\d\d\d\d)(.*?)(\d\d\d\d)?(?:\/)?(\d\d\d\d)?"/i);
+  if (!matchedData || !matchedData[1]) {
+    log.debug('CustomError: Failed to regex parseTournamentName', { result: matchedData, htmltext });
+    throw new CustomError('Failed to regex parseTournamentName', { result: matchedData, htmltext });
+  }
+
+  const tournamentData = {};
+  tournamentData.name = matchedData[1].trim();
+  tournamentData.year1 = matchedData[2] || '';
+  tournamentData.year2 = matchedData[3] || '';
+  tournamentData.year = `${tournamentData.year1}${tournamentData.year2 ? '/' : ''}${tournamentData.year2}`.trim();
+
+  return tournamentData;
+}
+
+export function parseTournamentPath(text) {
+  const matchedData = text.match(/(.*?)(?:-)?((?:\d\d\d\d)?(?:-\d\d\d\d)?)$/i);
+  if (!matchedData || !matchedData[1]) {
+    log.debug('CustomError: Failed to regex parseTournamentPath', { result: matchedData, text });
+    throw new CustomError('Failed to regex parseTournamentPath', { result: matchedData, text });
+  }
+
+  const tournamentData = {};
+  tournamentData.name = matchedData[1].trim();
+  tournamentData.year = matchedData[2] || '';
+
+  return tournamentData;
 }
 
 export function parseNextMatchesHashes(htmltext) {

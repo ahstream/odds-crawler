@@ -34,5 +34,10 @@ yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/snooker/wor
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/volleyball/world/world-championship-u20-women/russia-usa-SUhWhKe3/'
 yarn cli addMatch --deleteLogFiles --url 'xxxx'
 
+yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/england/premier-league-2020-2021/arsenal-brighton-2qsbaz5A/'
+yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/england/premier-league/brentford-arsenal-863eg7q9/'
+
+
+
 
 

@@ -9,6 +9,7 @@ import { updateMarketOdds } from './marketodds';
 import { updateOddsHistoryDB } from './oddsHistory';
 import { parseMatchPageEvent, parseMatchUrl } from './parser';
 import { httpGetAllowedHtmltext } from './provider';
+import { getTournament } from './tournament';
 
 const _ = require('lodash');
 
@@ -34,6 +35,8 @@ export async function getMatchFromWebPage(parsedUrl) {
   match.matchScore = await scorelib.getMatchScore(match, htmltext);
   match.status = match.matchScore.status ?? match.status;
   match.statusType = match.matchScore.type;
+
+  match.tournament = await getTournament(htmltext, parsedUrl, match.params.tournamentId);
 
   match.betTypes = await betlib.getBetTypes(match);
   if (!match.betTypes || Object.keys(match.betTypes).length === 0) {
@@ -140,9 +143,9 @@ function createMatch(parsedUrl) {
     statusType: null,
     sportName: parsedUrl.sport,
     sportId: null,
-    country: parsedUrl.country,
-    tournament: parsedUrl.tournament,
+    countryName: parsedUrl.country,
     tournamentId: null,
+    tournamentName: parsedUrl.tournamentName,
     tournamentKey: parsedUrl.tournamentKey,
     startTime: null,
     timestamp: null,
