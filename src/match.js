@@ -127,10 +127,10 @@ function updateMatchInfo(match) {
 
 function getNumBookies(match) {
   const numBookiesList = [];
-  numBookiesList.push(match.market[`${match.id}_1_1_1_0.00_0`].numBookies ?? -1);
-  numBookiesList.push(match.market[`${match.id}_1_2_1_0.00_0`].numBookies ?? -1);
-  numBookiesList.push(match.market[`${match.id}_3_1_1_0.00_0`].numBookies ?? -1);
-  numBookiesList.push(match.market[`${match.id}_3_2_1_0.00_0`].numBookies ?? -1);
+  numBookiesList.push(match.market[`${match.id}_1_1_1_0.00_0`]?.numBookies ?? 0);
+  numBookiesList.push(match.market[`${match.id}_1_2_1_0.00_0`]?.numBookies ?? 0);
+  numBookiesList.push(match.market[`${match.id}_3_1_1_0.00_0`]?.numBookies ?? 0);
+  numBookiesList.push(match.market[`${match.id}_3_2_1_0.00_0`]?.numBookies ?? 0);
   const numBookies = _.max(numBookiesList);
   if (numBookies < 1) {
     log.error('No bookies:', match.url);

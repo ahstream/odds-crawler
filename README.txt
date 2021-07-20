@@ -13,7 +13,7 @@ yarn cli crawlMatchPages --interval 5000 --sportName "soccer" --daysAfter 0 --da
 yarn cli crawlAllSportsMatchPages --interval 100 --daysAfter 1 --daysBefore 1
 yarn cli crawlAllSportsMatchPages --interval 1 --daysAfter 10 --daysBefore 20
 yarn cli crawlAllSportsMatchPages --interval 1 --daysAfter 1 --daysBefore 1 --intervalMax 3 --daysAfterMax 5 --daysBeforeMax 5 --initWithMaxDays
-yarn cli crawlAllSportsMatchPages --interval 60 --daysAfter 10 --daysBefore 2 --intervalMax 600 --daysAfterMax 100 --daysBeforeMax 10
+yarn cli crawlAllSportsMatchPages --interval 60 --daysAfter 10 --daysBefore 2 --intervalMax 600 --daysAfterMax 100 --daysBeforeMax 10 --deleteLogFiles
 
 yarn cli crawlMatchLinks --interval 60 --status ""
 yarn cli crawlMatchLinks --interval 60 --status "" --deleteLogFiles
