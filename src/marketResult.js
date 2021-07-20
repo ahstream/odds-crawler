@@ -90,8 +90,9 @@ export function createMarketResult(market, match, betArgs) {
   const score = getMarketScore(match, betArgs);
   if (!score) {
     if (!scopelib.isScopeTooLong(betArgs.sc, match.matchScore.periods)) {
-      log.info('No score:', betArgs);
-      log.debug('No score:', betArgs, match.matchScore, match.url);
+      // log.info('No score:', betArgs);
+      // log.debug('No score:', betArgs, match.matchScore, match.url);
+      log.info('No score:', match.url);
     }
     return null;
   }

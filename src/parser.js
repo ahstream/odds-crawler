@@ -120,14 +120,14 @@ export function parseNextMatchesHashes(htmltext) {
 
   const result = htmltext.match(/var page = new PageNextMatches\(({"xHash":{[^}]*},"xHashf":{[^}]*},[^}]*})/im);
   if (!result || !result[1]) {
-    log.debug('CustomError: Failed to regex parseNextMatchesHashes', { result, htmltext });
+    log.debug('CustomError: Failed to regex parseNextMatchesHashes', { result });
     throw new CustomError('Failed to regex parseNextMatchesHashes', { result, htmltext });
   }
 
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    log.debug('CustomError: Failed to JSON parse in parseNextMatchesHashes', error, htmltext);
+    log.debug('CustomError: Failed to JSON parse in parseNextMatchesHashes', error, result);
     throw new CustomError('Failed to JSON parse in parseNextMatchesHashes', {
       errorMsg: error.message,
       error,
@@ -141,14 +141,14 @@ export function parseNextMatchesJson(htmltext) {
 
   const result = htmltext.match(/({.*})\);$/im);
   if (!result || !result[1]) {
-    log.debug('CustomError: Failed to regex parseNextMatchesJson', { result, htmltext });
+    log.debug('CustomError: Failed to regex parseNextMatchesJson', { result });
     throw new CustomError('Failed to regex parseNextMatchesJson', { result, htmltext });
   }
 
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    log.debug('CustomError: Failed to JSON parse in parseNextMatchesJson', error, htmltext);
+    log.debug('CustomError: Failed to JSON parse in parseNextMatchesJson', error, result);
     throw new CustomError('Failed to JSON parse in parseNextMatchesJson', { errorMsg: error.message, error, htmltext });
   }
 }
@@ -178,25 +178,24 @@ export function parseMatchPageEvent(htmltext) {
 
   const result = htmltext.match(/new PageEvent\(({[^}]*})\)/im);
   if (!result || !result[1]) {
-    log.debug('CustomError: Failed to regex parseMatchPageEvent', { result, htmltext });
+    // log.debug('CustomError: Failed to regex parseMatchPageEvent', { result, htmltext });
     throw new CustomError('Failed to regex parseMatchPageEvent', { result, htmltext });
   }
 
   try {
     return JSON.parse(result[1]);
   } catch (error) {
-    log.debug('CustomError: Failed to JSON parse in parseMatchPageEvent', { error, htmltext });
+    log.debug('CustomError: Failed to JSON parse in parseMatchPageEvent', { error, result });
     throw new CustomError('Failed to JSON parse in parseMatchPageEvent', { errorMsg: error.message, error, htmltext });
   }
 }
 
 export function parseMatchFeed(htmltext) {
-
   validateHtmltext(htmltext);
 
   const result = htmltext.match(/^globals.jsonpCallback\('[^']*'\, (\{.*refresh"\:[0-9]+\})\)\;/im);
   if (!result || !result[1]) {
-    log.debug('CustomError: Failed to regex parseMatchFeed', { result, htmltext });
+    log.debug('CustomError: Failed to regex parseMatchFeed', { result });
     throw new CustomError('Failed to regex parseMatchFeed', { result, htmltext });
   }
 
@@ -204,12 +203,12 @@ export function parseMatchFeed(htmltext) {
   try {
     feed = JSON.parse(result[1]).d;
   } catch (error) {
-    log.debug('CustomError: Failed to JSON parse in parseMatchFeed', { errorMsg: error.message, error, htmltext });
+    log.debug('CustomError: Failed to JSON parse in parseMatchFeed', { errorMsg: error.message, error, result });
     throw new CustomError('Failed to JSON parse in parseMatchFeed', { errorMsg: error.message, error, htmltext });
   }
 
   if (feed.E && feed.E === 'notAllowed') {
-    log.debug('CustomError: Error code: notAllowed (parseMatchFeed)', { feed, htmltext });
+    log.debug('CustomError: Error code: notAllowed (parseMatchFeed)', { feed, result });
     throw new CustomError('Error code: notAllowed (parseMatchFeed)', { feed, htmltext });
   }
   return feed;
@@ -218,7 +217,7 @@ export function parseMatchFeed(htmltext) {
 export function validateHtmltext(htmltext) {
   const error = parseError(htmltext);
   if (error) {
-    log.debug('CustomError: Error', { error, htmltext });
+    log.debug('CustomError: Error', { error });
     throw new CustomError(`Error: ${error}`, { htmltext });
   }
 }

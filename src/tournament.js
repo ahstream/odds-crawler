@@ -23,7 +23,6 @@ export async function getTournament(htmltext, parsedUrl, tournamentId) {
   tournament.mainYear = tournamentData.year2 ? tournamentData.year2 : tournamentData.year1;
   tournament.prevYear = tournamentData.year2 ? tournamentData.year1 : null;
   await addTournament(tournament);
-  log.info(tournament);
   return tournament;
 }
 
@@ -40,7 +39,7 @@ const TOURNAMENT_KEYS = 'tournamentKeys';
 
 async function addTournament(tournament) {
   if (await existsInDB(tournament.id)) {
-    log.info('tournament exists in DB!');
+    // log.info('tournament exists in DB!');
     return false;
   }
   await addToDB(tournament);
@@ -49,7 +48,7 @@ async function addTournament(tournament) {
 
 async function addTournamentKey(tournament) {
   if (await existsInKeyDB(tournament.key)) {
-    log.info('tournament key exists in DB!');
+    // log.info('tournament key exists in DB!');
     return false;
   }
   await addToKeyDB(tournament);

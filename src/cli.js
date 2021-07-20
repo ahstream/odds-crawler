@@ -124,7 +124,7 @@ async function crawlMatchPages(args) {
       }
       log.info(`Result: ${crawlResult.numMatchLinks.total}/${crawlResult.numMatchLinks.new}/${crawlResult.numMatchLinks.existing}/${crawlResult.numMatchLinks.ignored}; ${crawlResult.numOtherLinks.total}/${crawlResult.numOtherLinks.new}/${crawlResult.numOtherLinks.existing}/${crawlResult.numOtherLinks.ignored} (total/new/dups/ignored)`);
       if (ct < numTimes) {
-        log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
+        log.info(`Sleep for ${args.interval} minutes before starting crawlMatchPages run #${ct + 1}...`);
         await utilslib.sleep(args.interval * 60 * 1000);
       }
     }
@@ -173,7 +173,7 @@ async function crawlAllSportsMatchPages(args) {
       }
 
       if (ct < numTimes) {
-        log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
+        log.info(`Sleep for ${args.interval} minutes before starting crawlAllSportsMatchPages run #${ct + 1}...`);
         await utilslib.sleep(args.interval * 60 * 1000);
       }
     }
@@ -205,7 +205,7 @@ async function crawlMatchLinks(args) {
       log.info(`Run #${ct} started...`);
       log.info('Result:', await crawlMatchLinksThread(args));
       if (ct < numTimes) {
-        log.info(`Sleep for ${args.interval} minutes before starting run #${ct + 1}...`);
+        log.info(`Sleep for ${args.interval} minutes before starting crawlMatchLinks run #${ct + 1}...`);
         await utilslib.sleep(args.interval * 60 * 1000);
       }
     }

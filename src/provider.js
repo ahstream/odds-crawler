@@ -58,7 +58,7 @@ export async function httpGetAllowedResponse(urls, delay = 300) {
     return response;
   }
 
-  log.debug('CustomError: Failed getting allowed response from URL', { urls, delay, data: response.data });
+  // log.debug('CustomError: Failed getting allowed response from URL', { urls, delay, data: response.data });
   throw new CustomError('Failed getting allowed response from URL', { urls, delay, data: response.data });
 }
 
