@@ -64,7 +64,7 @@ export async function crawlMatchPages(sportName, startDate, daysForward, daysBac
 
       log.debug('Match links crawled:', result, numLinks);
     } catch (e) {
-      log.error('Failed crawlMatchPages:', e.message, e);
+      log.error('Failed crawlMatchPages:', e.message);
     }
   }
 

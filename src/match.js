@@ -139,6 +139,11 @@ function getNumBookies(match) {
   return numBookies;
 }
 
+// todo: match returnerar startsida -> cancelled -> ta bort matchLink!
+// todo: upptäck felkod på fler fel!
+// todo: undersök no score!
+// todo: no bookies + finished -> ta bort från matchLinks!
+
 // CREATORS ----------------------------------------------------------------------------------------
 
 function createMatch(parsedUrl) {

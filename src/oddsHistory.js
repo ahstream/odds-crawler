@@ -92,7 +92,7 @@ export async function updateOddsHistoryDB(history) {
           log.debug('Mongo DB writeErrors[0]:', err.writeErrors[0]);
           return { insertedCount: err.result.result.nInserted };
         case 11000:
-          log.debug('Mongo DB Error (Duplicate key):', err.message);
+          // log.debug('Mongo DB Error (Duplicate key):', err.message);
           return { insertedCount: err.result.result.nInserted };
         default:
           log.error('Mongo DB Error:', err.message);
