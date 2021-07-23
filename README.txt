@@ -39,7 +39,7 @@ yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/engl
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/england/premier-league/brentford-arsenal-863eg7q9/'
 
 
-yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/tennis/italy/todi-challenger-men/arnaldi-matteo-gigante-matteo-WSheBt2n/'
+yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/argentina/primera-a-women/tInB0QYE'
 
 
 
