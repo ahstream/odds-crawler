@@ -86,7 +86,8 @@ export function parseFakedMatchUrl(matchId, tournamentKeyWithYear) {
 }
 
 export function parseTournamentName(htmltext) {
-  const matchedData = htmltext.match(/Show all "(?!\d\d\d\d)(.*?)(\d\d\d\d)?(?:\/)?(\d\d\d\d)?"/i);
+  // const matchedData = htmltext.match(/Show all "(?!\d\d\d\d)(.*?)(\d\d\d\d)?(?:\/)?(\d\d\d\d)?"/i);
+  const matchedData = htmltext.match(/Show all "((?:\d\d\d\d )?(?!\d\d\d\d)(?:.*?))(\d\d\d\d)?(?:\/)?(\d\d\d\d)?"/i);
   if (!matchedData || !matchedData[1]) {
     log.debug('CustomError: Failed to regex parseTournamentName', { result: matchedData, htmltext });
     throw new CustomError('Failed to regex parseTournamentName', { result: matchedData, htmltext });

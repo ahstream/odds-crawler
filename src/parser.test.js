@@ -2,6 +2,7 @@ import { CustomError } from './exceptions';
 import {
   parseMatchUrl,
   parseFakedMatchUrl,
+  parseTournamentName,
   parseTournamentPath,
   parseNextMatchesData,
   parseNextMatchesHashes,
@@ -117,6 +118,36 @@ test('parseFakedMatchUrl()', () => {
   });
 });
 
+test('parseTournamentName()', () => {
+  expect(() => {
+    parseTournamentName('');
+  }).toThrow(CustomError);
+  expect(parseTournamentName('Show all "Olympic Games Women" matches')).toEqual({
+    name: 'Olympic Games Women',
+    year: '',
+    year1: '',
+    year2: ''
+  });
+  expect(parseTournamentName('Show all "Premier League 2020" matches')).toEqual({
+    name: 'Premier League',
+    year: '2020',
+    year1: '2020',
+    year2: ''
+  });
+  expect(parseTournamentName('Show all "Premier League 2020/2021" matches')).toEqual({
+    name: 'Premier League',
+    year: '2020/2021',
+    year1: '2020',
+    year2: '2021'
+  });
+  expect(parseTournamentName('Show all "1857 Cup" matches')).toEqual({
+    name: '1857 Cup',
+    year: '',
+    year1: '',
+    year2: ''
+  });
+});
+
 test('parseTournamentPath()', () => {
   expect(() => {
     parseTournamentPath('');
@@ -124,6 +155,7 @@ test('parseTournamentPath()', () => {
   expect(parseTournamentPath('league-one-2019-2020')).toEqual({ name: 'league-one', year: '2019-2020' });
   expect(parseTournamentPath('league-one-2019')).toEqual({ name: 'league-one', year: '2019' });
   expect(parseTournamentPath('league-one')).toEqual({ name: 'league-one', year: '' });
+  expect(parseTournamentPath('1857-cup')).toEqual({ name: '1857-cup', year: '' });
 });
 
 test('parseNextMatchesHash()', () => {
