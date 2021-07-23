@@ -6,7 +6,8 @@ import {
   parseTournamentPath,
   parseNextMatchesData,
   parseNextMatchesHashes,
-  parseNextMatchesJson
+  parseNextMatchesJson,
+  parseCanonical
 } from './parser';
 
 const _ = require('lodash');
@@ -207,4 +208,10 @@ test('parseNextMatchesData()', async () => {
   expect(result.parsedMatchUrls[0].matchUrl).toEqual('/tennis/usa/atp/aaa-bbb-SQMIFmzh/');
   expect(result.parsedMatchUrls[1].matchUrl).toEqual('/soccer/usa/nisa/chattanooga-maryland-bobcats-SQMIFmzh/');
   expect(result.otherUrls).toEqual(['http://www.google.com']);
+});
+
+test('parseCanonical()', () => {
+  expect(parseCanonical('xxxxxx')).toEqual('');
+  expect(parseCanonical('<link rel="canonical" href="https://www.oddsportal.com/soccer/sweden/superettan/helsingborg-varnamo-8QRGC3LU/" />')).toEqual('https://www.oddsportal.com/soccer/sweden/superettan/helsingborg-varnamo-8QRGC3LU/');
+  expect(parseCanonical('<link rel="canonical" href="https://www.oddsportal.com/" />')).toEqual('https://www.oddsportal.com/');
 });

@@ -7,7 +7,7 @@ import { writeToFile } from './dataWriter';
 import { CustomError } from './exceptions';
 import { updateMarketOdds } from './marketodds';
 import { updateOddsHistoryDB } from './oddsHistory';
-import { parseMatchPageEvent, parseMatchUrl } from './parser';
+import { parseMatchPageEvent, parseMatchUrl, parseCanonical } from './parser';
 import { httpGetAllowedHtmltext } from './provider';
 import { getTournament } from './tournament';
 
@@ -25,13 +25,32 @@ const MATCHES = 'matches';
 
 // MAIN FUNCTIONS ---------------------------------------------------------------------------------
 
+function getMatchBase(parsedUrl, htmltext) {
+  const match = createMatch(parsedUrl);
+  try {
+    match.params = parseMatchPageEvent(htmltext);
+  } catch (e) {
+    const canonical = parseCanonical(htmltext);
+    log.info('canoncial:', canonical);
+    if (canonical === 'https://www.oddsportal.com/') {
+      match.status = 'canceled';
+      match.statusType = 'canceled';
+    } else {
+      throw e;
+    }
+  }
+  return match;
+}
+
 export async function getMatchFromWebPage(parsedUrl) {
   const url = `https://www.oddsportal.com${parsedUrl.matchUrl}`;
   const htmltext = await httpGetAllowedHtmltext([url]);
 
-  const match = createMatch(parsedUrl);
+  const match = getMatchBase(parsedUrl, htmltext);
+  if (match.statusType === 'canceled') {
+    return match;
+  }
 
-  match.params = parseMatchPageEvent(htmltext);
   match.matchScore = await scorelib.getMatchScore(match, htmltext);
   match.status = match.matchScore.status ?? match.status;
   match.statusType = match.matchScore.type;
@@ -64,7 +83,7 @@ export async function getMatchFromWebPageUrl(url) {
   const parsedUrl = parseMatchUrl(url);
   // log.verbose(parsedUrl);
   const match = await getMatchFromWebPage(parsedUrl);
-  // log.verbose(match);  // todo
+  log.verbose(match);  // todo
   return match;
 }
 
@@ -96,25 +115,25 @@ export async function addMatchToDBIfCompleted(match) {
 }
 
 export function hasNormalMatchResult(match) {
-  return match.status === 'finished';
+  return match.statusType === 'finished';
 }
 
 export function isFinished(match) {
-  return match.status === 'finished';
+  return match.statusType === 'finished';
 }
 
 export function isCompleted(match) {
-  return match.matchScore.type === 'finished' ||
-    match.matchScore.type === 'canceled' ||
-    match.matchScore.type === 'awarded';
+  return match.statusType === 'finished' ||
+    match.statusType === 'canceled' ||
+    match.statusType === 'awarded';
 }
 
 export function isScheduled(match) {
-  return match.matchScore.type === 'scheduled';
+  return match.statusType === 'scheduled';
 }
 
 export function isRescheduled(match) {
-  return match.matchScore.type === 'postponed';
+  return match.statusType === 'postponed';
 }
 
 function updateMatchInfo(match) {

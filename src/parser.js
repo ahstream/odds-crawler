@@ -174,6 +174,15 @@ export function parseNextMatchesData(htmltext) {
   return { parsedMatchUrls, otherUrls };
 }
 
+export function parseCanonical(htmltext) {
+  // Example htmltext: <link rel="canonical" href="https://www.oddsportal.com/soccer/sweden/superettan/helsingborg-varnamo-8QRGC3LU/" />
+  const result = htmltext.match(/<link rel="canonical" href="([^"]*)" \/>/i);
+  if (result && result[1]) {
+    return result[1];
+  }
+  return '';
+}
+
 export function parseMatchPageEvent(htmltext) {
   validateHtmltext(htmltext);
 
