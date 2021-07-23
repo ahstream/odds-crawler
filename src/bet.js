@@ -54,6 +54,10 @@ export async function getBetTypes(match) {
   }
 
   const betTypes = {};
+  if (feed.nav === null) {
+    return betTypes;
+  }
+
   Object.keys(feed.nav).forEach((bettingTypeKey, _index) => {
     utilslib.ensureProperties(betTypes, [bettingTypeKey]);
     Object.keys(feed.nav[bettingTypeKey]).forEach((scopeKey, _scopeIndex) => {

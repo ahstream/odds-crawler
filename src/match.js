@@ -39,15 +39,17 @@ export async function getMatchFromWebPage(parsedUrl) {
   match.tournament = await getTournament(htmltext, parsedUrl, match.params.tournamentId);
 
   match.betTypes = await betlib.getBetTypes(match);
-  if (!match.betTypes || Object.keys(match.betTypes).length === 0) {
+  /* if (!match.betTypes || Object.keys(match.betTypes).length === 0) {
     log.debug('CustomError: Failed getting bet types for:', { match, htmltext });
     throw new CustomError('Failed getting bet types for:', { match, htmltext });
-  }
+  } */
 
   match.info.numMarkets = await feedlib.processMatchFeeds(match);
   if (match.info.numMarkets < 1) {
-    log.debug('CustomError: No markets in feed for:', { url: match.url, htmltext });
-    throw new CustomError('No markets in feed for:', { url: match.url, htmltext });
+    if (match.statusType === 'finished' || match.statusType === 'scheduled') {
+      log.debug('CustomError: No markets in feed for:', { url: match.url, htmltext });
+      throw new CustomError('No markets in feed for:', { url: match.url, htmltext });
+    }
   }
 
   updateMarketOdds(match);
@@ -133,8 +135,8 @@ function getNumBookies(match) {
   numBookiesList.push(match.market[`${match.id}_3_2_1_0.00_0`]?.numBookies ?? 0);
   const numBookies = _.max(numBookiesList);
   if (numBookies < 1) {
-    log.error('No bookies:', match.url);
-    return null;
+    log.debug('No bookies:', match.url);
+    return 0;
   }
   return numBookies;
 }

@@ -182,8 +182,9 @@ function handleCrawlMatchLinkError(matchLink, error) {
   matchLink.statusType = 'error';
   matchLink.errorMsg = error.message;
   matchLink.error = {
-    name: error.name,
     message: error.message,
+    date: now,
+    name: error.name,
     data: error.data,
     stack: error.stack,
     completeError: JSON.stringify(error)
@@ -215,7 +216,7 @@ function calcHoursToNextCrawl(matchLink) {
     return -1;
   }
   if (matchLink.isRescheduled) {
-    log.debug('Match is rescheduled:', matchLink);
+    // log.debug('Match is rescheduled:', matchLink);
     return 12;
   }
   if (matchLink.hoursToStart < 0) {

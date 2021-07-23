@@ -195,6 +195,10 @@ function calcOE(score) {
 }
 
 function calcHTFT(score, outcomeHT, outcomeFT, match) {
+  if (match.matchScore.scores.H1 === null) {
+    // Missing H1 score, cannot calc this market!
+    return null;
+  }
   const ht = getOutcome(match.matchScore.scores.H1.home, match.matchScore.scores.H1.away);
   const ft = getOutcome(score.home, score.away);
 

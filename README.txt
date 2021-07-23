@@ -17,7 +17,7 @@ yarn cli crawlAllSportsMatchPages --interval 60 --daysAfter 10 --daysBefore 2 --
 
 yarn cli crawlMatchLinks --interval 60 --status ""
 yarn cli crawlMatchLinks --interval 60 --status "" --deleteLogFiles
-yarn cli crawlMatchLinks --interval 5 --status "error"
+yarn cli crawlMatchLinks --interval 5000 --status "error" --force
 yarn cli crawlMatchLinks --interval 60 --status "new"
 
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/england/premier-league-2020-2021/arsenal-brighton-2qsbaz5A/'
@@ -39,6 +39,7 @@ yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/engl
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/england/premier-league/brentford-arsenal-863eg7q9/'
 
 
+yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/tennis/italy/todi-challenger-men/arnaldi-matteo-gigante-matteo-WSheBt2n/'
 
 
 

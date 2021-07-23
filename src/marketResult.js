@@ -92,14 +92,14 @@ export function createMarketResult(market, match, betArgs) {
     if (!scopelib.isScopeTooLong(betArgs.sc, match.matchScore.periods)) {
       // log.info('No score:', betArgs);
       // log.debug('No score:', betArgs, match.matchScore, match.url);
-      log.info('No score:', match.url);
+      // log.info('No score:', match.url);
     }
     return null;
   }
 
   const marketCalc = marketcalclib.calcMarket(match, score, betArgs);
   if (marketCalc === null || marketCalc.outcome === null) {
-    log.info('marketCalc is null for betArgs:', betArgs);
+    log.debug('marketCalc is null for betArgs:', betArgs);
     return null;
   }
 

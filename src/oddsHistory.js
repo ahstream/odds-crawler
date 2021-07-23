@@ -93,6 +93,7 @@ export async function updateOddsHistoryDB(history) {
           return { insertedCount: err.result.result.nInserted };
         case 11000:
           // log.debug('Mongo DB Error (Duplicate key):', err.message);
+          // This is not an error, it is expected to get duplicate keys!
           return { insertedCount: err.result.result.nInserted };
         default:
           log.error('Mongo DB Error:', err.message);
