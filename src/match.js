@@ -22,25 +22,9 @@ const mongodb = require('./mongodb.js');
 const log = createLogger();
 
 const MATCHES = 'matches';
+const BASE_URL = 'https://www.oddsportal.com/';
 
 // MAIN FUNCTIONS ---------------------------------------------------------------------------------
-
-function getMatchBase(parsedUrl, htmltext) {
-  const match = createMatch(parsedUrl);
-  try {
-    match.params = parseMatchPageEvent(htmltext);
-  } catch (e) {
-    const canonical = parseCanonical(htmltext);
-    log.info('canoncial:', canonical);
-    if (canonical === 'https://www.oddsportal.com/') {
-      match.status = 'canceled';
-      match.statusType = 'canceled';
-    } else {
-      throw e;
-    }
-  }
-  return match;
-}
 
 export async function getMatchFromWebPage(parsedUrl) {
   const url = `https://www.oddsportal.com${parsedUrl.matchUrl}`;
@@ -83,7 +67,23 @@ export async function getMatchFromWebPageUrl(url) {
   const parsedUrl = parseMatchUrl(url);
   // log.verbose(parsedUrl);
   const match = await getMatchFromWebPage(parsedUrl);
-  log.verbose(match);  // todo
+  // log.verbose(match);  // todo
+  return match;
+}
+
+function getMatchBase(parsedUrl, htmltext) {
+  const match = createMatch(parsedUrl);
+  try {
+    match.params = parseMatchPageEvent(htmltext);
+  } catch (e) {
+    const canonical = parseCanonical(htmltext);
+    if (canonical === BASE_URL) {
+      match.status = 'canceled';
+      match.statusType = 'canceled';
+    } else {
+      throw e;
+    }
+  }
   return match;
 }
 
@@ -162,7 +162,6 @@ function getNumBookies(match) {
 
 // todo: match returnerar startsida -> cancelled -> ta bort matchLink!
 // todo: upptäck felkod på fler fel!
-// todo: undersök no score!
 // todo: no bookies + finished -> ta bort från matchLinks!
 
 // CREATORS ----------------------------------------------------------------------------------------
