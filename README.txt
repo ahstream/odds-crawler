@@ -18,7 +18,7 @@ yarn cli crawlAllSportsMatchPages --interval 60 --daysAfter 10 --daysBefore 2 --
 yarn cli crawlMatchLinks --interval 60 --status ""
 yarn cli crawlMatchLinks --interval 60 --status "" --deleteLogFiles
 yarn cli crawlMatchLinks --interval 5000 --status "error" --force
-yarn cli crawlMatchLinks --interval 60 --status "new"
+yarn cli crawlMatchLinks --interval 60
 
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/england/premier-league-2020-2021/arsenal-brighton-2qsbaz5A/'
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/basketball/usa/nba/milwaukee-bucks-phoenix-suns-4nnd7v16/'
@@ -40,6 +40,8 @@ yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/engl
 
 
 yarn cli addMatch --deleteLogFiles --url 'https://www.oddsportal.com/soccer/argentina/primera-a-women/tInB0QYE'
+
+yarn cli addMatch --url '/soccer/ukraine/premier-league/WAJhCcEE/'
 
 
 

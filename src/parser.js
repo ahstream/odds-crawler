@@ -221,6 +221,7 @@ export function parseMatchFeed(htmltext) {
     log.debug('CustomError: Error code: notAllowed (parseMatchFeed)', { feed, result });
     throw new CustomError('Error code: notAllowed (parseMatchFeed)', { feed, htmltext });
   }
+
   return feed;
 }
 

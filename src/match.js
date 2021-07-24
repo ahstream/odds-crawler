@@ -38,6 +38,7 @@ export async function getMatchFromWebPage(parsedUrl) {
   match.matchScore = await scorelib.getMatchScore(match, htmltext);
   match.status = match.matchScore.status ?? match.status;
   match.statusType = match.matchScore.type;
+  match.startTime = match.matchScore.startTime;
 
   match.tournament = await getTournament(htmltext, parsedUrl, match.params.tournamentId);
 
@@ -75,6 +76,8 @@ function getMatchBase(parsedUrl, htmltext) {
   const match = createMatch(parsedUrl);
   try {
     match.params = parseMatchPageEvent(htmltext);
+    match.tournamentId = match.params.tournamentId;
+    match.sportId = match.params.sportId;
   } catch (e) {
     const canonical = parseCanonical(htmltext);
     if (canonical === BASE_URL) {

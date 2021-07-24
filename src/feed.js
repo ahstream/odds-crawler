@@ -17,20 +17,44 @@ const log = createLogger();
 // ------------------------------------------------------------------------------------------------
 
 export async function processMatchFeeds(match) {
-  const feedKeys = getFeedKeys(match);
-  const feedUrls = getFeedUrls(match, feedKeys);
-  const feedResults = await httpGetManyUrls(feedUrls);
+  const feedUrls = getFeedUrls(match, getFeedKeys(match));
+  const mainUrls = feedUrls.map(item => item.url1)
+  const mainResults = await httpGetManyUrls(mainUrls);
 
-  return processMatchFeedResults(match, feedResults);
+  const secondaryUrls = [];
+  const mainResultsToKeep = [];
+  for (const item of mainResults.data) {
+    let feed = null;
+    try {
+      feed = parser.parseMatchFeed(item.response.data);
+    } catch(e) {
+      // log.error('Error', e.message, e);
+    }
+    if (feed !== null) {
+      mainResultsToKeep.push(item)
+    } else {
+      const secondaryUrl = (feedUrls.find(obj => obj.url1 === item.url)).url2;
+      secondaryUrls.push(secondaryUrl);
+      log.info('secondaryUrl:', secondaryUrl);
+    }
+  }
+  log.info('secondaryUrls:', secondaryUrls);
+  const secondaryResults = await httpGetManyUrls(secondaryUrls);
+  // log.info('secondaryResults:', secondaryResults);
+  for (const item of secondaryResults.data) {
+    mainResultsToKeep.push(item);
+  }
+
+  return processMatchFeedResults(match, mainResultsToKeep);
 }
 
-function processMatchFeedResults(match, feedResults) {
+function processMatchFeedResults(match, feeds) {
   let numMarkets = 0;
-  for (const data of feedResults.data) {
-    const feed = parser.parseMatchFeed(data.response.data);
+  for (const feedData of feeds) {
+    const feed = parser.parseMatchFeed(feedData.response.data);
     if (feed === null) {
-      log.debug('CustomError: Match feed is null', { url: match.url, feedData: data });
-      throw new CustomError('Match feed is null', { url: match.url, feedData: data });
+      log.debug('CustomError: Match feed is null', { url: match.url, feedData });
+      throw new CustomError('Match feed is null', { url: match.url, feedData });
     }
     numMarkets += processMatchFeed(match, feed);
   }
@@ -79,7 +103,9 @@ function getFeedUrls(match, feedKeys) {
     const bt = feedKeys[i].bt;
     const sc = feedKeys[i].sc;
     const baseUrl = 'https://fb.oddsportal.com/feed/match/1-1-';
-    feedUrls.push(`${baseUrl}${match.id}-${bt}-${sc}-${match.params.xhash}.dat?_=${createLongTimestamp()}`);
+    const url1 = `${baseUrl}${match.id}-${bt}-${sc}-${match.params.xhash}.dat?_=${createLongTimestamp()}`;
+    const url2 = `${baseUrl}${match.id}-${bt}-${sc}-${match.params.xhashf}.dat?_=${createLongTimestamp()}`;
+    feedUrls.push({url1, url2});
   }
 
   return feedUrls;

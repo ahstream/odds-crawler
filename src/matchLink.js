@@ -165,9 +165,9 @@ function handleCrawlMatchLinkSuccess(matchLink, match) {
   matchLink.isRescheduled = matchlib.isRescheduled(match);
   matchLink.status = match.status;
   matchLink.statusType = match.statusType;
-  matchLink.startTime = match.matchScore.startTime;
-  matchLink.tournamentId = match.params.tournamentId;
-  matchLink.sportId = match.params.sportId;
+  matchLink.startTime = match.startTime;
+  matchLink.tournamentId = match.tournamentId;
+  matchLink.sportId = match.sportId;
 }
 
 function handleCrawlMatchLinkError(matchLink, error) {
