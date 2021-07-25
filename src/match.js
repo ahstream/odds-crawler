@@ -48,9 +48,11 @@ export async function getMatchFromWebPage(parsedUrl) {
     throw new CustomError('Failed getting bet types for:', { match, htmltext });
   } */
 
+
+
   match.info.numMarkets = await feedlib.processMatchFeeds(match);
   if (match.info.numMarkets < 1) {
-    if (match.statusType === 'finished' || match.statusType === 'scheduled') {
+    if (match.statusType === 'finished') {
       log.debug('CustomError: No markets in feed for:', { url: match.url, htmltext });
       throw new CustomError('No markets in feed for:', { url: match.url, htmltext });
     }

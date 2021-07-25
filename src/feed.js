@@ -35,10 +35,11 @@ export async function processMatchFeeds(match) {
     } else {
       const secondaryUrl = (feedUrls.find(obj => obj.url1 === item.url)).url2;
       secondaryUrls.push(secondaryUrl);
-      log.info('secondaryUrl:', secondaryUrl);
     }
   }
-  log.info('secondaryUrls:', secondaryUrls);
+  if (secondaryUrls.length > 0) {
+    log.info('secondaryUrls.length:', secondaryUrls.length);
+  }
   const secondaryResults = await httpGetManyUrls(secondaryUrls);
   // log.info('secondaryResults:', secondaryResults);
   for (const item of secondaryResults.data) {
