@@ -9,6 +9,7 @@ yarn cli crawlMatchPages --interval 1 --sportName "soccer" --daysAfter 1 --daysB
 yarn cli crawlMatchPages --interval 500 --sportName "soccer" --daysAfter 60 --daysBefore 30
 yarn cli crawlMatchPages --interval 5000 --sportName "tennis" --daysAfter 60 --daysBefore 30
 yarn cli crawlMatchPages --interval 5000 --sportName "soccer" --daysAfter 0 --daysBefore 0
+yarn cli crawlMatchPages --interval 60 --sportName "soccer" --daysAfter 0 --daysBefore 1
 
 yarn cli crawlAllSportsMatchPages --interval 100 --daysAfter 1 --daysBefore 1
 yarn cli crawlAllSportsMatchPages --interval 1 --daysAfter 10 --daysBefore 20
