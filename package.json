@@ -9,6 +9,7 @@
     "test": "jest",
     "dev": "babel-node src/dev.js",
     "cli": "babel-node src/cli.js --trace-warnings ",
+    "crawlMatchLinks": "babel-node src/cli.js --trace-warnings crawlMatchLinks --interval 60",
     "debug": "babel-node src/dev.js --inspect",
     "profile": "babel-node --prof src/dev.js",
     "prettier:report": "prettier \"**/*.{js,ts,json,md}\" --check",
