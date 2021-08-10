@@ -235,8 +235,8 @@ function calcOU(score, tg) {
     case 0.75:
       return calcOUSplit(score, tg);
     default:
-      log.debug('CustomError: Failed calcOU for:', { score, tg });
-      throw new CustomError('Failed calcOU for:', { score, tg });
+      log.debug('Not supported OU:', tg, score);
+      return null;
   }
 }
 
