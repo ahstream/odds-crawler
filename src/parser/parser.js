@@ -12,20 +12,9 @@ const log = createLogger();
 
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
-/**
- * ping()
- */
 export const ping = () => 'pong';
 
 export function parseUrl(url) {
-  /*
-  const urlFlags = url.match(/.*\?(.*)/i);
-  const flags = urlFlags && urlFlags[1] ? urlFlags[1] : '';
-  if (flags) {
-    url = url.replace(`?${flags}`, '');
-  }
-  */
-
   const result = url.match(/https:\/\/www\.oddsportal\.com\/([^/]*\/)?([^/]*\/)?([^/]*\/)?([^/]*\/)?/i);
 
   const sport = utilslib.trimChars(result[1] ?? '', '/').trim();
@@ -69,7 +58,6 @@ export function parseUrl(url) {
     event,
     eventId
   };
-  // return [type, sport, country, divisionCodeName, divisionCode, year, event, eventId];
 }
 
 export function parseDivisionFromUrlPath(divisionPath) {
@@ -300,9 +288,6 @@ export function parseBookiesFromBookiesPage(htmltext) {
   return JSON.parse(match[1]);
 }
 
-/**
- * ok
- */
 export function parseMatchUrl(url) {
   const result = url.match(/(?:https:\/\/www\.oddsportal\.com)?\/([^/]*\/)?([^/]*\/)?([^/]*\/)?([^/]*\/)?/i);
   if (!result || !result[4]) {

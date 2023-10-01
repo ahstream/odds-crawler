@@ -1,4 +1,3 @@
-const betlib = require('../bet/bet.js');
 const { createLogger } = require('../lib/loggerlib');
 const marketoddslib = require('../market/marketOdds.js');
 
@@ -21,16 +20,9 @@ function createId(match, betArgs, outcomeArgs, bookieArgs) {
 
 function createOdds(id, match, marketId, betArgs, outcomeArgs, bookieArgs, completeOddsItem) {
   return {
-    id, // todo
+    id, 
     matchId: match.id,
     marketId,
-    // betName: betArgs.betName,
-    // bt,
-    // sc,
-    // back,
-    // attributeText,
-    // attribute1: attributes.attribute1,
-    // attribute2: attributes.attribute2,
 
     betArgs,
     outcome: outcomeArgs.num,

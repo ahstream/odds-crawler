@@ -30,16 +30,8 @@ export async function getMatchFromWebPage(parsedUrl) {
 
     const match = createMatch(parsedUrl);
 
-    // const event = parseAndValidateBaseEvent(url, htmltext, season);
-    // assert(event, 'Failed parseAndValidateBaseEvent');
-
     match.params = parseMatchPageEvent(htmltext);
     match.score = await scorelib.parseScore(match, htmltext);
-    /*
-    if (!match.score) {
-      throw new CustomError('Failed parsing match score', { match, htmltext });
-    }
-     */
 
     match.status = match.score.status;
     match.params.isAwarded = match.status === 'awarded';
@@ -54,16 +46,6 @@ export async function getMatchFromWebPage(parsedUrl) {
       throw new CustomError('No bets in feed', { match, htmltext });
     }
     log.debug(`Num bets in feed: ${numBets}`);
-
-    /*
-    event.hasOdds = _.isEmpty(event.odds) == false;
-    if (event.hasOdds) {
-      marketoddslib.updateMarketOdds(event);
-    }
-    event.ok = true;
-         */
-
-    // log.verbose(match);
 
     return match;
   } catch (ex) {
@@ -106,7 +88,7 @@ export async function updateMatchOddsHistoryDB(match) {
 }
 
 export async function moveToExportedMatches() {
-  // TODO: Exportera bara matcher som är fully completed!
+  // TODO: Exportera bara matcher som är fully completed?
   const exportedMatchesCol = mongodb.db.collection('exportedMatches');
   const matchesCol = mongodb.db.collection('matches');
   for (const match of await matchesCol.find({}).toArray()) {
@@ -122,10 +104,6 @@ export function hasNormalMatchResult(match) {
 }
 
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
-
-async function getMatchFromDB(matchId) {
-  return (await mongodb.db.collection('matches').find({ _id: matchId }).toArray())[0];
-}
 
 export async function exportedMatchExists(matchId) {
   return (await mongodb.db.collection('exportedMatches').find({ _id: matchId }).limit(1).count()) === 1;

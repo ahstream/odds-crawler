@@ -2,7 +2,6 @@
 
 import { CustomError } from '../exception/customError';
 
-const assert = require('assert');
 const _ = require('lodash');
 
 const config = require('../../config/config.json');
@@ -48,8 +47,6 @@ export async function getBetTypes(match) {
   const feed = await feedlib.getMatchFeed(match, config.bt.Match, config.sc.FT);
   if (feed === null || feed.nav === undefined) {
     throw new CustomError('Failed getting bet types', { feed, match });
-    // log.debug('getBetTypes error! matchId, feed:', match.id, feed);
-    // return null;
   }
 
   const betTypes = {};

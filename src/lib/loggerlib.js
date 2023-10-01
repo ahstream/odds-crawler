@@ -11,8 +11,6 @@ const defaultOptions = {
 
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
-// exports.createLogger = createLogger;
-
 exports.deleteLogFiles = (dir) => {
   const dirVal = trimCharsRight(dir, '/');
 
@@ -115,7 +113,6 @@ export function createLogger(level = '', dir = 'logs', options = {}) {
         filename: `${dirVal}/verbose.log`,
         level: 'verbose'
       })
-      // new winston.transports.File({ format: noColorFormatter, filename: `${dirVal}/silly.log`, level: 'silly' }),
     ]
   });
 

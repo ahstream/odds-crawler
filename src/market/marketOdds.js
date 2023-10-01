@@ -105,7 +105,7 @@ function calcTrueEqOdds(odds, overround) {
 
 function createMarketOdds(id) {
   return {
-    id, // todo
+    id,
     marketId: null,
     bookie: null,
 
@@ -114,9 +114,6 @@ function createMarketOdds(id) {
     numOutcomes: null,
 
     openingOverround: null,
-    // openingOk: null,
-    // openingDateOk: null,
-    // openingDate: null,
 
     openingOdds1: null,
     openingOdds2: null,

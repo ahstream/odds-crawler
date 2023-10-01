@@ -7,7 +7,6 @@ import {
 } from '../provider/provider';
 import { updateMatchOddsHistoryDB } from './match.js';
 
-const assert = require('assert');
 const _ = require('lodash');
 
 const { createLogger } = require('../lib/loggerlib');
@@ -60,7 +59,6 @@ export async function processMatchLinks() {
     })
     .toArray();
 
-  // todo: logga counter!
   for (const matchLink of [...nextMatchLinks, ...prevMatchLinks]) {
     try {
       const match = await matchlib.getMatchFromWebPage(matchLink.parsedUrl);
@@ -72,7 +70,7 @@ export async function processMatchLinks() {
 
     } catch (ex) {
       log.error(ex.message, matchLink.parsedUrl.matchUrl, ex.name);
-      matchLink.error = { name: ex.name, message: ex.message }; // , data: ex.data };
+      matchLink.error = { name: ex.name, message: ex.message };
       matchLink.errorCount++;
       matchLink.isCompleted = null;
       matchLink.status = 'error';
@@ -138,9 +136,6 @@ export async function updateMatchLinkInDB(matchLink) {
   }
 }
 
-/**
- * ok
- */
 export async function processOtherLinks() {
   const otherLinksCol = mongodb.db.collection('otherLinks');
   const ignoredLinksCol = mongodb.db.collection('otherLinksIgnored');
@@ -154,9 +149,6 @@ export async function processOtherLinks() {
 
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
 
-/**
- *
- */
 async function crawlDay(sport, sportId, date) {
   log.info(`Crawl match links on date: ${date.toLocaleDateString()}, sport: ${sport}, sportId: ${sportId}`);
 
@@ -178,9 +170,6 @@ async function crawlDay(sport, sportId, date) {
   return { ...matchLinksAdded, ...otherLinksAdded };
 }
 
-/**
- *
- */
 export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
   const urls = [];
   const baseUrl = 'https://fb.oddsportal.com/ajax-next-games/';
@@ -203,9 +192,6 @@ export async function getNextMatchesByHashes(sportId, dateStr, hashes) {
   return null;
 }
 
-/**
- *
- */
 function getDateRange(date, days, inc) {
   const currentDate = new Date(date);
   const dates = [];

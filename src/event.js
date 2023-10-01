@@ -3,18 +3,18 @@
 const assert = require('assert');
 const _ = require('lodash');
 
+const betlib = require('./bet/bet.js');
+const crawlerQueue = require('./crawler/crawlerQueue.js');
+const dataWriter = require('./dataWriter/dataWriter.js');
+const divisionlib = require('./division/division.js');
+const feedlib = require('./feed/feed.js');
+const { createLogger } = require('./lib/loggerlib');
+const utilslib = require('./lib/utilslib');
+const marketoddslib = require('./market/marketOdds.js');
+const parser = require('./parser/parser');
+const provider = require('./provider/provider');
+const scorelib = require('./score/score.js');
 const config = require('../config/config.json');
-const betlib = require('../src/bet/bet.js');
-const crawlerQueue = require('../src/crawler/crawlerQueue.js');
-const dataWriter = require('../src/dataWriter/dataWriter.js');
-const divisionlib = require('../src/division/division.js');
-const feedlib = require('../src/feed/feed.js');
-const { createLogger } = require('../src/lib/loggerlib');
-const utilslib = require('../src/lib/utilslib');
-const marketoddslib = require('../src/market/marketOdds.js');
-const parser = require('../src/parser/parser');
-const provider = require('../src/provider/provider');
-const scorelib = require('../src/score/score.js');
 
 const log = createLogger();
 
@@ -69,12 +69,7 @@ export async function getEventFromWebPage(url, season) {
   }
 }
 
-export async function crawlEvent(
-  url,
-  divisionCode,
-  season,
-  { addToQueue = false, skipDups = config.skipDuplicatedEvents }
-) {
+export async function crawlEvent(url, divisionCode, season, { addToQueue = false, skipDups = config.skipDuplicatedEvents }) {
   try {
     log.debug(`Start crawling event: ${url}`);
 
@@ -84,9 +79,7 @@ export async function crawlEvent(
       return createEvent({ isDuplicate: true });
     }
 
-    log.debug(
-      `Sleep ${config.delayBetweenCrawledEvents} ms before crawling event...`
-    );
+    log.debug(`Sleep ${config.delayBetweenCrawledEvents} ms before crawling event...`);
     await utilslib.sleep(config.delayBetweenCrawledEvents);
 
     const event = await getEventFromWebPage(url, season);
@@ -124,11 +117,7 @@ export async function crawlEvent(
 // HELPER FUNCTIONS -----------------------------------------------------------------------------
 
 function parseAndValidateBaseEvent(url, htmltext, fallbackSeason) {
-  const divisionData = divisionlib.parseDivisionData(
-    url,
-    htmltext,
-    fallbackSeason
-  );
+  const divisionData = divisionlib.parseDivisionData(url, htmltext, fallbackSeason);
   if (!divisionData) {
     return null;
   }
@@ -178,12 +167,7 @@ function processParams(event, htmltext) {
 }
 
 async function processScore(event) {
-  const score = await scorelib.parseScore(
-    event.id,
-    event.name,
-    event.url,
-    event.xhash
-  );
+  const score = await scorelib.parseScore(event.id, event.name, event.url, event.xhash);
   assert(score.ok, 'Failed scorelib.parseScore');
 
   event.startTime = score.startTime;
@@ -297,9 +281,7 @@ function parseParams(event, htmltext, options = {}) {
     params.away = parsedParams.away;
     params.tournamentId = parsedParams.tournamentId;
   } catch (error) {
-    log.error(
-      `Failed to parse json params for event: ${event.url}, error: ${error}`
-    );
+    log.error(`Failed to parse json params for event: ${event.url}, error: ${error}`);
     return params;
   }
 

@@ -52,5 +52,3 @@ export function expectedNumOfOutcomes(bt) {
       return null;
   }
 }
-
-// HELPER FUNCTIONS -----------------------------------------------------------------------------

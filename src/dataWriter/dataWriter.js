@@ -116,7 +116,6 @@ function convertToSqlSafeCsvData(data) {
         data[key] = '\\N';
       } else if (typeof data[key] === 'boolean') {
         const newVal = data[key] ? 1 : 0;
-        // log.info('boolean, key, oldVal, newVal:', key, data[key], newVal);
         data[key] = newVal;
       }
     } else {
@@ -125,7 +124,6 @@ function convertToSqlSafeCsvData(data) {
           data[key][key2] = '\\N';
         } else if (typeof data[key][key2] === 'boolean') {
           const newVal = data[key][key2] ? 1 : 0;
-          // log.info('boolean, key, oldVal, newVal:', key2, data[key][key2], newVal);
           data[key][key2] = newVal;
         }
       });

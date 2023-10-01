@@ -3,8 +3,6 @@
 const config = require('../../config/config.json');
 const { createLogger } = require('../lib/loggerlib');
 
-const log = createLogger();
-
 // EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
 export function getAttributeText(betFeed) {

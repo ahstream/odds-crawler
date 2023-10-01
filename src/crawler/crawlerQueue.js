@@ -4,11 +4,11 @@ const fs = require('fs');
 
 const config = require('../../config/config.json');
 const divisionlib = require('../division/division.js');
-const eventlib = require('../../old/event.js');
+const seasonlib = require('../division/season.js');
+const eventlib = require('../event.js');
 const { createLogger } = require('../lib/loggerlib');
 const utilslib = require('../lib/utilslib');
 const parser = require('../parser/parser.js');
-const seasonlib = require('../division/season.js');
 
 const log = createLogger();
 
@@ -95,7 +95,6 @@ function processTextItem(item) {
 
   const url = item.text;
   const parsedUrl = parser.parseUrl(url);
-  // log.info(`Parsed URL type: ${parsedUrl.type}`);
 
   switch (parsedUrl.type) {
     case 'event':
@@ -122,7 +121,6 @@ function processTextItem(item) {
 
 async function processEventItem(item) {
   const event = await eventlib.crawlEvent(item.url, item.divisionCode, item.year, {});
-  // await utilslib.sleep(1);
   removeItemFromQueue(item);
   if (event.error) {
     addEvent(item.url, item.divisionCode, item.year, {
@@ -393,18 +391,6 @@ function itemMatchWithOptions(item, options = {}) {
     return false;
   }
 
-  /*
-  let foundMismatch = false;
-  Object.keys(options).forEach(function (key, _index) {
-    if (obj[key] === null) {
-      obj[key] = 'null';
-    }
-    if (options[key] !== item[key]) {
-      foundMismatch = true;
-    }
-  });
-  */
-
   if (options.type !== undefined && options.type !== item.type) {
     return false;
   }
@@ -419,21 +405,6 @@ function itemMatchWithOptions(item, options = {}) {
   }
 
   return true;
-}
-
-function getItemDescription(queueItem) {
-  switch (queueItem.type) {
-    case 'event':
-      return queueItem.event || queueItem.url;
-    case 'season':
-      return `${queueItem.url}`;
-    case 'division':
-      return `${queueItem.url}`;
-    case 'divisions':
-      return `${queueItem.url}`;
-    default:
-      return `Unknown queue item type: ${queueItem.type}`;
-  }
 }
 
 //  ENSURER FUNCTIONS  ---------------------------------------------------------------------------------

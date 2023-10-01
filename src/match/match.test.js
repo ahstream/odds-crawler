@@ -11,9 +11,6 @@ afterEach(() => {
   mongo.close();
 });
 
-/**
- * ok
- */
 test('getNextMatches', async () => {
   jest.setTimeout(20000);
 
@@ -40,9 +37,6 @@ test('getNextMatches', async () => {
   expect(m3.otherUrls.length).toBeGreaterThan(0);
 });
 
-/**
- * ok
- */
 test('getNextMatchesByHash', async () => {
   const result = await match.getNextMatchesByHash('2', '20210606', 'yj6d8', 'yj4de');
   expect(result).toHaveProperty('matchUrls');

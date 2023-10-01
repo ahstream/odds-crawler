@@ -166,10 +166,6 @@ export function createScore(options = {}) {
     isOT: false,
     isPenalties: false,
 
-    // isFinishedOk: false,
-    // isPostponed: false,
-    // finalResultOnly: false,
-
     startTime: null,
     startTimeUnix: null,
 
@@ -184,35 +180,6 @@ export function createScore(options = {}) {
     sc3_2: null,
     sc4_1: null, // H2
     sc4_2: null,
-
-    /*
-    sc5_1: null, // P1
-    sc5_2: null,
-    sc6_1: null, // P2
-    sc6_2: null,
-    sc7_1: null, // P3
-    sc7_2: null,
-
-    sc8_1: null, // Q1
-    sc8_2: null,
-    sc9_1: null, // Q2
-    sc9_2: null,
-    sc10_1: null, // Q3
-    sc10_2: null,
-    sc11_1: null, // Q4
-    sc11_2: null,
-
-    sc12_1: null, // S1
-    sc12_2: null,
-    sc13_1: null, // S2
-    sc13_2: null,
-    sc14_1: null, // S3
-    sc14_2: null,
-    sc15_1: null, // S4
-    sc15_2: null,
-    sc16_1: null, // S5
-    sc16_2: null,
-    */
 
     sc98_1: null, // OT/ET
     sc98_2: null,

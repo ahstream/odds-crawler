@@ -1,13 +1,8 @@
-// DECLARES -----------------------------------------------------------------------------
-
-
 import { CustomError } from '../exception/customError';
 import { getHtmltextFromResponse } from '../provider/provider';
 
-const assert = require('assert');
 const _ = require('lodash');
 
-const config = require('../../config/config.json');
 const betlib = require('../bet/bet.js');
 const { createLogger } = require('../lib/loggerlib');
 const parser = require('../parser/parser');
@@ -58,8 +53,6 @@ export async function getMatchFeed(match, betType, scope) {
   const htmltext = getHtmltextFromResponse(response, urls);
   if (!htmltext) {
     throw new CustomError('Failed getting match feed', { betType, scope, response });
-    // log.debug('Failed getMatchFeed, urls:', urls);
-    // return null;
   }
 
   return parser.parseMatchFeed(htmltext);

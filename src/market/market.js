@@ -1,7 +1,6 @@
 import { hasNormalMatchResult } from '../match/match';
 
 const config = require('../../config/config.json');
-const betlib = require('../bet/bet.js');
 const bookielib = require('../bookie/bookie.js');
 const { createLogger } = require('../lib/loggerlib');
 const marketresultlib = require('./marketResult');
@@ -20,15 +19,12 @@ export function addMarket(match, betArgs, bookies) {
     const market = createMarket(marketId);
 
     market.matchId = match.id;
-    // market.season = match.season;
 
     market.betName = betArgs.betName;
     market.bt = betArgs.bt;
     market.sc = betArgs.sc;
     market.isBack = betArgs.isBack;
     market.attributeText = betArgs.attributeText;
-    // market.attribute1 = attributes.attribute1;
-    // market.attribute2 = attributes.attribute2;
 
     const numTotalBookies = Object.keys(bookies).length;
     market.numExcluded = bookielib.countExcluded(bookies);
@@ -91,10 +87,8 @@ export function isMarketIncluded(match, betArgs) {
 
 function createMarket(id) {
   return {
-    id, // todo
+    id, 
     matchId: null,
-
-    // season: null,
 
     betName: null,
     bt: null,

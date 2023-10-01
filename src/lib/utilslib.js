@@ -1,10 +1,6 @@
-// DECLARES -----------------------------------------------------------------------------
-
 /* eslint-disable no-extend-native */
 /* eslint-disable func-names */
 /* eslint-disable import/prefer-default-export */
-
-// EXPORTED FUNCTIONS -----------------------------------------------------------------------------
 
 export function isValidUrl(url) {
   try {
